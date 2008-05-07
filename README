@@ -1,0 +1,8 @@
+Genetic Conquest : An AI Client for Thousand Parsec (RFTS ruleset)
+
+Authors:
+Victor Ivri
+
+Copyright: This software is developed and distributed under GNU GENERAL PUBLIC LICENSE. See COPYRIGHT for details.
+
+This is an AI client that builds on libtpproto-java.
