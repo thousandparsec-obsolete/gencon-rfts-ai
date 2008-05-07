@@ -1,0 +1,46 @@
+
+TO-DO
+
+Genetic Conquest
+
+*** NOTE (07/05/2008 , Victor Ivri)
+*** I have decided to slightly switch the sequence of development, to make for a smoother ride; I'll do Coding II before Coding I, to ensure basic client functionality, and only then will grow meat onto it.
+
+
+
+    *  Initial period of learning and Software Design:
+    * 2008-04-21 - 2008-04-29 : Begin active study of libraries, ruleset, and other relevant materials. A server will be installed and a simple client test-harness for AI testing implemented.
+    * 2008-04-30 - 2008-05-7 : ADTs for the project will be designed; the core algorithm will be completed in pseudocode and diagram form.
+    * 2008-05-8 - 2008-05-13 : Design scheme for the Opponent Simulation Module will be completed in pseudocode and diagram form. 
+
+ * Goal for period: All relevant materials have been studied, a test-bed for the AI implemented, 
+ * and initial volume of documentation released.
+
+    * Coding I:
+    * 2008-05-14 - 2008-05-17 : Relevant classes, methods, and fields will be created for the AI agent.
+    * 2008-05-18 - 2008-05-24 : The core genetic algorithm will be written. An AI arena for bot-contests will be implemented, and will run on the local server.
+    * 2008-05-25 - 2008-05-29 : The Fitness Function for the evaluation of game-hypotheses will have been devised and tested.
+    * 2008-05-30 - 2008-06-4 : All coding of overhead AI agent structures will have been completed.
+    * 2008-06-5 - 2008-06-11 : OSM module coding (1).
+    * 2008-06-12 - 2008-06-18 : OSM module coding (2). OSM module coding will have been completed, and fully capable of playing the game on the AI arena as a standalone AI.
+    * 2008-06-19 - 2008-06-25 : Genetic algorithm and OSM module will be integrated. Thorough unit and integration tests will be run on the AI agent. AI agent will be able to compete in an AI arena on the local server.
+    * 2008-06-26 - 2008-07-7 : Buffer zone for corrections, retesting, and unexpected situations. 
+
+ * Goal for period: Core genetic algorithm and AI agent ADT, as well as the OSM, will be tested. Complete AI agent will be able to                
+ * play and finish games in the AI arena, in time for mid-term evaluations.
+
+    * Coding II: 
+
+    * 2008-07-8 - 2008-07-14 : Work on completing libtpproto-java towards having an AI Client (1). All low-level client-server routines will be completed.
+    * 2008-07-15 - 2008-07-21 : Work on completing libtpproto-java towards having an AI Client (2). The existing client classes will be fully integrated with the AI structures. AI Client will successfully connect to server, and will be able to successfully complete games against human and AI players on local and remote server.
+    * 2008-07-22 - 2008-07-28 : Thorough unit and integration tests will have been run on the AI client.
+    * 2008-07-29 - 2008-08-11 : Buffer zone for corrections, retesting, and unexpected situations. 
+
+ * Goal for period: A complete and working Java AI Client will be ready. 
+ * Full-scale integration testing will have been completed.
+
+    * Final touches and documentation:
+    * 2008-08-12 - 2008-08-18 : Documentation will have been written and polished; code scrubbed and extensively commented. 
+
+ * Goal for period: Finish code scrubbing, and complete all relevant documentation (javadoc and a separate volume).
+
