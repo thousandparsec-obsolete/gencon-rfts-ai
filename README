@@ -5,6 +5,7 @@ Victor Ivri
 
 Copyright: This software is developed and distributed under GNU GENERAL PUBLIC LICENSE. See COPYRIGHT for details.
 
-This is an AI client that builds on libtpproto-java.
+This is an AI client that builds on libtpproto-java, and utilizes genetic algorithms to find good solutions.
 
-Running the client: Runner
+Running the client: (type in without braces)
+java Runner [URI_address] [Difficulty]
