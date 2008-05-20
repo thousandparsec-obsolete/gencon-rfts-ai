@@ -19,7 +19,7 @@ public class Client
 	private Connection<TP03Visitor> conn;
 	PrintStream stout = System.out; 
 	Scanner stin = new Scanner(System.in);
-	private boolean verboseDebugMode = true; //prints stack traces of exceptions.
+	private boolean verboseDebugMode; //prints stack traces of exceptions.
 	
 	//game-related
 	private int difficulty;
@@ -34,24 +34,6 @@ public class Client
 		System.out.println("Genetic Conquest: An AI Client for Thousand Parsec : RFTS ruleset.\n");
 		
 		Client client = new Client();
-		
-		client.setVerboseDebug();
-		
-		boolean repeat = false;
-		do
-		{
-		client.stout.print("Verbose debug mode? ('y' / 'n') : ");
-		if (client.stin.next().equals("y"))
-			client.verboseDebugMode = true;
-		else if (client.stin.next().equals("n"))
-			client.verboseDebugMode = false;
-		else
-		{
-			client.stout.println("Invalid input. Try again.");
-			repeat = true;
-		}
-		} while (repeat);
-		
 		
 		if (args.length == 2 && args[0].equals("-c"))
 			client.init(args[1]);
@@ -77,29 +59,34 @@ public class Client
 	 */
 	void init()
 	{
+		setVerboseDebug();
+		
  		stout.print("Enter the address of the server : ");
 		String address = stin.next();
 		
-		stout.println("Create new account or use existing? (enter: 'n' or 'e'");
+		stout.print("Create new account or use existing? ('n' / 'e') ");
 		
-		boolean retry = false;
-		do
+		boolean retry = true;
+		while (retry == true)
 		{
 			String login = stin.next();
 			if (login.equals("e"))
+			{
 				setURIfromStdinput(address);
+				retry = false;
+			}
 			else if (login.equals("n"))
 			{
 				//the first string in user[] is username, the second is password.
 				String[] user = createNewAccount(address);
 				setURI(user[0], user[1], address); 
+				retry = false;
 			}
 			else
 			{
 				stout.println("Invalid input. Try again.");
-				retry = true;
 			}
-		} while (retry == true);
+		}
 		
 		//NOT SURE:::
 		// ~~~ NO NEED TO ESTABLISH CONNECTION, AS IT HAS BEEN DONE IN createNewAccountAndLogin(server)
@@ -116,14 +103,16 @@ public class Client
 	 */
 	void init(String URIstring)
 	{
+		setVerboseDebug();
 		try
 		{
 			this.serverURI = new URI(URIstring);
 		}
 		catch (URISyntaxException e)
 		{
-			stout.println("URI incorrect. Try again, exiting application.");
+			stout.println("URI incorrect. Try again; exiting application.");
 			PrintTraceIfDebug(e);
+			System.exit(-1);
 		}
 		
 		//first establish a connection with the server
@@ -138,20 +127,25 @@ public class Client
 	 */
 	void setVerboseDebug()
 	{
-		boolean repeat = false;
-		do
+		boolean repeat = true;
+		while (repeat == true)
 		{
 			stout.print("Verbose debug mode? ('y' / 'n') : ");
-			if (stin.next().equals("y"))
-				verboseDebugMode = true;
-			else if (stin.next().equals("n"))
-				verboseDebugMode = false;
-			else
+			String input = stin.next();
+			
+			if (input.equals("y"))
 			{
-				stout.println("Invalid input. Try again.");
-				repeat = true;
+				verboseDebugMode = true;
+				repeat = false;
 			}
-		} while (repeat);
+			else if (input.equals("n"))
+			{
+				verboseDebugMode = false;
+				repeat = false;
+			}
+			else
+				stout.println("Invalid input. Try again.");
+		}
 	}
 	
 	
@@ -201,7 +195,7 @@ public class Client
 		while(true == true)
 		{
 			stout.print("Enter command > ");
-			String command = stin.nextLine();
+			String command = stin.next();
 			
 			if (command.equals("q")){
 				exit("Manual exit from client.");
