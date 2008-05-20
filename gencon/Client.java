@@ -15,10 +15,11 @@ import net.thousandparsec.netlib.tp03.*;
 public class Client
 {
 	//maintanence
-	private String URIString;
+	private URI serverURI;
 	private Connection<TP03Visitor> conn;
-	private PrintStream stout = System.out; 
-	private Scanner stin = new Scanner(System.in);
+	PrintStream stout = System.out; 
+	Scanner stin = new Scanner(System.in);
+	private boolean verboseDebugMode = true; //prints stack traces of exceptions.
 	
 	//game-related
 	private int difficulty;
@@ -26,7 +27,7 @@ public class Client
 	/**
 	 * Runner method for the client.
 	 * 
-	 * @param args [0] -c : connect to a URI specified in [1]. Else if none given: proceed normally.
+	 * @param args Optional: '-c serverURI' . If none provided, user will be manually prompted for user info and server address.
 	 */
 	public static void main(String[] args)
 	{
@@ -34,7 +35,25 @@ public class Client
 		
 		Client client = new Client();
 		
-		if (args.length > 0 && args[0].equals("-c"))
+		client.setVerboseDebug();
+		
+		boolean repeat = false;
+		do
+		{
+		client.stout.print("Verbose debug mode? ('y' / 'n') : ");
+		if (client.stin.next().equals("y"))
+			client.verboseDebugMode = true;
+		else if (client.stin.next().equals("n"))
+			client.verboseDebugMode = false;
+		else
+		{
+			client.stout.println("Invalid input. Try again.");
+			repeat = true;
+		}
+		} while (repeat);
+		
+		
+		if (args.length == 2 && args[0].equals("-c"))
 			client.init(args[1]);
 		else if (args.length == 0)
 			client.init();
@@ -82,6 +101,7 @@ public class Client
 			}
 		} while (retry == true);
 		
+		//NOT SURE:::
 		// ~~~ NO NEED TO ESTABLISH CONNECTION, AS IT HAS BEEN DONE IN createNewAccountAndLogin(server)
 		//first establish a connection with the server
 		establishConnection();
@@ -94,9 +114,17 @@ public class Client
 	 * Initializes client with specified URI string.
 	 * @param URI the string that specifies the address of the server, the username, and the password
 	 */
-	void init(String URI)
+	void init(String URIstring)
 	{
-		this.URIString = URI;
+		try
+		{
+			this.serverURI = new URI(URIstring);
+		}
+		catch (URISyntaxException e)
+		{
+			stout.println("URI incorrect. Try again, exiting application.");
+			PrintTraceIfDebug(e);
+		}
 		
 		//first establish a connection with the server
 		establishConnection();
@@ -105,6 +133,31 @@ public class Client
 		run();
 	}
 	
+	/**
+	 *	Sets verbose debug mode from user input. 
+	 */
+	void setVerboseDebug()
+	{
+		boolean repeat = false;
+		do
+		{
+			stout.print("Verbose debug mode? ('y' / 'n') : ");
+			if (stin.next().equals("y"))
+				verboseDebugMode = true;
+			else if (stin.next().equals("n"))
+				verboseDebugMode = false;
+			else
+			{
+				stout.println("Invalid input. Try again.");
+				repeat = true;
+			}
+		} while (repeat);
+	}
+	
+	
+	/*
+	 * Setting server URI from user input. 
+	 */
 	private void setURIfromStdinput(String address)
 	{
 		stout.print("Enter username : ");
@@ -116,19 +169,22 @@ public class Client
 	}
 	
 	
-	//this is VERY erroneous; TOP priority fix
+	/*
+	 * Making the server URI from a string.
+	 */
 	private void setURI(String usrname, String pwd, String address)
 	{
-		this.URIString = "tp://" + pwd + ":" + usrname + "@" + address;
-	}
-	
-	/*
-	 * 
-	 * @return String[] : index 0 is username, index 1 is password.
-	 */
-	private String[] createNewAccount(String server)
-	{
-		return null;
+		String URIString = "tp://" + usrname + ":" + pwd + "@" + address;
+		try
+		{
+			this.serverURI = new URI(URIString);
+		}
+		catch (URISyntaxException e)
+		{
+			stout.println("URI incorrect. Try again:");
+			PrintTraceIfDebug(e);
+			setURIfromStdinput(address);
+		}
 	}
 	
 	/*
@@ -201,6 +257,15 @@ public class Client
 	
 	
 /*
+	 * 
+	 * @return String[] : index 0 is username, index 1 is password.
+	 */
+	private String[] createNewAccount(String server)
+	{
+		return null;
+	}
+
+	/*
  * Establishes a connection with the server.
  * 
  */
@@ -211,7 +276,7 @@ public class Client
 			stout.print("Establishing connection to server... ");
 		
 			TP03Decoder decoder = new TP03Decoder();
-			conn = decoder.makeConnection(new URI(this.URIString), true, new TP03Visitor(false));
+			conn = decoder.makeConnection(serverURI, true, new TP03Visitor(false));
 			DefaultConnectionListener<TP03Visitor> listener = new DefaultConnectionListener<TP03Visitor>();
 			conn.addConnectionListener(listener);
 		
@@ -220,8 +285,7 @@ public class Client
 		catch (Exception e)
 		{
 			stout.println("Error connecting to server.");
-			stout.println(e.getMessage());
-			e.printStackTrace();
+			PrintTraceIfDebug(e);
 			System.exit(-1);
 		}
 	}
@@ -230,7 +294,7 @@ public class Client
 	/*
 	 * Sets the difficulty of the AI opponent.
 	 * @param diff between 1 --> 9.
-	 * @param verbose display or not.
+	 * @param verbose display on screen or not.
 	 */
 	private void setDifficulty(int diff, boolean verbose)
 	{
@@ -260,8 +324,7 @@ public class Client
 		catch (Exception e)
 		{
 			stout.println("Failed to synchronously fetch frames");
-			stout.println(e.getMessage());
-			e.printStackTrace();
+			PrintTraceIfDebug(e);
 		}
 	}
 	*/
@@ -286,11 +349,18 @@ public class Client
 		}
 		catch (IOException e)
 		{
-			stout.println("Error closing the connection. Exiting application.");
-			stout.println(e.getMessage());
-			e.printStackTrace();
+			stout.println("Error closing the connection. Exiting application anyway.");
+			PrintTraceIfDebug(e);
 			System.exit(-1);
 		}
 	}
+	
+	
+	private void PrintTraceIfDebug(Exception e)
+	{
+		if (verboseDebugMode)
+			e.printStackTrace();
+	}
+	
 	
 }
