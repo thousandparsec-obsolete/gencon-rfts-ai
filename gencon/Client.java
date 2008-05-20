@@ -32,10 +32,12 @@ public class Client
 	{
 		System.out.println("Genetic Conquest: An AI Client for Thousand Parsec : RFTS ruleset.\n");
 		
+		Client client = new Client();
+		
 		if (args.length > 0 && args[0].equals("-c"))
-			new Client(args[1]);
+			client.init(args[1]);
 		else if (args.length == 0)
-			new Client();
+			client.init();
 		else
 		{
 			System.out.print("Input error. Try again.");
@@ -44,45 +46,45 @@ public class Client
 	}
 	
 	/**
-	 * Starts a client without specified URI. Manual entry of URI components (server address, username, password)
+	 * New instance of the client.
 	 *
 	 */
-	Client()
-	{
-		init();
-	}
+	Client(){}
 	
+
 	/**
-	 * Starts a client with specified URI. For testing and autoconnect.
-	 * @param args same as in {@link main}
-	 */
-	Client(String URI) 
-	{
-		init(URI);
-	}
-	
-	/**
-	 * initializes client without specified URI string.
+	 * initializes client. URI string given by standard input.
 	 *
 	 */
-	private void init()
+	void init()
 	{
  		stout.print("Enter the address of the server : ");
-		String server = stin.next();
+		String address = stin.next();
 		
 		stout.println("Create new account or use existing? (enter: 'n' or 'e'");
 		
-		String login = stin.next();
-		if (login.equals("e"))
+		boolean retry = false;
+		do
 		{
-			setURIfromStdinput(server);
-		}
-		else if (login.equals("n"))
-		{
-			//the first string in user[] is username, the second is password.
-			String[] user = createNewAccount(server);
-			setURI(user[0], user[1], server); 
-		}
+			String login = stin.next();
+			if (login.equals("e"))
+				setURIfromStdinput(address);
+			else if (login.equals("n"))
+			{
+				//the first string in user[] is username, the second is password.
+				String[] user = createNewAccount(address);
+				setURI(user[0], user[1], address); 
+			}
+			else
+			{
+				stout.println("Invalid input. Try again.");
+				retry = true;
+			}
+		} while (retry == true);
+		
+		// ~~~ NO NEED TO ESTABLISH CONNECTION, AS IT HAS BEEN DONE IN createNewAccountAndLogin(server)
+		//first establish a connection with the server
+		establishConnection();
 
 		//run client
 		run();
@@ -92,31 +94,35 @@ public class Client
 	 * Initializes client with specified URI string.
 	 * @param URI the string that specifies the address of the server, the username, and the password
 	 */
-	private void init(String URI)
+	void init(String URI)
 	{
 		this.URIString = URI;
+		
+		//first establish a connection with the server
+		establishConnection();
 		
 		//run client
 		run();
 	}
 	
-	private void setURIfromStdinput(String server)
+	private void setURIfromStdinput(String address)
 	{
 		stout.print("Enter username : ");
 		String usrname = stin.next();
 		stout.print("Enter password : ");
 		String pwd = stin.next();
 		
-		//the URI string is formatted thus:  
-		this.URIString = "tp://" + usrname + ":" + pwd + "@" + server;
+		setURI(usrname, pwd, address);
 	}
 	
-	private void setURI(String usrname, String pwd, String server)
+	
+	//this is VERY erroneous; TOP priority fix
+	private void setURI(String usrname, String pwd, String address)
 	{
-		this.URIString = "tp://" + usrname + ":" + pwd + "@" + server;
+		this.URIString = "tp://" + pwd + ":" + usrname + "@" + address;
 	}
 	
-	/**
+	/*
 	 * 
 	 * @return String[] : index 0 is username, index 1 is password.
 	 */
@@ -125,14 +131,11 @@ public class Client
 		return null;
 	}
 	
-	/**
+	/*
 	 * Runs the client.
 	 */
 	private void run()
-	{
-		//first establish a connection with the server
-		establishConnection();
-		
+	{	
 		//set to default:
 		setDifficulty(5, false);
 		
@@ -172,7 +175,7 @@ public class Client
 		}
 	}
 	
-	/**
+	/*
 	 * Prints out list of accepted commands.
 	 */
 	private void printCommands()
@@ -187,7 +190,7 @@ public class Client
 		
 	}
 	
-	/**
+	/*
 	 * Prints out message of invalid command.
 	 */
 	private void printInvalid()
@@ -197,14 +200,9 @@ public class Client
 	
 	
 	
-/**
+/*
  * Establishes a connection with the server.
  * 
- * @throws UnknownHostException
- * @throws IOException
- * @throws URISyntaxException
- * @throws InterruptedException
- * @throws TPException
  */
 	private void establishConnection()
 	{
@@ -213,7 +211,7 @@ public class Client
 			stout.print("Establishing connection to server... ");
 		
 			TP03Decoder decoder = new TP03Decoder();
-			conn = decoder.makeConnection(new URI(URIString), true, new TP03Visitor(false));
+			conn = decoder.makeConnection(new URI(this.URIString), true, new TP03Visitor(false));
 			DefaultConnectionListener<TP03Visitor> listener = new DefaultConnectionListener<TP03Visitor>();
 			conn.addConnectionListener(listener);
 		
@@ -229,7 +227,7 @@ public class Client
 	}
 	
 	
-	/**
+	/*
 	 * Sets the difficulty of the AI opponent.
 	 * @param diff between 1 --> 9.
 	 * @param verbose display or not.
@@ -241,7 +239,7 @@ public class Client
 			stout.println("Difficulty set to " + this.difficulty + "/9");
 	}
 	
-	/**
+	/*
 	 * Start playing game.
 	 */
 	private void startPlay()
@@ -271,7 +269,7 @@ public class Client
 	
 	
 	
-	/**
+	/*
 	 * Closing connection, and exiting client.
 	 * @param message Exit message.
 	 */
@@ -288,7 +286,7 @@ public class Client
 		}
 		catch (IOException e)
 		{
-			stout.println("Error closing the connection.");
+			stout.println("Error closing the connection. Exiting application.");
 			stout.println(e.getMessage());
 			e.printStackTrace();
 			System.exit(-1);
