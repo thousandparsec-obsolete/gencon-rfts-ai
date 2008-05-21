@@ -15,11 +15,20 @@ import net.thousandparsec.netlib.tp03.*;
 public class Client
 {
 	//maintanence
-	private URI serverURI;
-	private Connection<TP03Visitor> conn;
+	final int NORMAL_EXIT = 0;
+	final int ABNORMAL_EXIT = -1;
 	PrintStream stout = System.out; 
 	Scanner stin = new Scanner(System.in);
-	private boolean verboseDebugMode; //prints stack traces of exceptions.
+	
+	//client-related
+	private URI serverURI;
+	private SequentialConnection<TP03Visitor> conn;
+	private PipelinedConnection<TP03Visitor> PipeConn;
+	
+
+	final String QUIT = "q";
+
+	private boolean verboseDebugMode = false; // False by default.
 	
 	//game-related
 	private int difficulty;
@@ -27,23 +36,47 @@ public class Client
 	/**
 	 * Runner method for the client.
 	 * 
-	 * @param args Optional: '-c serverURI' . If none provided, user will be manually prompted for user info and server address.
+	 * @param args Optional: '-a serverURI' to autologin to server. The serverURI must include user info, 
+	 * e.g.: "tp://guest:guest@thousandparsec.net/tp". If none provided, user will be manually prompted for 
+	 * user info and server address, without autologin.
+	 * 
 	 */
-	public static void main(String[] args)
+	void runClient(String[] args)
 	{
-		System.out.println("Genetic Conquest: An AI Client for Thousand Parsec : RFTS ruleset.\n");
 		
-		Client client = new Client();
+		stout.println("GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.\n");
+		stout.println("Follow the instructions. To quit, enter '" + QUIT + "' at any time when prompted for input.");
 		
-		if (args.length == 2 && args[0].equals("-c"))
-			client.init(args[1]);
-		else if (args.length == 0)
-			client.init();
-		else
+		// setting verbose duebug mode on/off
+		// client.setVerboseDebug();
+		
+		String URIstr = "";
+		
+		try
 		{
-			System.out.print("Input error. Try again.");
-			System.exit(-1);
+			for (int i = 0; i < args.length; i++)
+			{
+				if (args[i].equals("-a"))
+				{
+					URIstr = args[i + 1];
+				}
+				if (args[i].equals("-v"))
+				{
+					verboseDebugMode = true;
+				}
+			}
 		}
+		catch (IndexOutOfBoundsException e)
+		{
+			exit("Input error in argument. The optional arguments syntax is: '-a URIstring -v'\n" +
+					"'-a URIstring' autologins as user, and '-v' activates verbose debug mode. Try again.", ABNORMAL_EXIT, null);
+		}
+		
+		if (URIstr.equals(""))
+			initNoAutologin();
+		else
+			initAutologin(URIstr);
+		
 	}
 	
 	/**
@@ -54,137 +87,215 @@ public class Client
 	
 
 	/**
-	 * initializes client. URI string given by standard input.
-	 *
+	 * Initializes client. URI string provided by standard input.
+	 * No autologin.
 	 */
-	void init()
+	void initNoAutologin()
 	{
-		setVerboseDebug();
-		
- 		stout.print("Enter the address of the server : ");
-		String address = stin.next();
-		
-		stout.print("Create new account or use existing? ('n' / 'e') ");
-		
-		boolean retry = true;
-		while (retry == true)
+		// setting the URI:
+		boolean uriOk = false;
+		while (!uriOk)
 		{
-			String login = stin.next();
-			if (login.equals("e"))
-			{
-				setURIfromStdinput(address);
-				retry = false;
-			}
-			else if (login.equals("n"))
-			{
-				//the first string in user[] is username, the second is password.
-				String[] user = createNewAccount(address);
-				setURI(user[0], user[1], address); 
-				retry = false;
-			}
-			else
-			{
-				stout.println("Invalid input. Try again.");
-			}
-		}
-		
-		//NOT SURE:::
-		// ~~~ NO NEED TO ESTABLISH CONNECTION, AS IT HAS BEEN DONE IN createNewAccountAndLogin(server)
-		//first establish a connection with the server
-		establishConnection();
-
-		//run client
-		run();
-	}
-	
-	/**
-	 * Initializes client with specified URI string.
-	 * @param URI the string that specifies the address of the server, the username, and the password
-	 */
-	void init(String URIstring)
-	{
-		setVerboseDebug();
-		try
-		{
-			this.serverURI = new URI(URIstring);
-		}
-		catch (URISyntaxException e)
-		{
-			stout.println("URI incorrect. Try again; exiting application.");
-			PrintTraceIfDebug(e);
-			System.exit(-1);
-		}
-		
-		//first establish a connection with the server
-		establishConnection();
-		
-		//run client
-		run();
-	}
-	
-	/**
-	 *	Sets verbose debug mode from user input. 
-	 */
-	void setVerboseDebug()
-	{
-		boolean repeat = true;
-		while (repeat == true)
-		{
-			stout.print("Verbose debug mode? ('y' / 'n') : ");
-			String input = stin.next();
+	 		stout.print("Enter the URI of the server (without user info; autologin disabled) : ");
+			String URIString = stin.next();
 			
-			if (input.equals("y"))
-			{
-				verboseDebugMode = true;
-				repeat = false;
-			}
-			else if (input.equals("n"))
-			{
-				verboseDebugMode = false;
-				repeat = false;
-			}
-			else
-				stout.println("Invalid input. Try again.");
+			quitIfEncounterExitString(URIString);
+			
+			uriOk = setURI(URIString);
+			if (!uriOk)
+				stout.println("Try again.");
 		}
-	}
-	
-	
-	/*
-	 * Setting server URI from user input. 
-	 */
-	private void setURIfromStdinput(String address)
-	{
-		stout.print("Enter username : ");
-		String usrname = stin.next();
-		stout.print("Enter password : ");
-		String pwd = stin.next();
 		
-		setURI(usrname, pwd, address);
+		// establish a connection with the server, no autologin.
+		establishPipelinedConnection(false);
+
+		//login as existing user, or create new user and then login
+		loginOrCreateUser();
+		
+		////// FINISHED INITIALIZING. CLIENT IS NOW CONNECTED AND LOGGED IN AS A USER ////////
+		
+		//run the main command interface of the client
+		runCommands();
 	}
 	
+	/**
+	 * Initializes client with previously specified URI string. Autologin enabled.
+	 * @param URI {@link URI} string (with user info).
+	 */
+	void initAutologin(String URIstring)
+	{
+		//setting the URI string. 
+		boolean success = setURI(URIstring);
+		if (!success)
+		{
+			stout.println("Attempt manual entry of URI.");
+			initNoAutologin();
+		}
+
+		// establish a connection with the server, with autologin
+		establishPipelinedConnection(true);
+		
+		//run the main command interface of the client
+		runCommands();
+	}
 	
 	/*
 	 * Making the server URI from a string.
+	 * Retrurns true if successful, false otherwise.
 	 */
-	private void setURI(String usrname, String pwd, String address)
+	private boolean setURI(String URIString)
 	{
-		String URIString = "tp://" + usrname + ":" + pwd + "@" + address;
+		boolean success = true;
+		URI trySetURI;
 		try
 		{
-			this.serverURI = new URI(URIString);
+			trySetURI = new URI(URIString);
+			this.serverURI = trySetURI;
 		}
 		catch (URISyntaxException e)
 		{
-			stout.println("URI incorrect. Try again:");
+			stout.println("Error: URI syntax incorrect.");
 			PrintTraceIfDebug(e);
-			setURIfromStdinput(address);
+			success = false;
 		}
+		
+		return success;
+	}
+	
+	/*	CURRENTLY NOT IN USE
+	 *	Sets verbose debug mode on/off (from standard input). 
+	 *
+	void setVerboseDebug()
+	{
+		boolean repeat = false;
+		do
+		{
+			repeat = false;
+			stout.print("Verbose debug mode? (y / n) : ");
+			String input = stin.next();
+			
+			quitIfEncounterExitString(input);
+			
+			if (input.equals("y"))
+				this.verboseDebugMode = true;
+			else if (input.equals("n"))
+				this.verboseDebugMode = false;
+			else
+			{
+				stout.println("Invalid input. Try again.");
+				repeat = true;
+			}
+		} while (repeat == true);
+	}
+	*/
+	
+	/*
+	 * Prints exception stack trace, if verbose debug mode is on.
+	 */
+	private void PrintTraceIfDebug(Exception e)
+	{
+		if (verboseDebugMode)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	/*
+	 * Establishes a pipelined connection with the server. Sets one pipeline (SequentialConnection) as the main connection of the client.
+	 * Uses TP03 protocol classes.
+	 * Autologin on/off, depends on the user
+	 */
+	private void establishPipelinedConnection(boolean autologin)
+	{
+		try
+		{
+			stout.print("Establishing connection to server... ");
+		
+			TP03Decoder decoder = new TP03Decoder();
+			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autologin, new TP03Visitor(false));
+			
+			DefaultConnectionListener<TP03Visitor> listener = new DefaultConnectionListener<TP03Visitor>();
+			basicCon.addConnectionListener(listener);
+			
+			PipelinedConnection<TP03Visitor> pConn = new PipelinedConnection<TP03Visitor>(basicCon);
+			
+			this.PipeConn = pConn;
+			this.conn = pConn.createPipeline();
+			
+			
+			stout.println("connection established.");
+		}
+		catch (Exception e)
+		{
+			exit("Error connecting to server.", ABNORMAL_EXIT, e);
+		}
+	}
+
+	/*
+	 * Logs in as user, or else creates new account and logs in as that user.
+	 * User info gathered from standard input.
+	 * 
+	 * ~STILL IN PROTOTYPICAL FORM
+	 * ~ASSUMPTION: 'create new user' does not automatically log you in as that user; rather, the client needs to manually log in afterwards.
+	 */
+	private void loginOrCreateUser()
+	{
+		boolean retry = false;
+		do 
+		{
+			stout.print("Create new account or login as existing user? (new / login) : ");
+			String choose = stin.next();
+			if (choose.equals("login"))
+			{
+				stout.println("Logging in as:");
+				String[] user = enterUserDetails();
+				String username = user[0];
+				String password = user[1];
+				retry = login(username , password);
+			}
+			else if (choose.equals("new"))
+			{
+				String[] user = enterUserDetails();
+				String username = user[0];
+				String password = user[1];
+				retry = createNewAccount(username, password);
+				retry = login(username, password);
+			}
+			else
+			{
+				stout.println("Invalid input. Try again.");
+				retry = true;
+			}
+		} while (retry == true);
 	}
 	
 	/*
-	 * Runs the client.
+	 * Simple method that queries for user details.
+	 * Returns String[], where the first index holds username, and the second holds password.
+	 * TO DO: Make password entry invisible on screen!!!
 	 */
-	private void run()
+	private String[] enterUserDetails()
+	{
+		String[] userDetails = new String[2];
+		
+		stout.print("Enter username: ");
+		String usrname = stin.next();
+		quitIfEncounterExitString(usrname);
+		userDetails[0] = usrname;
+		
+		stout.print("Enter password: ");
+		String pwd = stin.next();
+		quitIfEncounterExitString(pwd);
+		userDetails[1] = pwd;
+		
+		return userDetails;
+	}
+	
+	
+	/*
+	 * Runs the main command interface of the client. Ideally should run on a separate thread (TO DO!)
+	 */
+	private void runCommands()
 	{	
 		//set to default:
 		setDifficulty(5, false);
@@ -192,25 +303,26 @@ public class Client
 		//execute command-line orders, until encountering control character 'q'
 		stout.println("Enter command. 'list' shows all available commands.");	
 		
-		while(true == true)
+		while(true)
 		{
 			stout.print("Enter command > ");
-			String command = stin.next();
+			String command = stin.nextLine();
 			
-			if (command.equals("q")){
-				exit("Manual exit from client.");
-			} 
-			else if (command.equals("list")){
+			quitIfEncounterExitString(command);
+			 
+			if (command.equals("list"))
 				printCommands();
-			}
-			else if (command.equals("start")){
+			
+			else if (command.equals("start"))
 				startPlay();
-			}
+			
 			else if (command.length() == 6 && 
 					command.substring(0, 4).equals("diff") && 
-					command.substring(5, 6).matches("[1-9]")){
+					command.substring(5, 6).matches("[1-9]"))
+			{
 				try
 				{
+					stout.println("Booya!");
 					setDifficulty(new Integer(command.substring(5,6)).intValue(), true);
 				}
 				catch (Exception e)
@@ -218,10 +330,9 @@ public class Client
 					printInvalid();
 				}
 			}
-			
-			else {
+			else 
 				printInvalid();
-			}
+			
 		}
 	}
 	
@@ -230,13 +341,14 @@ public class Client
 	 */
 	private void printCommands()
 	{
-		stout.println("\n> The list of available commands <");
-		stout.println("'q' - close connection, and exit client.");
+		stout.println("\n> The list of available commands (Case sensitive) <");
+		stout.println("'" + QUIT + "' - exits client.");
 		stout.println("'list' - lists all available commands.");
 		stout.println("'start' - start playing the game. Default difficulty: 5");
-		stout.println("'diff arg' - set difficulty; arg = 1 --> 9");
+		stout.println("'diff $' - set difficulty of AI; $ = 1 --> 9");
 		
-		stout.println("> ------------------------------ <\n");
+		stout.println();
+//	stout.println("> ------------------------------ <\n");
 		
 	}
 	
@@ -248,43 +360,8 @@ public class Client
 		stout.println("Invalid command. For full list of accepted commands, enter 'list'");
 	}
 	
-	
-	
-/*
-	 * 
-	 * @return String[] : index 0 is username, index 1 is password.
-	 */
-	private String[] createNewAccount(String server)
-	{
-		return null;
-	}
 
-	/*
- * Establishes a connection with the server.
- * 
- */
-	private void establishConnection()
-	{
-		try
-		{
-			stout.print("Establishing connection to server... ");
-		
-			TP03Decoder decoder = new TP03Decoder();
-			conn = decoder.makeConnection(serverURI, true, new TP03Visitor(false));
-			DefaultConnectionListener<TP03Visitor> listener = new DefaultConnectionListener<TP03Visitor>();
-			conn.addConnectionListener(listener);
-		
-			stout.println("connection established.");
-		}
-		catch (Exception e)
-		{
-			stout.println("Error connecting to server.");
-			PrintTraceIfDebug(e);
-			System.exit(-1);
-		}
-	}
-	
-	
+
 	/*
 	 * Sets the difficulty of the AI opponent.
 	 * @param diff between 1 --> 9.
@@ -306,6 +383,7 @@ public class Client
 		//recieveFramesSynch();
 	}
 	
+
 	/*
 	private void recieveFramesSynch()
 	{
@@ -330,31 +408,44 @@ public class Client
 	 * Closing connection, and exiting client.
 	 * @param message Exit message.
 	 */
-	private void exit(String message)
+	private void exit(String message, int exitType, Exception exc)
 	{
+		
 		try
 		{
-			stout.println("Exit: " + message);
-			stout.print("Closing connection... ");
-			conn.close();
-			stout.println("done.");
-			stout.println("Farewell, farewell; goodbye is such sweet sorrow.");
-			System.exit(0);
+			stout.println("\nClosing GenCon: " + message);
+			if (PipeConn != null)
+			{
+				stout.print("Closing connection... ");
+				PipeConn.close();
+				stout.println("done.");
+			}
+			//getting fancy
+			//stout.println("Farewell, farewell; goodbye is such sweet sorrow.");
+			
+			stout.println("Successful exit.");
+			
+			//if there is an exception, print trace if verbose debug mode is on.
+			if (exc != null)
+				PrintTraceIfDebug(exc);
+			
+			System.exit(exitType);
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
-			stout.println("Error closing the connection. Exiting application anyway.");
+			stout.println("Error closing the connection. Exiting application.");
 			PrintTraceIfDebug(e);
-			System.exit(-1);
+			System.exit(ABNORMAL_EXIT);
 		}
 	}
 	
-	
-	private void PrintTraceIfDebug(Exception e)
+	/*
+	 * Exit client if encounter the QUIT string in standard input.
+	 */
+	private void quitIfEncounterExitString(String str)
 	{
-		if (verboseDebugMode)
-			e.printStackTrace();
+		if (str.equals(QUIT))
+			exit("Manual exit.", NORMAL_EXIT, null);
 	}
-	
 	
 }
