@@ -34,43 +34,45 @@ public class Client
 	private int difficulty;
 	
 	/**
-	 * Runner method for the client.
+	 * Run this method to start the client.
 	 * 
-	 * @param args Optional: '-a serverURI' to autologin to server. The serverURI must include user info, 
-	 * e.g.: "tp://guest:guest@thousandparsec.net/tp". If none provided, user will be manually prompted for 
-	 * user info and server address, without autologin.
+	 * @param args Optional arguments: '-a serverURI' and '-v'. 
+	 * To autologin to server as an existing user, type in '-a serverURI'. 
+	 * The serverURI must include user info, e.g.: "tp://guest:guest@thousandparsec.net/tp". If none provided, 
+	 * user will be manually prompted for user info and server address, without autologin.
+	 * To turn on verbose debug mode, type in '-v'.
 	 * 
 	 */
-	void runClient(String[] args)
+	public void runClient(String[] args)
 	{
 		
 		stout.println("GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.\n");
 		stout.println("Follow the instructions. To quit, enter '" + QUIT + "' at any time when prompted for input.");
 		
-		// setting verbose duebug mode on/off
-		// client.setVerboseDebug();
-		
 		String URIstr = "";
 		
-		try
+		for (int i = 0; i < args.length; i++)
 		{
-			for (int i = 0; i < args.length; i++)
+			if (args[i].equals("-a") && i < args.length - 1)
 			{
-				if (args[i].equals("-a"))
-				{
-					URIstr = args[i + 1];
-				}
-				if (args[i].equals("-v"))
-				{
-					verboseDebugMode = true;
-				}
+				URIstr = args[i + 1];
+			}
+			else if (args[i].equals("-v"))
+			{
+				verboseDebugMode = true;
+				stout.println("Verbose debug mode : on");
+			}
+			else if (i - 1 >= 0 && args[i - 1].equals("-a"))
+			{ /* legal case; the URI string */ }
+			//case: illegal argument
+			else
+			{
+				exit("Input error in arguments.", ABNORMAL_EXIT,
+						new IllegalArgumentException("Illegal Arguments. \nThe optional arguments syntax are: '-a URIstring', and '-v'.\n" +
+						"'-a URIstring' autologins as user, and '-v' activates verbose debug mode. \nTry again."));
 			}
 		}
-		catch (IndexOutOfBoundsException e)
-		{
-			exit("Input error in argument. The optional arguments syntax is: '-a URIstring -v'\n" +
-					"'-a URIstring' autologins as user, and '-v' activates verbose debug mode. Try again.", ABNORMAL_EXIT, null);
-		}
+		
 		
 		if (URIstr.equals(""))
 			initNoAutologin();
@@ -112,7 +114,7 @@ public class Client
 		//login as existing user, or create new user and then login
 		loginOrCreateUser();
 		
-		////// FINISHED INITIALIZING. CLIENT IS NOW CONNECTED AND LOGGED IN AS A USER ////////
+			//////	 FINISHED INITIALIZING. CLIENT IS NOW CONNECTED AND LOGGED IN AS A USER ////////
 		
 		//run the main command interface of the client
 		runCommands();
@@ -134,6 +136,8 @@ public class Client
 
 		// establish a connection with the server, with autologin
 		establishPipelinedConnection(true);
+		
+			//////	 FINISHED INITIALIZING. CLIENT IS NOW CONNECTED AND LOGGED IN AS A USER ////////
 		
 		//run the main command interface of the client
 		runCommands();
@@ -162,41 +166,25 @@ public class Client
 		return success;
 	}
 	
-	/*	CURRENTLY NOT IN USE
-	 *	Sets verbose debug mode on/off (from standard input). 
-	 *
-	void setVerboseDebug()
-	{
-		boolean repeat = false;
-		do
-		{
-			repeat = false;
-			stout.print("Verbose debug mode? (y / n) : ");
-			String input = stin.next();
-			
-			quitIfEncounterExitString(input);
-			
-			if (input.equals("y"))
-				this.verboseDebugMode = true;
-			else if (input.equals("n"))
-				this.verboseDebugMode = false;
-			else
-			{
-				stout.println("Invalid input. Try again.");
-				repeat = true;
-			}
-		} while (repeat == true);
-	}
-	*/
-	
 	/*
 	 * Prints exception stack trace, if verbose debug mode is on.
+	 * Avoids the mess of the usual exception.printStackTrace(), 
+	 * where it prints in parallel with other things.
 	 */
 	private void PrintTraceIfDebug(Exception e)
 	{
 		if (verboseDebugMode)
 		{
-			e.printStackTrace();
+			stout.println("______________________________________");
+			stout.println("DEBUG:");
+			stout.println("Exception: " + e.getClass().getName());
+			stout.println("Cause: " + e.getMessage());
+			stout.println("Stack trace:");
+			StackTraceElement[] stackTrace = e.getStackTrace();
+			for (StackTraceElement ste : stackTrace)
+				stout.println(ste.toString());
+			
+			stout.println("______________________________________\n");
 		}
 	}
 
@@ -251,15 +239,32 @@ public class Client
 				String[] user = enterUserDetails();
 				String username = user[0];
 				String password = user[1];
-				retry = login(username , password);
+				
+				if (!login(username , password))
+				{
+					stout.println("Failed to login. Try again.");
+					retry = true;
+				}
 			}
 			else if (choose.equals("new"))
 			{
 				String[] user = enterUserDetails();
 				String username = user[0];
 				String password = user[1];
-				retry = createNewAccount(username, password);
-				retry = login(username, password);
+				if (createNewAccount(username, password))
+				{
+					if (!login(username, password))
+					{
+						stout.println("Unexpected failure to login after creating account. Try logging as the new user.");
+						retry = true;
+					}
+					
+				}
+				else
+				{
+					stout.println("Failed to create account. Try again.");
+					retry = true;
+				}
 			}
 			else
 			{
@@ -322,7 +327,6 @@ public class Client
 			{
 				try
 				{
-					stout.println("Booya!");
 					setDifficulty(new Integer(command.substring(5,6)).intValue(), true);
 				}
 				catch (Exception e)
@@ -348,7 +352,6 @@ public class Client
 		stout.println("'diff $' - set difficulty of AI; $ = 1 --> 9");
 		
 		stout.println();
-//	stout.println("> ------------------------------ <\n");
 		
 	}
 	
@@ -401,9 +404,6 @@ public class Client
 	}
 	*/
 	
-	
-	
-	
 	/*
 	 * Closing connection, and exiting client.
 	 * @param message Exit message.
@@ -423,11 +423,11 @@ public class Client
 			//getting fancy
 			//stout.println("Farewell, farewell; goodbye is such sweet sorrow.");
 			
-			stout.println("Successful exit.");
-			
 			//if there is an exception, print trace if verbose debug mode is on.
 			if (exc != null)
 				PrintTraceIfDebug(exc);
+			
+			stout.println("\nSuccessful exit.");
 			
 			System.exit(exitType);
 		}
