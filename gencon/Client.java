@@ -1,5 +1,6 @@
 package gencon;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -7,6 +8,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.util.StringTokenizer;
 import java.util.concurrent.Future;
 
 import net.thousandparsec.netlib.*;
@@ -24,6 +26,7 @@ public class Client
 	private URI serverURI;
 	private SequentialConnection<TP03Visitor> conn;
 	private PipelinedConnection<TP03Visitor> PipeConn;
+	private TP03Visitor visitor;
 	
 
 	final String QUIT = "q";
@@ -195,21 +198,20 @@ public class Client
 	 */
 	private void establishPipelinedConnection(boolean autologin)
 	{
+		TP03Decoder decoder = new TP03Decoder();
+		this.visitor =  new TP03Visitor(false);
 		try
 		{
 			stout.print("Establishing connection to server... ");
-		
-			TP03Decoder decoder = new TP03Decoder();
-			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autologin, new TP03Visitor(true));
 			
-			DefaultConnectionListener<TP03Visitor> listener = new DefaultConnectionListener<TP03Visitor>();
-			basicCon.addConnectionListener(listener);
+			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autologin, visitor);
+			
+			basicCon.addConnectionListener(new DefaultConnectionListener<TP03Visitor>());
 			
 			PipelinedConnection<TP03Visitor> pConn = new PipelinedConnection<TP03Visitor>(basicCon);
 			
 			this.PipeConn = pConn;
 			this.conn = pConn.createPipeline();
-			
 			
 			stout.println("connection established.");
 		}
@@ -234,6 +236,8 @@ public class Client
 		{
 			stout.print("Create new account or login as existing user? (new / login) : ");
 			String choose = stin.next();
+			quitIfEncounterExitString(choose);
+			
 			if (choose.equals("login"))
 			{
 				stout.println("Logging in as:");
@@ -296,6 +300,71 @@ public class Client
 		
 		return userDetails;
 	}
+	
+	
+	private boolean login(String username, String password)
+	{
+		Login loginFrame = new Login();
+		loginFrame.setUsername(username);
+		loginFrame.setPassword(password);
+		
+		//the expected response
+		Class okay = Class.forName("net.thousandparsec.netlib.tp03.Okay");
+		
+		try
+		{
+			//synchronously sends, and waits for okay
+			conn.sendFrame(loginFrame, okay);
+		}
+		catch (TPException tpe)
+		{
+			if (tpe.getMessage().startsWith("Response"))
+			{
+				stout.println("Unexpected failure: Sequence numbers did not match. Try again.");
+				PrintTraceIfDebug(tpe);
+				loginOrCreateUser();
+			}
+			else if (tpe.getMessage().startsWith("Unexpected"))
+			{
+				//checking whether it's redirect or fail:
+				StringTokenizer st = new StringTokenizer(tpe.getMessage());
+				
+				//iterate tokens in the error message, until get to the one that says "redirect" or "fail" in the frame type:
+				for (int i = 0; i < 4; i++)
+					st.nextToken();
+				
+				String theFrame = st.nextToken();
+				
+				stout.println("Failed to login. Possible cause: . Try again.");
+				PrintTraceIfDebug(tpe);
+				loginOrCreateUser();PrintTraceIfDebug(tpe);
+			}
+			else
+			{
+				PrintTraceIfDebug(tpe);
+			}
+		}
+		catch (EOFException eofe)
+		{
+			stout.println("Unexpected failure: No frame received from server. Try again.");
+			PrintTraceIfDebug(eofe);
+			loginOrCreateUser();
+		}
+		catch (IOException ioe)
+		{
+			stout.println("Unexpected failure. Try again.");
+			PrintTraceIfDebug(ioe);
+			loginOrCreateUser();
+		}
+		
+		
+		
+		
+		
+	}
+	
+	
+	
 	
 	
 	/*
@@ -385,14 +454,14 @@ public class Client
 	{
 		stout.println("Starting to play game... ");
 		//INVOKING A TEST METHOD
-		recieveFramesSynch();
+		recieveFramesAsynch();
 	}
 	
 
 	/*
 	 * REALLY, A TEST METHOD
 	 */
-	private void recieveFramesSynch()
+	private void recieveFramesAsynch()
 	{
 		try
 		{
