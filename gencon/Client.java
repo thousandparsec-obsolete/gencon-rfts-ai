@@ -200,7 +200,7 @@ public class Client
 			stout.print("Establishing connection to server... ");
 		
 			TP03Decoder decoder = new TP03Decoder();
-			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autologin, new TP03Visitor(false));
+			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autologin, new TP03Visitor(true));
 			
 			DefaultConnectionListener<TP03Visitor> listener = new DefaultConnectionListener<TP03Visitor>();
 			basicCon.addConnectionListener(listener);
@@ -224,7 +224,8 @@ public class Client
 	 * User info gathered from standard input.
 	 * 
 	 * ~STILL IN PROTOTYPICAL FORM
-	 * ~ASSUMPTION: 'create new user' does not automatically log you in as that user; rather, the client needs to manually log in afterwards.
+	 * ~ASSUMPTION: 'create new user' does not automatically log you in as that user; 
+	 * rather, the client needs to manually log in afterwards.
 	 */
 	private void loginOrCreateUser()
 	{
@@ -383,17 +384,20 @@ public class Client
 	private void startPlay()
 	{
 		stout.println("Starting to play game... ");
-		//recieveFramesSynch();
+		//INVOKING A TEST METHOD
+		recieveFramesSynch();
 	}
 	
 
 	/*
+	 * REALLY, A TEST METHOD
+	 */
 	private void recieveFramesSynch()
 	{
 		try
 		{
 			stout.print("Recieving all frames synchronously... ");
-			conn.receiveAllFrames(this);
+			conn.getConnection().receiveAllFramesAsync(new TP03Visitor());
 			stout.println("done.");
 		}
 		catch (Exception e)
@@ -402,7 +406,7 @@ public class Client
 			PrintTraceIfDebug(e);
 		}
 	}
-	*/
+	
 	
 	/*
 	 * Closing connection, and exiting client.
@@ -427,7 +431,7 @@ public class Client
 			if (exc != null)
 				PrintTraceIfDebug(exc);
 			
-			stout.println("\nSuccessful exit.");
+			stout.println("\nClean exit.");
 			
 			System.exit(exitType);
 		}
