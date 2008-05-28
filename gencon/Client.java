@@ -104,7 +104,15 @@ public class Client
 	Client(){}
 	
 
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * 
+ *	INITIALIZATION: NORMAL OPERATION OR AUTORUN
+ * 
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
+	
 	/*
+	 * NORMAL OPERATION.
 	 * Initializes client. URI string provided by standard input.
 	 * No autologin.
 	 */
@@ -132,6 +140,7 @@ public class Client
 	}
 	
 	/*
+	 * AUTORUN.
 	 * Initializes client with previously specified URI string. Autologin enabled.
 	 * @param URI {@link URI} string (with user info).
 	 */
@@ -154,6 +163,13 @@ public class Client
 			exit("Invalid URI. Exiting autorun.", ABNORMAL_EXIT, null);
 	}
 	
+
+	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 * 
+	 *	METHODS FOR USER INPUT IN NORMAL OPERATION OF CLIENT
+	 * 
+	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 */
 	
 	private void setVerboseDebug()
 	{
@@ -237,6 +253,15 @@ public class Client
 		return true;
 	}
 	
+
+	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 * 
+	 *	CONNECTION METHODS
+	 * 
+	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 */
+	
+	
 	/*
 	 * Establishes a pipelined connection with the server. Sets one pipeline (SequentialConnection) as the main connection of the client.
 	 * Uses TP03 protocol classes.
@@ -263,6 +288,14 @@ public class Client
 			exit("Error connecting to server.", ABNORMAL_EXIT, e);
 		}
 	}
+	
+
+	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 * 
+	 *	CONNECTION METHODS USED IN NORMAL OPERATION OF CLIENT.
+	 * 
+	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 */
 
 	/*
 	 * Logs in as user, or else creates new account and logs in as that user.
@@ -410,8 +443,13 @@ public class Client
 	}
 	
 	
-	
-	
+
+	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 * 
+	 *	STARTING TO PLAY!
+	 * 
+	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 */
 	
 	/*
 	 * Start playing game.
@@ -441,6 +479,15 @@ public class Client
 			PrintTraceIfDebug(e);
 		}
 	}
+	
+	
+
+	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 * 
+	 *	MAINTANANCE METHODS
+	 * 
+	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 */
 	
 	
 	/*

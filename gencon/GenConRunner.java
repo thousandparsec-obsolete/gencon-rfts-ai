@@ -19,7 +19,6 @@ public class GenConRunner {
 	{
 		Client genConClient = new Client();
 		genConClient.runClient(args);
-
 	}
 
 }
