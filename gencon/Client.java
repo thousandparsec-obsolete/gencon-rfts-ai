@@ -1,17 +1,10 @@
 package gencon;
 
-import java.io.BufferedInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.Scanner;
-import java.util.StringTokenizer;
-import java.util.concurrent.Future;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
+import gencon.utils.*;
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp03.*;
 
@@ -27,13 +20,13 @@ import net.thousandparsec.netlib.tp03.*;
 public class Client
 {
 	//maintanence
-	private static final int NORMAL_EXIT = 0;
-	private static final int ABNORMAL_EXIT = -1;
+	public static final int NORMAL_EXIT = 0;
+	public static final int ABNORMAL_EXIT = -1;
 	private static final PrintStream stout = System.out; 
-	private final Scanner stin = new Scanner(System.in);
 	public static final String QUIT = "q";
+	
+	private final ScannerListener stin;
 	private boolean verboseDebugMode = true; // True by default.
-	private Thread SCANNER_LISTENER; 
 	
 	//connection-related
 	private URI serverURI;
@@ -62,8 +55,7 @@ public class Client
 	 */
 	Client()
 	{
-		//SCANNER_LISTENER = new Thread(new ScannerListener(new Scanner(System.in), this));
-		//SCANNER_LISTENER.start();
+		stin = new ScannerListener(new Scanner(System.in), this);
 	}
 	
 	
@@ -71,7 +63,8 @@ public class Client
 	public void runClient(String[] args)
 	{
 		
-		stout.println("GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.\n");
+		stout.println("GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.");
+		stout.println("To quit, enter '" + QUIT + "' at any time, then press RETURN.\n");
 		
 		String URIstr = "";
 		
@@ -125,8 +118,7 @@ public class Client
 	 */
 	private void initNoAutorun()
 	{
-		stout.println("Follow the instructions. To quit, enter '" + QUIT + "' at any time when prompted for input.");
-		
+		stout.println("Follow the instructions...");
 		//set verbose debug mode on/off
 		setVerboseDebug();
 		
@@ -170,9 +162,7 @@ public class Client
 		 //and there will be no room for user corrections.
 		else 
 			exit("Invalid URI. Exiting autorun.", ABNORMAL_EXIT, null);
-		
-		//exiting
-		exit("Finished playing.", NORMAL_EXIT, null);
+
 	}
 	
 
@@ -229,30 +219,6 @@ public class Client
 
 
 	/*
-	 * Sets the difficulty of the AI opponent.
-	 */
-	private void setDifficulty()
-	{
-		boolean ok = true;
-		do {
-			stout.print("Set difficulty of AI player (1 to 9) : ");
-			try
-			{
-				difficulty = stin.nextInt();
-				stout.println("Difficulty set to : " + difficulty);
-				return;
-			}
-			catch (Exception e)
-			{
-				stout.println("Invalid input. Enter a number between 1 to 9. Try again.");
-				ok = false;
-			}
-			
-		} while (!ok);
-	}
-	
-	
-	/*
 	 * Making the server URI from a string.
 	 * Retrurns true if successful, false otherwise.
 	 */
@@ -272,16 +238,44 @@ public class Client
 		}
 		return true;
 	}
-	
 
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 * 
-	 *	CONNECTION METHODS
-	 * 
-	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	/*
+	 * Sets the difficulty of the AI opponent.
 	 */
-	
-	
+	private void setDifficulty()
+	{
+		boolean ok = true;
+		do {
+			
+			
+			
+			
+			
+			stout.print("Set difficulty of AI player (1 to 9) : ");
+			int num = -1; 
+			try
+			{
+				num = new Integer(stin.next()).intValue();
+				if (num > 0 && num < 10)
+					ok = true;
+			}
+			catch (Exception e)
+			{
+				stout.println("Invalid input. Enter a number between 1 to 9. Try again.");
+				ok = false;
+			}
+			if (ok)
+			{
+				difficulty = num;
+				stout.println("Difficulty set to : " + difficulty);
+			}
+		} while (!ok);
+	}
+
+
+
 	/*
 	 * Establishes a pipelined connection with the server. Sets one pipeline (SequentialConnection) as the main connection of the client.
 	 * Uses TP03 protocol classes.
@@ -486,6 +480,9 @@ public class Client
 		while (true);
 		*/
 		
+		
+		//exiting
+		exit("Finished playing.", NORMAL_EXIT, null);
 	}
 	
 
@@ -537,21 +534,19 @@ public class Client
 			if (exc != null)
 				PrintTraceIfDebug(exc);
 			
-			//signalling the ScannerListener that it's time to go home.
-			//SCANNER_LISTENER.interrupt();
-			//Thread.sleep(10);
 			
 			
-			stout.println("\nClean exit.");
-			
+			// interrupting the ScannerListener.
 			stin.close();
+			//closing standard out.
 			stout.close();
 			
+			System.err.println("\nClean exit.");
 			System.exit(exitType);
 		}
 		catch (Exception e)
 		{
-			stout.println("Error on exit. Quitting application.");
+			System.err.println("Error on exit. Quitting application.");
 			PrintTraceIfDebug(e);
 			System.exit(ABNORMAL_EXIT);
 		}
@@ -579,53 +574,13 @@ public class Client
 		}
 	}
 	
-	private void exitOnEncounteringExitString()
-	{
-		exit("Exit character: '" + QUIT + "' encountered. Exiting Client...", NORMAL_EXIT, null);
-	}
-	
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 * 
-	 *	INNER CLASS: SCANNER LISTENER
-	 * 
-	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 */
-	
 	/**
-	 * An inner class that implements the {@link Runnable} interface. 
-	 * Periodically (10 ms) listens on the input scanner, to see whether the exit string has been encountered.
+	 * Used by the {@link ScannerListener} class, to notify the Client that
+	 * the exit string has been encountered. 
 	 */
-	class ScannerListener implements Runnable
+	public void exitOnEncounteringExitString()
 	{
-		private final Scanner scanner;
-		private final Client client;
-		
-		/*
-		 * Dummy constructor
-		 */
-		private ScannerListener(){scanner = null; client = null;}
-		
-		public ScannerListener(Scanner sc, Client cl)
-		{
-			scanner = sc;
-			client = cl;
-		}
-		
-		public void run() 
-		{
-			while (true)
-			{
-				if (Thread.interrupted())
-					return; //return if interrupted
-				
-				if (scanner.hasNext(Client.QUIT))
-				{
-					//encountered exit string; exiting client.
-					client.exitOnEncounteringExitString();
-					return;
-				}
-			}
-		}
+		exit("Exit string: '" + QUIT + "' encountered. Exiting Client...", NORMAL_EXIT, null);
 	}
-	
+		
 }
