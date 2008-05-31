@@ -31,7 +31,8 @@ public class Client
 	//connection-related
 	private URI serverURI;
 	private PipelinedConnection<TP03Visitor> PipeConn;
-	private LoggerConnectionListener<TP03Visitor> eventLogger;
+	private final LoggerConnectionListener<TP03Visitor> eventLogger;
+	private final TP03Visitor visitor;
 
 	//game-related
 	private int difficulty = 5;
@@ -50,12 +51,15 @@ public class Client
 	 */
 	
 	/**
-	 * New instance of the client.
+	 * The default constructor.
 	 *
 	 */
 	Client()
 	{
+		//starting up the input listener
 		stin = new ScannerListener(new Scanner(System.in), this);
+		eventLogger = new LoggerConnectionListener<TP03Visitor>();
+		visitor = new TP03Visitor(false);
 	}
 	
 	
@@ -288,7 +292,7 @@ public class Client
 		{
 			stout.print("Establishing connection to server... ");
 			
-			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autologin, new TP03Visitor(false));
+			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autologin, visitor);
 			
 			basicCon.addConnectionListener(eventLogger);
 			
@@ -472,13 +476,22 @@ public class Client
 	{
 		stout.println("Starting to play game... ");
 		//INVOKING A TEST METHOD
-		//recieveFramesAsynch();
+		recieveFramesAsynch();
 		
 		//testing Scanner Listener:
 		/*
 		stout.println("Waiting for exit string... ");
 		while (true);
 		*/
+		try
+		{
+			Thread.sleep(10000); //sleep for a while
+		}
+		catch (InterruptedException e)
+		{
+			exit("Sleep interrupted", ABNORMAL_EXIT, e);
+		}
+		
 		
 		
 		//exiting
@@ -494,7 +507,16 @@ public class Client
 		try
 		{
 			stout.print("Recieving all frames asynchronously... ");
-			conn.getConnection().receiveAllFramesAsync(new TP03Visitor());
+			SequentialConnection<TP03Visitor> c= PipeConn.createPipeline();
+			SequentialConnection<TP03Visitor> d= PipeConn.createPipeline();
+			c.sendFrame(new GetTimeRemaining(), visitor);
+			eventLogger.dumpLogStd();
+			d.sendFrame(new GetObjectIDs(), visitor);
+			c.sendFrame(new GetTimeRemaining(), visitor);
+			eventLogger.dumpLogStd();
+			c.close();
+			d.close();
+			
 			stout.println("done.");
 		}
 		catch (Exception e)
@@ -518,7 +540,7 @@ public class Client
 	 * Closing connection, and exiting client.
 	 * @param message Exit message.
 	 */
-	private void exit(String message, int exitType, Exception exc)
+	private synchronized void exit(String message, int exitType, Exception exc)
 	{
 		try
 		{
@@ -538,15 +560,16 @@ public class Client
 			
 			// interrupting the ScannerListener.
 			stin.close();
+			
+			stout.println("\nClean exit.");
 			//closing standard out.
 			stout.close();
 			
-			System.err.println("\nClean exit.");
 			System.exit(exitType);
 		}
 		catch (Exception e)
 		{
-			System.err.println("Error on exit. Quitting application.");
+			stout.println("Error on exit. Quitting application.");
 			PrintTraceIfDebug(e);
 			System.exit(ABNORMAL_EXIT);
 		}
@@ -555,7 +578,9 @@ public class Client
 	/*
 	 * Prints exception stack trace, if verbose debug mode is on.
 	 * Avoids the mess of the usual exception.printStackTrace(), 
-	 * where it prints in parallel with other things.
+	 * where it prints in System.err, in parallel with System.out.
+	 * This way, info will remain chronologically consistent.
+	 * 
 	 */
 	private void PrintTraceIfDebug(Exception e)
 	{
@@ -580,7 +605,7 @@ public class Client
 	 */
 	public void exitOnEncounteringExitString()
 	{
-		exit("Exit string: '" + QUIT + "' encountered. Exiting Client...", NORMAL_EXIT, null);
+		exit("Exit string '" + QUIT + "' encountered. Exiting Client...", NORMAL_EXIT, null);
 	}
 		
 }

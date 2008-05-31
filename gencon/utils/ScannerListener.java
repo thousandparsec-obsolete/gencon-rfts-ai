@@ -15,13 +15,15 @@ public class ScannerListener
 {
 	private final Scanner scanner;
 	private final Client client;
-	Listener listen;
-	Thread listenThread;
+	private final Thread listenThread;
+	
+	private boolean quit = false;
+	private boolean scannerLocked = false;
 	
 	/*
 	 * Dummy constructor
 	 */
-	private ScannerListener(){scanner = null; client = null;}
+	private ScannerListener(){scanner = null; client = null; listenThread = null;}
 	
 	/**
 	 * The sole constructor.
@@ -34,28 +36,51 @@ public class ScannerListener
 		scanner = sc;
 		client = cl;
 		
-		listen = new Listener();
-		
-		listenThread = new Thread(listen);
+		listenThread = new Thread(new Listener());
 		listenThread.start();
 	}
 	
 	/**
-	 * Same contract as in {@link Scanner}.next()
+	 * Same contract as in {@link Scanner}.next(),
+	 * except when the exit string is encountered.
+	 * In that case, the listener is notified to close the client.
+	 * 
+	 * This method is thread-safe.
 	 */
 	public String next() throws NoSuchElementException, IllegalStateException
 	{
-		monitor();
-		return scanner.next();
+		String in;
+		scannerLocked = true;
+		synchronized (scanner)
+		{
+			in = scanner.next();
+			if (in.equals(Client.QUIT))
+				quit = true;
+		}
+		scannerLocked = false;
+		return in;
 	}
 	
 	/**
-	 * Same contract as in {@link Scanner}.nextInt()
+	 * Same contract as in {@link Scanner}.nextInt(),
+	 * except when the exit string is encountered.
+	 * In that case, the listener is notified to close the client.
+	 * 
+	 * This method is thread-safe.
 	 */
 	public int nextInt() throws InputMismatchException, NoSuchElementException, IllegalStateException
 	{
-		monitor();
-		return scanner.nextInt();
+		String in;
+		scannerLocked = true;
+		synchronized (scanner)
+		{
+			in = scanner.next();
+			if (in.equals(Client.QUIT))
+				quit = true;
+		}
+		scannerLocked = false;
+		
+		return new Integer(in).intValue();
 	}
 	
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,6 +92,7 @@ public class ScannerListener
 	
 	/**
 	 * Interrupts the listening thread.
+	 * Meant to be activated by the {@link Client}, to terminate the other thread in an orderly manner.
 	 */
 	public void close()
 	{
@@ -74,14 +100,23 @@ public class ScannerListener
 	}
 
 	/*
-	 * Monitors for the exit string.
+	 * Monitors for the exit string. true means it has encountered it.
 	 */
-	private void monitor()
+	private boolean check()
 	{
-		if (scanner.hasNext(Client.QUIT))
-			listen.quit();
+		if (scannerLocked)
+			return quit;
+		else
+			return quit || hasNextQuit();
 	}
 	
+	private boolean hasNextQuit()
+	{
+		synchronized (scanner)
+		{
+			return scanner.hasNext(Client.QUIT);
+		}
+	}
 	
 	/**
 	 * Inner class that runs on a separate thread, monitoring the ScannerListener every second (1000ms).
@@ -90,12 +125,7 @@ public class ScannerListener
 	 */
 	class Listener implements Runnable
 	{
-		private boolean quit;
-		
-		Listener()
-		{
-			quit = false;
-		}
+		Listener(){}
 		
 		public void run() 
 		{
@@ -103,27 +133,19 @@ public class ScannerListener
 			{
 				try
 				{
-					Thread.sleep(10);
-					monitor();
-					// encountered exit string; exiting client.
-					if (quit)
+					Thread.sleep(1000);
+					if (check())
 					{
-						
 						client.exitOnEncounteringExitString();
 						return;
 					}
 				}
 				catch (InterruptedException e)
 				{
-					System.err.println("Thread interrupted.");
 					return; //return if interrupted
 				}
 			}
 		}
-		
-		public void quit()
-		{
-			quit = true;
-		}
+	
 	}
 }
