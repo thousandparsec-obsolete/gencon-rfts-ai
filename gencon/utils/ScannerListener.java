@@ -1,13 +1,14 @@
 package gencon.utils;
 
-import gencon.Client;
+import gencon.*;
+import gencon.clientLib.Client;
 
 import java.util.*;
 
 /**
  * A wrapper class for {@link Scanner}. 
  * Periodically (every second) listens on the input scanner in a separate thread, 
- * to see whether the special QUIT string has been encountered in the {@link Client}.
+ * to see whether the special QUIT string has been encountered in {@link System}.in.
  * 
  * @author Victor Ivri
  */
@@ -104,10 +105,10 @@ public class ScannerListener
 	 */
 	private boolean check()
 	{
-		if (scannerLocked)
+		if (scannerLocked)  //case: scanner waiting for standard in.
 			return quit;
-		else
-			return quit || hasNextQuit();
+		else				//case: scanner not waiting for standard in.
+			return quit || hasNextQuit(); 
 	}
 	
 	private boolean hasNextQuit()

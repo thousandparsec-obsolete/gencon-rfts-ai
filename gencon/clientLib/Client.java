@@ -1,4 +1,4 @@
-package gencon;
+package gencon.clientLib;
 
 import java.io.*;
 import java.net.*;
@@ -58,7 +58,7 @@ public class Client
 	{
 		//starting up the input listener
 		stin = new ScannerListener(new Scanner(System.in), this);
-		eventLogger = new LoggerConnectionListener<TP03Visitor>();
+		eventLogger = new LoggerConnectionListener<TP03Visitor>(20, System.out);
 		visitor = new TP03Visitor(false);
 	}
 	
@@ -68,7 +68,7 @@ public class Client
 	{
 		
 		stout.println("GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.");
-		stout.println("To quit, enter '" + QUIT + "' at any time, then press RETURN.\n");
+		stout.println("To quit at any time, enter '" + QUIT + "', then press RETURN.\n");
 		
 		String URIstr = "";
 		
@@ -136,7 +136,7 @@ public class Client
 		establishPipelinedConnection(false);
 
 		//login as existing user, or create new user and then login
-		loginOrCreateUser();
+		//loginOrCreateUser();
 		
 		//let the games begin!
 		startPlay();
@@ -237,7 +237,7 @@ public class Client
 		catch (URISyntaxException e)
 		{
 			stout.println("Error: URI syntax incorrect.");
-			PrintTraceIfDebug(e);
+			Utils.PrintTraceIfDebug(e, verboseDebugMode);
 			return false;
 		}
 		return true;
@@ -252,11 +252,6 @@ public class Client
 	{
 		boolean ok = true;
 		do {
-			
-			
-			
-			
-			
 			stout.print("Set difficulty of AI player (1 to 9) : ");
 			int num = -1; 
 			try
@@ -281,7 +276,7 @@ public class Client
 
 
 	/*
-	 * Establishes a pipelined connection with the server. Sets one pipeline (SequentialConnection) as the main connection of the client.
+	 * Establishes a pipelined connection with the server.
 	 * Uses TP03 protocol classes.
 	 * Autologin on/off, depends on the user
 	 */
@@ -405,20 +400,19 @@ public class Client
 		loginFrame.setUsername(username);
 		loginFrame.setPassword(password);
 		
-		//the expected response
-		Class okay = Class.forName("net.thousandparsec.netlib.tp03.Okay");
+		
 		
 		try
 		{
 			//synchronously sends, and waits for okay
-			conn.sendFrame(loginFrame, okay);
+			PipeConn.createPipeline().sendFrame(loginFrame, okay);
 		}
 		catch (TPException tpe)
 		{
 			if (tpe.getMessage().startsWith("Response"))
 			{
 				stout.println("Unexpected failure: Sequence numbers did not match. Try again.");
-				PrintTraceIfDebug(tpe);
+				Utils.PrintTraceIfDebug(tpe, verboseDebugMode);
 				loginOrCreateUser();
 			}
 			else if (tpe.getMessage().startsWith("Unexpected"))
@@ -433,30 +427,26 @@ public class Client
 				String theFrame = st.nextToken();
 				
 				stout.println("Failed to login. Possible cause: . Try again.");
-				PrintTraceIfDebug(tpe);
-				loginOrCreateUser();PrintTraceIfDebug(tpe);
+				Utils.PrintTraceIfDebug(tpe, verboseDebugMode);
+				loginOrCreateUser();
 			}
 			else
 			{
-				PrintTraceIfDebug(tpe);
+				Utils.PrintTraceIfDebug(tpe, verboseDebugMode);
 			}
 		}
 		catch (EOFException eofe)
 		{
 			stout.println("Unexpected failure: No frame received from server. Try again.");
-			PrintTraceIfDebug(eofe);
+			Utils.PrintTraceIfDebug(eofe, verboseDebugMode);
 			loginOrCreateUser();
 		}
 		catch (IOException ioe)
 		{
 			stout.println("Unexpected failure. Try again.");
-			PrintTraceIfDebug(ioe);
+			Utils.PrintTraceIfDebug(ioe, verboseDebugMode);
 			loginOrCreateUser();
 		}
-		
-		
-		
-		
 		
 	}
 	
@@ -476,8 +466,40 @@ public class Client
 	{
 		stout.println("Starting to play game... ");
 		//INVOKING A TEST METHOD
-		recieveFramesAsynch();
+		//recieveFramesAsynch();
 		
+			Connect connectFrame = new Connect();
+			connectFrame.setString("gencon");
+		
+		
+			Login loginFrame = new Login();
+			loginFrame.setUsername("guest");
+			loginFrame.setPassword("guest");
+			
+			GetObjectsByID getId = new GetObjectsByID();
+			
+			
+			
+			try
+			{
+				//the expected response
+				Class okay = Class.forName("net.thousandparsec.netlib.tp03.Okay");
+				Class sequence = Class.forName("net.thousandparsec.netlib.tp03.Sequence");
+				Class object = Class.forName("net.thousandparsec.netlib.tp03.Object");
+				//synchronously sends, and waits for okay
+				SequentialConnection<TP03Visitor> conn = PipeConn.createPipeline();
+				conn.sendFrame(connectFrame, okay);
+				conn.sendFrame(loginFrame, okay);
+				conn.sendFrame(getId, sequence);
+			}
+			catch (Exception e)
+			{
+				stout.println("failed");
+				Utils.PrintTraceIfDebug(e, verboseDebugMode);
+			}
+		
+			eventLogger.dumpLogStd();
+			
 		//testing Scanner Listener:
 		/*
 		stout.println("Waiting for exit string... ");
@@ -510,19 +532,17 @@ public class Client
 			SequentialConnection<TP03Visitor> c= PipeConn.createPipeline();
 			SequentialConnection<TP03Visitor> d= PipeConn.createPipeline();
 			c.sendFrame(new GetTimeRemaining(), visitor);
-			eventLogger.dumpLogStd();
 			d.sendFrame(new GetObjectIDs(), visitor);
 			c.sendFrame(new GetTimeRemaining(), visitor);
-			eventLogger.dumpLogStd();
 			c.close();
 			d.close();
-			
+			eventLogger.dumpLogStd();
 			stout.println("done.");
 		}
 		catch (Exception e)
 		{
 			stout.println("Failed to synchronously fetch frames");
-			PrintTraceIfDebug(e);
+			Utils.PrintTraceIfDebug(e, verboseDebugMode);
 		}
 	}
 	
@@ -544,6 +564,7 @@ public class Client
 	{
 		try
 		{
+			stout.println("\n______________________________________");
 			stout.println("\nClosing GenCon: " + message);
 			if (PipeConn != null)
 			{
@@ -554,12 +575,14 @@ public class Client
 			
 			//if there is an exception, print trace if verbose debug mode is on.
 			if (exc != null)
-				PrintTraceIfDebug(exc);
+				Utils.PrintTraceIfDebug(exc, verboseDebugMode);
 			
 			
 			
 			// interrupting the ScannerListener.
+			stout.print("Closing input listener... ");
 			stin.close();
+			stout.println("done.");
 			
 			stout.println("\nClean exit.");
 			//closing standard out.
@@ -570,34 +593,12 @@ public class Client
 		catch (Exception e)
 		{
 			stout.println("Error on exit. Quitting application.");
-			PrintTraceIfDebug(e);
+			Utils.PrintTraceIfDebug(e, verboseDebugMode);
 			System.exit(ABNORMAL_EXIT);
 		}
 	}
 	
-	/*
-	 * Prints exception stack trace, if verbose debug mode is on.
-	 * Avoids the mess of the usual exception.printStackTrace(), 
-	 * where it prints in System.err, in parallel with System.out.
-	 * This way, info will remain chronologically consistent.
-	 * 
-	 */
-	private void PrintTraceIfDebug(Exception e)
-	{
-		if (verboseDebugMode)
-		{
-			stout.println("______________________________________");
-			stout.println("DEBUG:");
-			stout.println("Exception in : " + e.getClass().getName());
-			stout.println("Cause : " + e.getMessage());
-			stout.println("Stack trace:");
-			StackTraceElement[] stackTrace = e.getStackTrace();
-			for (StackTraceElement ste : stackTrace)
-				stout.println(ste.toString());
-			
-			stout.println("______________________________________");
-		}
-	}
+
 	
 	/**
 	 * Used by the {@link ScannerListener} class, to notify the Client that

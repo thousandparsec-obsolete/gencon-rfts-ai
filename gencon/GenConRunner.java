@@ -1,5 +1,7 @@
 package gencon;
 
+import gencon.clientLib.Client;
+
 public class GenConRunner {
 
 	/**
