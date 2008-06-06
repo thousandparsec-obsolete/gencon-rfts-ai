@@ -1,8 +1,6 @@
 package gencon.utils;
 
-import gencon.*;
 import gencon.clientLib.Client;
-
 import java.util.*;
 
 /**
@@ -124,7 +122,7 @@ public class ScannerListener
 	 * @author Victor Ivri
 	 *
 	 */
-	class Listener implements Runnable
+	private class Listener implements Runnable
 	{
 		Listener(){}
 		
