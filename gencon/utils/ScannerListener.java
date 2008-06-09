@@ -19,13 +19,8 @@ public class ScannerListener
 	private boolean quit = false;
 	private boolean scannerLocked = false;
 	
-	/*
-	 * Dummy constructor
-	 */
-	private ScannerListener(){scanner = null; client = null; listenThread = null;}
-	
 	/**
-	 * The sole constructor.
+	 * The constructor.
 	 * 
 	 * @param sc usually, a new {@link Scanner}.
 	 * @param cl the specific {@link Client} that's meant to be monitored.

@@ -1,32 +1,17 @@
 package gencon.utils;
 
+import java.io.EOFException;
+import java.io.IOException;
 import java.io.PrintStream;
+
+import net.thousandparsec.netlib.TPException;
+
+import gencon.clientLib.*;
 
 public class Utils 
 {
 	private Utils(){} //DUMMY CONSTRUCTOR : STATIC CLASS
-	
-	
-	/**
-	 * Gets the class in the specified classpath, and deals with exceptions
-	 * by returning null.
-	 * 
-	 * @param classPath the class path leading to the class in question.
-	 * @return the {@link Class} in the class path, or null if invalid.
-	 */
-	public static Class getClass(String classPath)
-	{
-		try
-		{
-			return Class.forName(classPath);
-		}
-		catch (ClassNotFoundException e)
-		{
-			Utils.PrintTraceIfDebug(e, true);
-			return null;
-		}
-		
-	}
+
 	
 	/**
 	 * Prints exception stack trace, if verbose debug mode is on.
@@ -35,7 +20,7 @@ public class Utils
 	 * This way, info will remain chronologically consistent.
 	 * 
 	 */
-	public static void PrintTraceIfDebug(Exception e, boolean verboseDebugMode)
+	public synchronized static void PrintTraceIfDebug(Exception e, boolean verboseDebugMode)
 	{
 		PrintStream stout = System.out;
 		if (verboseDebugMode)

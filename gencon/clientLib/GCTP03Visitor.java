@@ -1,34 +1,25 @@
 package gencon.clientLib;
 
-import net.thousandparsec.netlib.Frame;
-import net.thousandparsec.netlib.TPException;
-import net.thousandparsec.netlib.tp03.TP03Visitor;
+import net.thousandparsec.netlib.*;
+import net.thousandparsec.netlib.tp03.*;
 
 public class GCTP03Visitor extends TP03Visitor
 {
 	
-	
-	
-	@Override
 	public void unhandledFrame(Frame<?> frame) throws TPException
 	{
-		//if (errorOnUnhandled)
-			//throw new TPException(String.format("Unexpected frame: type %d (%s)", frame.getFrameType(), frame.toString()));
-		
-		handleAsynchFrame(frame);
+		throw new TPException(String.format("Unexpected frame: type %d (%s)", frame.getFrameType(), frame.toString()));
 	}
-	
-	
-	private void handleAsynchFrame(Frame<?> frame)
-	{
-		if (frame.getClass().getSimpleName().equals("TimeRemaining")) //new turn
-		{
-			System.out.println("new turn");
-		}
-		
-		else if (frame.getClass().getSimpleName().equals("Fail")) //new turn
-		{
-			System.out.println("Failed to receive expected frame.");
-		}
-	}
+
+    @Override
+    public void frame(TimeRemaining frame)
+    {
+            System.err.println("new turn. Time remaining: " + frame.getTime());
+    }
+
+    @Override
+    public void frame(Fail frame)
+    {
+            System.err.println("Failed to receive expected frame.");
+    }
 }

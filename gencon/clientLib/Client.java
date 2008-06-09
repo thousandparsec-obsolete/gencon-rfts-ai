@@ -9,6 +9,7 @@ import net.thousandparsec.netlib.*;
 import net.thousandparsec.util.*;
 import net.thousandparsec.netlib.tp03.*;
 import net.thousandparsec.netlib.tp03.Object;
+import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
 
 
 /**
@@ -19,9 +20,11 @@ import net.thousandparsec.netlib.tp03.Object;
  * @author Victor Ivri
  *
  */
-public class Client <V extends Visitor>
+public class Client <V extends Visitor, F extends Frame>
 {
-	//maintanence
+	//
+	//	MAINTANANCE
+	//
 	public static final int NORMAL_EXIT = 0;
 	public static final int ABNORMAL_EXIT = -1;
 	private static final PrintStream stout = System.out; 
@@ -31,11 +34,19 @@ public class Client <V extends Visitor>
 	private boolean verboseDebugMode = true; // True by default.
 	private boolean autorun;
 	
-	//connection-related
+	private final Class<F> okay = (Class<F>)net.thousandparsec.netlib.tp03.Okay.class;
+	private final Class<F> fail = (Class<F>)net.thousandparsec.netlib.tp03.Fail.class;
+	private final Class<F> sequence = (Class<F>)net.thousandparsec.netlib.tp03.Sequence.class;
+	
+	//
+	//	CONNECTION-RELATED
+	//
 	private URI serverURI;
-	private PipelinedConnection<TP03Visitor> PipeConn;
+	//private PipelinedConnection<TP03Visitor> PipeConn;
+	private ConnectionManager connMgr;
 	private final LoggerConnectionListener<TP03Visitor> eventLogger;
 	private final TP03Visitor visitor;
+
 
 	//game-related
 	private int difficulty = 5;
@@ -146,7 +157,7 @@ public class Client <V extends Visitor>
 		//let the games begin!
 		startPlay();
 		
-		exit("Finished playing.", ABNORMAL_EXIT, null);
+		exit("Finished playing.", NORMAL_EXIT, null);
 	}
 	
 	/*
@@ -174,6 +185,7 @@ public class Client <V extends Visitor>
 		else 
 			exit("Invalid URI. Exiting autorun.", ABNORMAL_EXIT, null);
 
+		exit("Finished playing.", NORMAL_EXIT, null);
 	}
 	
 
@@ -257,7 +269,7 @@ public class Client <V extends Visitor>
 	 */
 	private void setDifficulty()
 	{
-		boolean ok = true;
+		boolean ok = false;
 		do {
 			stout.print("Set difficulty of AI player (1 to 9) : ");
 			int num = -1; 
@@ -266,6 +278,8 @@ public class Client <V extends Visitor>
 				num = new Integer(stin.next()).intValue();
 				if (num > 0 && num < 10)
 					ok = true;
+				else
+					throw new Exception();
 			}
 			catch (Exception e)
 			{
@@ -298,12 +312,29 @@ public class Client <V extends Visitor>
 			
 			basicCon.addConnectionListener(eventLogger);
 			
-			PipelinedConnection<TP03Visitor> pConn = new PipelinedConnection<TP03Visitor>(basicCon);
-			this.PipeConn = pConn;
+			connMgr = new ConnectionManager<TP03Visitor>(basicCon);
 			
-			stout.println("connection established.");
+			//PipelinedConnection<TP03Visitor> pConn = new PipelinedConnection<TP03Visitor>(basicCon);
+			//this.PipeConn = pConn;
+			
+			
 			if (autorun)
-				stout.println("Logged in successfully.");
+			{
+				stout.println("connection established to : " + serverURI);
+				stout.println("Logged in successfully as : " + serverURI.getUserInfo());
+			}
+			else //send connect frame...
+			{
+				SequentialConnection<TP03Visitor> conn = (SequentialConnection<TP03Visitor>)connMgr.createPipeline();
+				Connect connect = new Connect();
+				connect.setString("gencon-testing");
+				conn.sendFrame(connect, okay);
+				conn.close();
+				//if reach here, then ok.
+				stout.println("connection established to : " + serverURI);
+			}
+				
+				
 		}
 		catch (Exception e)
 		{
@@ -346,6 +377,8 @@ public class Client <V extends Visitor>
 				
 				if (!login(username , password))
 					retry = true;
+				else
+					retry = false;
 			}
 			else if (choose.equals("new"))
 			{
@@ -359,6 +392,8 @@ public class Client <V extends Visitor>
 						stout.println("Unexpected failure to login after creating account. Try logging as the new user manually.");
 						retry = true;
 					}
+					else
+						retry = false;
 				}
 				else
 				{
@@ -366,7 +401,7 @@ public class Client <V extends Visitor>
 					retry = true;
 				}
 			}
-			else
+			else //other input
 			{
 				stout.println("Invalid input. Try again.");
 				retry = true;
@@ -385,51 +420,39 @@ public class Client <V extends Visitor>
 		
 		stout.print("Enter username: ");
 		String usrname = stin.next();
-	//	quitIfEncounterExitString(usrname);
 		userDetails[0] = usrname;
 		
 		stout.print("Enter password: ");
 		String pwd = stin.next();
-	//	quitIfEncounterExitString(pwd);
 		userDetails[1] = pwd;
 		
 		return userDetails;
 	}
 	
-	//IN VERY PROTOTYPICAL FORM!!!
 	private boolean login(String username, String password)
 	{
-		Connect connectFrame = new Connect();
-		connectFrame.setString("gencon-testing");
-		
 		Login loginFrame = new Login();
 		loginFrame.setUsername(username);
 		loginFrame.setPassword(password);
 		
-		Class okay = Utils.getClass("net.thousandparsec.netlib.tp03.Okay");
-		if (okay == null)
-			exit("Wrong classpath for Okay frame", ABNORMAL_EXIT, null);
-		
 		try
 		{
 			//will be supplanted by the ThreadedPipelineManager methods... sometime... in the future...
-			SequentialConnection<TP03Visitor> conn = PipeConn.createPipeline();
+			SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
 			stout.print("Logging in...");
-			conn.sendFrame(connectFrame, okay);
-			stout.println("...");
 			conn.sendFrame(loginFrame, okay);
-			conn.close();
+			//conn.close();
 			stout.println("Login successful");
 		}
 		catch (TPException tpe)
 		{
-			stout.println("Unexpected failure: Protocol failure. Failed to login. Try again.");
+			stout.println("Failed to login as user. Possible cause: username and password don't match. Try again.");
 			Utils.PrintTraceIfDebug(tpe, verboseDebugMode);
 			return false;
 		}
 		catch (EOFException eofe)
 		{
-			stout.println("Unexpected failure: End of stream reached. Failed to login. Try again.");
+			stout.println("Unexpected failure: End of stream reached. Exiting client.");
 			Utils.PrintTraceIfDebug(eofe, verboseDebugMode);
 			exit("No more frames sent from server.", NORMAL_EXIT, eofe);
 		}
@@ -439,15 +462,42 @@ public class Client <V extends Visitor>
 			Utils.PrintTraceIfDebug(ioe, verboseDebugMode);
 			return false;
 		}
-		
 		return true;
+
 	}
 	
 	private boolean createNewAccount(String username, String password)
 	{
-		//TO BE DONE!!
 		
-		return false;
+		CreateAccount newAccount = new CreateAccount();
+		newAccount.setUsername(username);
+		newAccount.setPassword(password);
+		
+		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+		try
+		{
+			conn.sendFrame(newAccount, okay);
+		}
+		catch (TPException tpe)
+		{
+			stout.println("Failed to create new account. Possible cause: user already exists. Try again.");
+			Utils.PrintTraceIfDebug(tpe, verboseDebugMode);
+			return false;
+		}
+		catch (EOFException eofe)
+		{
+			stout.println("Unexpected failure: End of stream reached. Exiting client.");
+			Utils.PrintTraceIfDebug(eofe, verboseDebugMode);
+			exit("No more frames sent from server.", NORMAL_EXIT, eofe);
+		}
+		catch (IOException ioe)
+		{
+			stout.println("Unexpected failure. Failed to login. Try again.");
+			Utils.PrintTraceIfDebug(ioe, verboseDebugMode);
+			return false;
+		}
+		return true;
+		
 	}
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -464,32 +514,58 @@ public class Client <V extends Visitor>
 	{
 		stout.println("Starting to play game... ");
 		//INVOKING A TEST METHOD
-		Vector<Pair<Integer, Object>> objects = recieveObjects();
 		
-		stout.println("Printing objects:");
-		for (Pair<Integer, Object> pair : objects)
+		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+		stout.println("pipe created");
+		TimeRemaining tr = null;
+		Frame me = null;
+		GetPlayer getme= new GetPlayer();
+		getme.getIds().add(new IdsType(0));
+		try
 		{
-			if (pair != null)
-				if (pair.right != null)
-					stout.println("Object: " + pair.right.toString() + " detpth: " + pair.left);
+			
+			tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
+			stout.println("time remaining until next turn (seconds): " + tr.getTime());
+			
+			me = conn.sendFrame(getme, net.thousandparsec.netlib.Frame.class);
+			stout.println("My player data is: " + me.toString());
+			
+			
+			conn.close();
+		}
+		catch (Exception e)
+		{
+			stout.println("unsuccessful retreiving time.");
 		}
 		
+	
+		stout.println("Receiving objects...");
 		
+		long before = System.currentTimeMillis();
+		Vector<Pair<Integer, Object>> objects = recieveAllObjects();
+		long took = System.currentTimeMillis() - before;
 		
-		//testing Scanner Listener:
-		/*
-		stout.println("Waiting for exit string... ");
-		while (true);
-		*/
+		stout.println("Printing objects:");
+		int i = 1;
+		for (Pair<Integer, Object> pair : objects)
+		{
+			stout.println(i + ") Object: " + pair.right.getObject().getClass().getSimpleName() + ", depth: " + pair.left);
+			i++;
+		}
+		
+		stout.println("Fetching objects took: " + took + " milliseconds.");
+		
+		stout.println("Receiving all players...");
+		receiveAllPlayers();
 	}
 	
 
 	/*
 	 * REALLY, A TEST METHOD
 	 */
-	private Vector<Pair<Integer, Object>> recieveObjects()
+	private Vector<Pair<Integer, Object>> recieveAllObjects()
 	{
-		SequentialConnection<TP03Visitor> conn = PipeConn.createPipeline();
+		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
 		ObjectHierarchyIterator ohi = new ObjectHierarchyIterator(conn, 0);
 		Vector<Pair<Integer, Object>> collection = new Vector<Pair<Integer,Object>>();
 		
@@ -516,6 +592,46 @@ public class Client <V extends Visitor>
 	}
 	
 	
+	private void receiveAllPlayers()
+	{
+		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+		GetPlayer getme = new GetPlayer();
+		for (int i = 0; i < 100; i++)
+		{
+			getme.getIds().add(new IdsType(i));
+
+		}
+		try
+		{
+			Player player;
+			Sequence seq = conn.sendFrame(getme, net.thousandparsec.netlib.tp03.Sequence.class);
+			int number = seq.getNumber();
+			
+			for (int j = 1; j < number; j++)
+			{
+				try
+				{
+					player = conn.receiveFrame(net.thousandparsec.netlib.tp03.Player.class);
+					stout.println(j + "'th player: " + player.toString());
+				}
+				catch (TPException ignore){}
+			}
+		}
+		catch (Exception e)
+		{
+			stout.println("unsuccessful retreiving players.");
+		}
+		
+		try
+		{
+			conn.close();
+		}
+		catch (IOException ignore){}
+	}
+	
+	
+	
+	
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	 * 
@@ -535,10 +651,10 @@ public class Client <V extends Visitor>
 		{
 			stout.println("\n______________________________________");
 			stout.println("\nClosing GenCon: " + message);
-			if (PipeConn != null)
+			if (connMgr != null)
 			{
 				stout.print("Closing connection... ");
-				PipeConn.close();
+				connMgr.close();
 				stout.println("done.");
 			}
 			
@@ -567,8 +683,6 @@ public class Client <V extends Visitor>
 		}
 	}
 	
-
-	
 	/**
 	 * Used by the {@link ScannerListener} class, to notify the Client that
 	 * the exit string has been encountered. 
@@ -577,6 +691,16 @@ public class Client <V extends Visitor>
 	public void exitOnEncounteringExitString()
 	{
 		exit("Exit string '" + QUIT + "' encountered. Exiting Client...", NORMAL_EXIT, null);
+	}
+	
+	
+	/**
+	 * 
+	 * @return true if the client is currently in verbose debug mode; false otherwise.
+	 */
+	public boolean isVerboseDebugMode()
+	{
+		return verboseDebugMode;
 	}
 		
 }
