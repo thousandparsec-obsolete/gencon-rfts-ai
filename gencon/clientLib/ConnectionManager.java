@@ -11,8 +11,9 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * 		~~~STILL IN PROTOTYPE FORM~~~ UNSURE OF BEST ROUTE FOR IMPLEMENTATION.
- * 
+ * Very simple connection manager, which implements an underlying {@link PipelinedConnection}.
+ * It's functionality, is to simply keep track of all pipelines, and close them in the end,
+ * in the event they weren't closed manually.
  * 
  * @author Victor Ivri
  *

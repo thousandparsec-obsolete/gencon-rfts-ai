@@ -516,7 +516,6 @@ public class Client <V extends Visitor, F extends Frame>
 		//INVOKING A TEST METHOD
 		
 		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
-		stout.println("pipe created");
 		TimeRemaining tr = null;
 		Frame me = null;
 		GetPlayer getme= new GetPlayer();
@@ -591,6 +590,11 @@ public class Client <V extends Visitor, F extends Frame>
 		return collection;
 	}
 	
+
+	
+	
+	
+	
 	
 	private void receiveAllPlayers()
 	{
@@ -614,7 +618,7 @@ public class Client <V extends Visitor, F extends Frame>
 					player = conn.receiveFrame(net.thousandparsec.netlib.tp03.Player.class);
 					stout.println(j + "'th player: " + player.toString());
 				}
-				catch (TPException ignore){}
+				catch (TPException ignore){stout.print(".");}
 			}
 		}
 		catch (Exception e)
