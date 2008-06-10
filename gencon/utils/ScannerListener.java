@@ -1,7 +1,10 @@
 package gencon.utils;
 
 import gencon.clientLib.Client;
-import java.util.*;
+
+import java.util.InputMismatchException;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 
 /**
  * A wrapper class for {@link Scanner}. 
@@ -13,7 +16,7 @@ import java.util.*;
 public class ScannerListener
 {
 	private final Scanner scanner;
-	private final Client client;
+	private final Client<?> client;
 	private final Thread listenThread;
 	
 	private boolean quit = false;
@@ -25,7 +28,7 @@ public class ScannerListener
 	 * @param sc usually, a new {@link Scanner}.
 	 * @param cl the specific {@link Client} that's meant to be monitored.
 	 */
-	public ScannerListener(Scanner sc, Client cl)
+	public ScannerListener(Scanner sc, Client<?> cl)
 	{
 		scanner = sc;
 		client = cl;

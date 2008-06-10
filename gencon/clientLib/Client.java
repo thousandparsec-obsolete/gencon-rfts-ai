@@ -20,7 +20,7 @@ import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
  * @author Victor Ivri
  *
  */
-public class Client <V extends Visitor, F extends Frame>
+public class Client <V extends Visitor>
 {
 	//
 	//	MAINTANANCE
@@ -34,16 +34,12 @@ public class Client <V extends Visitor, F extends Frame>
 	private boolean verboseDebugMode = true; // True by default.
 	private boolean autorun;
 	
-	private final Class<F> okay = (Class<F>)net.thousandparsec.netlib.tp03.Okay.class;
-	private final Class<F> fail = (Class<F>)net.thousandparsec.netlib.tp03.Fail.class;
-	private final Class<F> sequence = (Class<F>)net.thousandparsec.netlib.tp03.Sequence.class;
-	
 	//
 	//	CONNECTION-RELATED
 	//
 	private URI serverURI;
 	//private PipelinedConnection<TP03Visitor> PipeConn;
-	private ConnectionManager connMgr;
+	private ConnectionManager<TP03Visitor> connMgr;
 	private final LoggerConnectionListener<TP03Visitor> eventLogger;
 	private final TP03Visitor visitor;
 
@@ -325,10 +321,10 @@ public class Client <V extends Visitor, F extends Frame>
 			}
 			else //send connect frame...
 			{
-				SequentialConnection<TP03Visitor> conn = (SequentialConnection<TP03Visitor>)connMgr.createPipeline();
+				SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
 				Connect connect = new Connect();
 				connect.setString("gencon-testing");
-				conn.sendFrame(connect, okay);
+				conn.sendFrame(connect, Okay.class);
 				conn.close();
 				//if reach here, then ok.
 				stout.println("connection established to : " + serverURI);
@@ -440,7 +436,7 @@ public class Client <V extends Visitor, F extends Frame>
 			//will be supplanted by the ThreadedPipelineManager methods... sometime... in the future...
 			SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
 			stout.print("Logging in...");
-			conn.sendFrame(loginFrame, okay);
+			conn.sendFrame(loginFrame, Okay.class);
 			//conn.close();
 			stout.println("Login successful");
 		}
@@ -476,7 +472,7 @@ public class Client <V extends Visitor, F extends Frame>
 		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
 		try
 		{
-			conn.sendFrame(newAccount, okay);
+			conn.sendFrame(newAccount, Okay.class);
 		}
 		catch (TPException tpe)
 		{
@@ -526,7 +522,7 @@ public class Client <V extends Visitor, F extends Frame>
 			tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
 			stout.println("time remaining until next turn (seconds): " + tr.getTime());
 			
-			me = conn.sendFrame(getme, net.thousandparsec.netlib.Frame.class);
+			me = conn.sendFrame(getme, Player.class);
 			stout.println("My player data is: " + me.toString());
 			
 			

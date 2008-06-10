@@ -6,6 +6,7 @@ import net.thousandparsec.netlib.tp03.*;
 public class GCTP03Visitor extends TP03Visitor
 {
 	
+	@Override
 	public void unhandledFrame(Frame<?> frame) throws TPException
 	{
 		throw new TPException(String.format("Unexpected frame: type %d (%s)", frame.getFrameType(), frame.toString()));
