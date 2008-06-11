@@ -1,0 +1,162 @@
+From 581d0ad962b370580d129b395cee067948830ea7 Mon Sep 17 00:00:00 2001
+From: Krzysztof Sobolewski <jezuch@interia.pl>
+Date: Tue, 10 Jun 2008 21:13:30 +0200
+Subject: [PATCH] Fix warning, mostly with generics.
+
+---
+ gencon/GenConRunner.java            |    3 ++-
+ gencon/clientLib/Client.java        |   20 ++++++++------------
+ gencon/clientLib/GCTP03Visitor.java |    1 +
+ gencon/utils/ScannerListener.java   |    9 ++++++---
+ 4 files changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/gencon/GenConRunner.java b/gencon/GenConRunner.java
+index 0569666..f5ec078 100644
+--- a/gencon/GenConRunner.java
++++ b/gencon/GenConRunner.java
+@@ -1,6 +1,7 @@
+ package gencon;
+ 
+ import gencon.clientLib.Client;
++import net.thousandparsec.netlib.tp03.TP03Visitor;
+ 
+ public class GenConRunner {
+ 
+@@ -19,7 +20,7 @@ public class GenConRunner {
+ 	
+ 	public static void main(String[] args) 
+ 	{
+-		Client genConClient = new Client();
++		Client<TP03Visitor> genConClient = new Client<TP03Visitor>();
+ 		genConClient.runClient(args);
+ 	}
+ 
+diff --git a/gencon/clientLib/Client.java b/gencon/clientLib/Client.java
+index 02070b0..5672201 100644
+--- a/gencon/clientLib/Client.java
++++ b/gencon/clientLib/Client.java
+@@ -20,7 +20,7 @@ import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
+  * @author Victor Ivri
+  *
+  */
+-public class Client <V extends Visitor, F extends Frame>
++public class Client <V extends Visitor>
+ {
+ 	//
+ 	//	MAINTANANCE
+@@ -34,16 +34,12 @@ public class Client <V extends Visitor, F extends Frame>
+ 	private boolean verboseDebugMode = true; // True by default.
+ 	private boolean autorun;
+ 	
+-	private final Class<F> okay = (Class<F>)net.thousandparsec.netlib.tp03.Okay.class;
+-	private final Class<F> fail = (Class<F>)net.thousandparsec.netlib.tp03.Fail.class;
+-	private final Class<F> sequence = (Class<F>)net.thousandparsec.netlib.tp03.Sequence.class;
+-	
+ 	//
+ 	//	CONNECTION-RELATED
+ 	//
+ 	private URI serverURI;
+ 	//private PipelinedConnection<TP03Visitor> PipeConn;
+-	private ConnectionManager connMgr;
++	private ConnectionManager<TP03Visitor> connMgr;
+ 	private final LoggerConnectionListener<TP03Visitor> eventLogger;
+ 	private final TP03Visitor visitor;
+ 
+@@ -325,10 +321,10 @@ public class Client <V extends Visitor, F extends Frame>
+ 			}
+ 			else //send connect frame...
+ 			{
+-				SequentialConnection<TP03Visitor> conn = (SequentialConnection<TP03Visitor>)connMgr.createPipeline();
++				SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+ 				Connect connect = new Connect();
+ 				connect.setString("gencon-testing");
+-				conn.sendFrame(connect, okay);
++				conn.sendFrame(connect, Okay.class);
+ 				conn.close();
+ 				//if reach here, then ok.
+ 				stout.println("connection established to : " + serverURI);
+@@ -440,7 +436,7 @@ public class Client <V extends Visitor, F extends Frame>
+ 			//will be supplanted by the ThreadedPipelineManager methods... sometime... in the future...
+ 			SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+ 			stout.print("Logging in...");
+-			conn.sendFrame(loginFrame, okay);
++			conn.sendFrame(loginFrame, Okay.class);
+ 			//conn.close();
+ 			stout.println("Login successful");
+ 		}
+@@ -476,7 +472,7 @@ public class Client <V extends Visitor, F extends Frame>
+ 		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+ 		try
+ 		{
+-			conn.sendFrame(newAccount, okay);
++			conn.sendFrame(newAccount, Okay.class);
+ 		}
+ 		catch (TPException tpe)
+ 		{
+@@ -518,7 +514,7 @@ public class Client <V extends Visitor, F extends Frame>
+ 		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+ 		stout.println("pipe created");
+ 		TimeRemaining tr = null;
+-		Frame me = null;
++		Player me = null;
+ 		GetPlayer getme= new GetPlayer();
+ 		getme.getIds().add(new IdsType(0));
+ 		try
+@@ -527,7 +523,7 @@ public class Client <V extends Visitor, F extends Frame>
+ 			tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
+ 			stout.println("time remaining until next turn (seconds): " + tr.getTime());
+ 			
+-			me = conn.sendFrame(getme, net.thousandparsec.netlib.Frame.class);
++			me = conn.sendFrame(getme, Player.class);
+ 			stout.println("My player data is: " + me.toString());
+ 			
+ 			
+diff --git a/gencon/clientLib/GCTP03Visitor.java b/gencon/clientLib/GCTP03Visitor.java
+index dd811f7..bfd686d 100644
+--- a/gencon/clientLib/GCTP03Visitor.java
++++ b/gencon/clientLib/GCTP03Visitor.java
+@@ -6,6 +6,7 @@ import net.thousandparsec.netlib.tp03.*;
+ public class GCTP03Visitor extends TP03Visitor
+ {
+ 	
++	@Override
+ 	public void unhandledFrame(Frame<?> frame) throws TPException
+ 	{
+ 		throw new TPException(String.format("Unexpected frame: type %d (%s)", frame.getFrameType(), frame.toString()));
+diff --git a/gencon/utils/ScannerListener.java b/gencon/utils/ScannerListener.java
+index b9e0e9e..45407a2 100644
+--- a/gencon/utils/ScannerListener.java
++++ b/gencon/utils/ScannerListener.java
+@@ -1,7 +1,10 @@
+ package gencon.utils;
+ 
+ import gencon.clientLib.Client;
+-import java.util.*;
++
++import java.util.InputMismatchException;
++import java.util.NoSuchElementException;
++import java.util.Scanner;
+ 
+ /**
+  * A wrapper class for {@link Scanner}. 
+@@ -13,7 +16,7 @@ import java.util.*;
+ public class ScannerListener
+ {
+ 	private final Scanner scanner;
+-	private final Client client;
++	private final Client<?> client;
+ 	private final Thread listenThread;
+ 	
+ 	private boolean quit = false;
+@@ -25,7 +28,7 @@ public class ScannerListener
+ 	 * @param sc usually, a new {@link Scanner}.
+ 	 * @param cl the specific {@link Client} that's meant to be monitored.
+ 	 */
+-	public ScannerListener(Scanner sc, Client cl)
++	public ScannerListener(Scanner sc, Client<?> cl)
+ 	{
+ 		scanner = sc;
+ 		client = cl;
+-- 
+1.5.5.3
+

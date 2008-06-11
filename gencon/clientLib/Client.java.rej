@@ -1,0 +1,10 @@
+diff a/gencon/clientLib/Client.java b/gencon/clientLib/Client.java	(rejected hunks)
+@@ -518,7 +514,7 @@ public class Client <V extends Visitor, F extends Frame>
+ 		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+ 		stout.println("pipe created");
+ 		TimeRemaining tr = null;
+-		Frame me = null;
++		Player me = null;
+ 		GetPlayer getme= new GetPlayer();
+ 		getme.getIds().add(new IdsType(0));
+ 		try
