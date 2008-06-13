@@ -20,8 +20,7 @@ import net.thousandparsec.netlib.tp03.Object;
 import gencon.utils.*;
 
 /**
- * Class with a single static method, which converts {@link Object} classes from protocol library,
- * to classes from gencon.gamelib library.
+ * A static class which converts classes from protocol library, to classes from gencon.gamelib library.
  * 
  * @author Victor Ivri
  *
@@ -55,7 +54,7 @@ public class ObjectConverter
 				children.add(new Integer(ct.getId()));
 		
 		//---------------------------------
-		//Type-specific params and instantiation: (Depending on the type of the object)
+		//Type-specific params and Body instantiation: (Depending on the type of the object)
 		
 		int object_type = object.getObject().getParameterType();
 		
@@ -76,9 +75,12 @@ public class ObjectConverter
 				ObjectParams.Planet pl = (ObjectParams.Planet) object.getObject();
 				Game_Player owner = new Game_Player(pl.getOwner(), ConnectionUtils.getPlayerById(pl.getOwner(), conn).getName());
 				
+				//getting orders:
+				
 				//getting resources:
 				
 				//getting pdbs:
+				
 				
 				return new Planet(game_id, modtime, name, position, parent, children, owner, orders, resources, pdbs);
 			}
@@ -108,7 +110,21 @@ public class ObjectConverter
 			
 			default: return null; //making compiler happy...
 		}
+	}
+
+	
+	public static synchronized gencon.gamelib.Order convertOrder(net.thousandparsec.netlib.tp03.Order order)
+	{
 		
 	}
 	
+	public static synchronized gencon.gamelib.Planet.Resources convertResources(Vector<net.thousandparsec.netlib.tp03.Resource> resources)
+	{
+		
+	}
+	
+	public static synchronized gencon.gamelib.Fleet.Ship convertShip(net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType ship)
+	{
+		
+	}
 }

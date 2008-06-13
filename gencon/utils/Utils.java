@@ -45,6 +45,7 @@ public class Utils
 	
 	public synchronized static String getUsrnameFromURI(URI uri)
 	{
+		System.out.println(uri.getUserInfo());
 		String[] usr = uri.getUserInfo().split(":");
 		return usr[0];
 	}

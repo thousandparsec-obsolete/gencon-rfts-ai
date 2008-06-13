@@ -1,8 +1,10 @@
 package gencon.clientLib;
 
 import java.io.PrintStream;
+import java.util.Vector;
 
 import net.thousandparsec.netlib.SequentialConnection;
+import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.GetObjectsByID;
 import net.thousandparsec.netlib.tp03.GetPlayer;
 import net.thousandparsec.netlib.tp03.GetTimeRemaining;
@@ -13,6 +15,8 @@ import net.thousandparsec.netlib.tp03.Sequence;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
 import net.thousandparsec.netlib.tp03.TimeRemaining;
 import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
+
+import gencon.utils.*;
 
 public class ConnectionUtils 
 {
@@ -31,32 +35,40 @@ public class ConnectionUtils
 		return universe;
 	}
 	
-	public synchronized static int getTimeRemaining(SequentialConnection<TP03Visitor> conn)
+	public synchronized static int getTimeRemaining(SequentialConnection<TP03Visitor> conn) throws Exception
 	{
 		TimeRemaining tr = null;
-		try
-		{
-			tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
-		}
-		catch (Exception e)
-		{
-			stout.println("unsuccessful retreiving time.");
-		}
+		tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
 		return tr.getTime();
 	}
 	
-	public synchronized static Player getPlayerById(int id, SequentialConnection<TP03Visitor> conn)
+	public synchronized static Player getPlayerById(int id, SequentialConnection<TP03Visitor> conn) throws Exception
 	{
 		GetPlayer get = new GetPlayer();
 		get.getIds().add(new IdsType(id));
-		try
+		conn.receiveFrame(Sequence.class);
+		return conn.receiveFrame(Player.class);
+	}
+	
+	public synchronized static Vector<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn) throws Exception
+	{
+		GetPlayer getplayers = new GetPlayer();
+		for (int i = 1; i < 100; i++)
 		{
-			conn.receiveFrame(Sequence.class);
-			return conn.receiveFrame(Player.class);
+			getplayers.getIds().add(new IdsType(i));
 		}
-		catch (Exception makeNull)
+
+		Sequence seq = conn.sendFrame(getplayers, net.thousandparsec.netlib.tp03.Sequence.class);
+		Vector<Player> players = new Vector<Player>(seq.getNumber());
+		for (int j = 0; j < seq.getNumber(); j++)
 		{
-			return null;
+			try
+			{
+				players.add(conn.receiveFrame(net.thousandparsec.netlib.tp03.Player.class));
+			}
+			catch (TPException ignore){}
 		}
+		
+		return players;
 	}
 }

@@ -12,7 +12,7 @@ public class Universe extends Body
 {
 
 	//DUMMY VALUES:
-	private final static int UNIVERSE_PARENT = -1; //magic number... 
+	public final static int UNIVERSE_PARENT = -1; //magic number... 
 	private final static long DUMMY_POSITION = -1; //magic number... no such position exists
 	private final static long[] UNIVERSE_POSITION = {DUMMY_POSITION, DUMMY_POSITION, DUMMY_POSITION};
 	

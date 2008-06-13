@@ -40,10 +40,10 @@ public class Planet extends Body
 		public final int POPULATION;
 		public final int SOCIAL_ENV;
 		public final int PLANETARY_ENV;
-		public final float POP_MAINTANENCE;
+		public final int POP_MAINTANENCE;
 		
 		public Resources(int resource_pts, int industry, int population, int social_env,
-				int planetary_env, float pop_maintanance)
+				int planetary_env, int pop_maintanance)
 		{
 			RESOURCE_POINTS = resource_pts;
 			INDUSTRY = industry;

@@ -5,6 +5,7 @@ import java.net.*;
 import java.util.*;
 
 import gencon.gamelib.FullGameStatus;
+import gencon.gamelib.ObjectConverter;
 import gencon.gamelib.Universe;
 import gencon.utils.*;
 import net.thousandparsec.netlib.*;
@@ -445,8 +446,7 @@ public class Client <V extends Visitor>
 			stout.print("Logging in...");
 			conn.sendFrame(loginFrame, Okay.class);
 			conn.close();
-			myUsername = Utils.getUsrnameFromURI(serverURI);
-			stout.println("Logged in successfully as : " + myUsername);
+			stout.println("Logged in successfully as : " + username);
 		}
 		catch (TPException tpe)
 		{
@@ -520,9 +520,17 @@ public class Client <V extends Visitor>
 		stout.println("Starting to play game... ");
 		
 		//printing time!
-		int time = ConnectionUtils.getTimeRemaining(connMgr.createPipeline());
-		stout.println("Time remaining until end of turn : " + time);
-		
+		try
+		{
+			int time = ConnectionUtils.getTimeRemaining(connMgr.createPipeline());
+			stout.println("Time remaining until end of turn : " + time);
+		}
+		catch (Exception e)
+		{
+			stout.println("Failed to retreive time.");
+			Utils.PrintTraceIfDebug(e, this);
+		}
+		/*
 		//getting universe!
 		Object un = null;
 		try
@@ -534,17 +542,11 @@ public class Client <V extends Visitor>
 			stout.println("Could not get universe. Exiting.");
 			exit("Failed to instantiate game.", ABNORMAL_EXIT, e);
 		}
-		//populate children:
-		List<Integer> children = new ArrayList<Integer>(un.getContains().size());
-		for (ContainsType ct : un.getContains())
-			if (ct != null)
-				children.add(new Integer(ct.getId()));
-		
-		Universe universe = new Universe(un.getId(), un.getModtime(), un.getName(), children);
-		//initializing the gameStatus:
+		Universe universe = (Universe)ObjectConverter.ConvertToBody(un, Universe.UNIVERSE_PARENT, 
+				connMgr.createPipeline());
 		gameStatus = new FullGameStatus(difficulty, universe, myUsername);
 		
-		
+		*/
 		
 		
 		
@@ -565,16 +567,43 @@ public class Client <V extends Visitor>
 			Object obj = pair.right;
 			stout.println("id: " + obj.getId() + "; Object: " + obj.getObject().getClass().getSimpleName() + 
 						"" + "; depth: " + pair.left);
-			stout.println("--> Contains: " + pair.right.getContains().toString() + "\n");
+			stout.println("--> Contains: " + pair.right.getContains().toString());
+			if (obj.getObject().getParameterType() == ObjectParams.Planet.PARAM_TYPE)
+			{
+				ObjectParams.Planet pl = (ObjectParams.Planet) obj.getObject();
+				stout.println("--> Owner: " + pl.getOwner() + "\n--> Resources: " + pl.getResources());
+			}
+			else if (obj.getObject().getParameterType() == ObjectParams.Fleet.PARAM_TYPE)
+			{
+				ObjectParams.Fleet fl = (ObjectParams.Fleet) obj.getObject();
+				stout.println("--> Owner: " + fl.getOwner() + "  Damage: " + fl.getDamage() +
+						"\n--> Ships: " + fl.getShips().toString());
+			}
+			stout.println();
 		}
 		
 		stout.println("Fetching objects took: " + took + " milliseconds.");
 		
 		stout.println("Receiving all players...");
-		receiveAllPlayers();
+		Vector<Player> players;
+		try
+		{
+			players = ConnectionUtils.getAllPlayers(connMgr.createPipeline());
+			//printing players:
+			for (Player pl : players)
+				stout.println("Pl. num: " + pl.getId() + " Pl. name: " + pl.getName()); 
+		}
+		catch (Exception e)
+		{
+			stout.println("Failed to retreive players.");
+			Utils.PrintTraceIfDebug(e, this);
+		}
 	}
 	
 
+	//  NOT NEEDED ANYMORE!!!!!
+	//  STAYS JUST FOR SHOW FOR A LIL WHILE.
+	
 	/*
 	 * REALLY, A TEST METHOD
 	 */
@@ -608,48 +637,7 @@ public class Client <V extends Visitor>
 	
 
 	
-	
-	//  NOT NEEDED ANYMORE!!!!!
-	//  STAYS JUST FOR SHOW FOR A LIL WHILE.
-	
-	private void receiveAllPlayers()
-	{
-		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
-		GetPlayer getme = new GetPlayer();
-		for (int i = 0; i < 100; i++)
-		{
-			getme.getIds().add(new IdsType(i));
-		}
-		try
-		{
-			Player player;
-			Sequence seq = conn.sendFrame(getme, net.thousandparsec.netlib.tp03.Sequence.class);
-			int number = seq.getNumber();
-			
-			for (int j = 1; j < number; j++)
-			{
-				try
-				{
-					player = conn.receiveFrame(net.thousandparsec.netlib.tp03.Player.class);
-					stout.println(player.getId() + "'th player: " + player.getName());
-				}
-				catch (TPException ignore){stout.print(".");}
-			}
-		}
-		catch (Exception e)
-		{
-			stout.println("unsuccessful retreiving players.");
-		}
-		
-		try
-		{
-			conn.close();
-		}
-		catch (IOException ignore){}
-	}
-	
-	
-	
+
 	
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
