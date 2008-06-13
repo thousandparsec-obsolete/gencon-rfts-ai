@@ -1,17 +1,22 @@
 package gencon.utils;
 
-import java.io.EOFException;
-import java.io.IOException;
+import gencon.clientLib.Client;
+
 import java.io.PrintStream;
+import java.net.URI;
 
-import net.thousandparsec.netlib.TPException;
-
-import gencon.clientLib.*;
-
+/**
+ * A collector class for general utility methods.
+ * 
+ * @author Victor Ivri
+ *
+ */
 public class Utils 
 {
 	private Utils(){} //DUMMY CONSTRUCTOR : STATIC CLASS
 
+	
+	public static PrintStream stout = System.out;
 	
 	/**
 	 * Prints exception stack trace, if verbose debug mode is on.
@@ -20,10 +25,10 @@ public class Utils
 	 * This way, info will remain chronologically consistent.
 	 * 
 	 */
-	public synchronized static void PrintTraceIfDebug(Exception e, boolean verboseDebugMode)
+	public synchronized static void PrintTraceIfDebug(Exception e, Client client)
 	{
-		PrintStream stout = System.out;
-		if (verboseDebugMode)
+		
+		if (client.isVerboseDebugMode())
 		{
 			stout.println("______________________________________");
 			stout.println("DEBUG:");
@@ -38,6 +43,11 @@ public class Utils
 		}
 	}
 	
+	public synchronized static String getUsrnameFromURI(URI uri)
+	{
+		String[] usr = uri.getUserInfo().split(":");
+		return usr[0];
+	}
 	
-	
+
 }

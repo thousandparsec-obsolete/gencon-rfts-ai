@@ -1,4 +1,4 @@
-package gencon.rfts;
+package gencon.gamelib;
 
 public class Order 
 {

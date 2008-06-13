@@ -4,12 +4,15 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import gencon.gamelib.FullGameStatus;
+import gencon.gamelib.Universe;
 import gencon.utils.*;
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.util.*;
 import net.thousandparsec.netlib.tp03.*;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
+import net.thousandparsec.netlib.tp03.Object.ContainsType;
 
 
 /**
@@ -45,7 +48,10 @@ public class Client <V extends Visitor>
 
 
 	//game-related
-	private int difficulty = 5;
+	private FullGameStatus gameStatus; //initialized in startPlay()
+	private String myUsername;
+	private short difficulty = 5;
+	
 	
 	
 	/**
@@ -92,7 +98,7 @@ public class Client <V extends Visitor>
 			{
 				if (args.length == 3)
 				{
-					difficulty = new Integer(args[2]).intValue();
+					difficulty = new Short(args[2]).shortValue();
 					if (!(difficulty > 0 && difficulty < 10)) //difficulty between 1-9
 						throw new Exception();
 				}
@@ -252,7 +258,7 @@ public class Client <V extends Visitor>
 		catch (URISyntaxException e)
 		{
 			stout.println("Error: URI syntax incorrect.");
-			Utils.PrintTraceIfDebug(e, verboseDebugMode);
+			Utils.PrintTraceIfDebug(e, this);
 			return false;
 		}
 		return true;
@@ -268,10 +274,10 @@ public class Client <V extends Visitor>
 		boolean ok = false;
 		do {
 			stout.print("Set difficulty of AI player (1 to 9) : ");
-			int num = -1; 
+			short num = -1; 
 			try
 			{
-				num = new Integer(stin.next()).intValue();
+				num = new Short(stin.next()).shortValue();
 				if (num > 0 && num < 10)
 					ok = true;
 				else
@@ -308,7 +314,7 @@ public class Client <V extends Visitor>
 			
 			basicCon.addConnectionListener(eventLogger);
 			
-			connMgr = new ConnectionManager<TP03Visitor>(basicCon);
+			connMgr = new ConnectionManager<TP03Visitor>(basicCon, this);
 			
 			//PipelinedConnection<TP03Visitor> pConn = new PipelinedConnection<TP03Visitor>(basicCon);
 			//this.PipeConn = pConn;
@@ -317,7 +323,8 @@ public class Client <V extends Visitor>
 			if (autorun)
 			{
 				stout.println("connection established to : " + serverURI);
-				stout.println("Logged in successfully as : " + serverURI.getUserInfo());
+				myUsername = Utils.getUsrnameFromURI(serverURI);
+				stout.println("Logged in successfully as : " + myUsername);
 			}
 			else //send connect frame...
 			{
@@ -437,25 +444,26 @@ public class Client <V extends Visitor>
 			SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
 			stout.print("Logging in...");
 			conn.sendFrame(loginFrame, Okay.class);
-			//conn.close();
-			stout.println("Login successful");
+			conn.close();
+			myUsername = Utils.getUsrnameFromURI(serverURI);
+			stout.println("Logged in successfully as : " + myUsername);
 		}
 		catch (TPException tpe)
 		{
 			stout.println("Failed to login as user. Possible cause: username and password don't match. Try again.");
-			Utils.PrintTraceIfDebug(tpe, verboseDebugMode);
+			Utils.PrintTraceIfDebug(tpe, this);
 			return false;
 		}
 		catch (EOFException eofe)
 		{
 			stout.println("Unexpected failure: End of stream reached. Exiting client.");
-			Utils.PrintTraceIfDebug(eofe, verboseDebugMode);
+			Utils.PrintTraceIfDebug(eofe, this);
 			exit("No more frames sent from server.", NORMAL_EXIT, eofe);
 		}
 		catch (IOException ioe)
 		{
 			stout.println("Unexpected failure. Failed to login. Try again.");
-			Utils.PrintTraceIfDebug(ioe, verboseDebugMode);
+			Utils.PrintTraceIfDebug(ioe, this);
 			return false;
 		}
 		return true;
@@ -473,23 +481,24 @@ public class Client <V extends Visitor>
 		try
 		{
 			conn.sendFrame(newAccount, Okay.class);
+			conn.close();
 		}
 		catch (TPException tpe)
 		{
 			stout.println("Failed to create new account. Possible cause: user already exists. Try again.");
-			Utils.PrintTraceIfDebug(tpe, verboseDebugMode);
+			Utils.PrintTraceIfDebug(tpe, this);
 			return false;
 		}
 		catch (EOFException eofe)
 		{
 			stout.println("Unexpected failure: End of stream reached. Exiting client.");
-			Utils.PrintTraceIfDebug(eofe, verboseDebugMode);
+			Utils.PrintTraceIfDebug(eofe, this);
 			exit("No more frames sent from server.", NORMAL_EXIT, eofe);
 		}
 		catch (IOException ioe)
 		{
 			stout.println("Unexpected failure. Failed to login. Try again.");
-			Utils.PrintTraceIfDebug(ioe, verboseDebugMode);
+			Utils.PrintTraceIfDebug(ioe, this);
 			return false;
 		}
 		return true;
@@ -509,29 +518,39 @@ public class Client <V extends Visitor>
 	private void startPlay()
 	{
 		stout.println("Starting to play game... ");
-		//INVOKING A TEST METHOD
 		
-		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
-		TimeRemaining tr = null;
-		Frame me = null;
-		GetPlayer getme= new GetPlayer();
-		getme.getIds().add(new IdsType(0));
+		//printing time!
+		int time = ConnectionUtils.getTimeRemaining(connMgr.createPipeline());
+		stout.println("Time remaining until end of turn : " + time);
+		
+		//getting universe!
+		Object un = null;
 		try
 		{
-			
-			tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
-			stout.println("time remaining until next turn (seconds): " + tr.getTime());
-			
-			me = conn.sendFrame(getme, Player.class);
-			stout.println("My player data is: " + me.toString());
-			
-			
-			conn.close();
+			un = ConnectionUtils.getUniverse(connMgr.createPipeline(), this);
 		}
 		catch (Exception e)
 		{
-			stout.println("unsuccessful retreiving time.");
+			stout.println("Could not get universe. Exiting.");
+			exit("Failed to instantiate game.", ABNORMAL_EXIT, e);
 		}
+		//populate children:
+		List<Integer> children = new ArrayList<Integer>(un.getContains().size());
+		for (ContainsType ct : un.getContains())
+			if (ct != null)
+				children.add(new Integer(ct.getId()));
+		
+		Universe universe = new Universe(un.getId(), un.getModtime(), un.getName(), children);
+		//initializing the gameStatus:
+		gameStatus = new FullGameStatus(difficulty, universe, myUsername);
+		
+		
+		
+		
+		
+		
+		
+		
 		
 	
 		stout.println("Receiving objects...");
@@ -541,11 +560,12 @@ public class Client <V extends Visitor>
 		long took = System.currentTimeMillis() - before;
 		
 		stout.println("Printing objects:");
-		int i = 1;
 		for (Pair<Integer, Object> pair : objects)
 		{
-			stout.println(i + ") Object: " + pair.right.getObject().getClass().getSimpleName() + ", depth: " + pair.left);
-			i++;
+			Object obj = pair.right;
+			stout.println("id: " + obj.getId() + "; Object: " + obj.getObject().getClass().getSimpleName() + 
+						"" + "; depth: " + pair.left);
+			stout.println("--> Contains: " + pair.right.getContains().toString() + "\n");
 		}
 		
 		stout.println("Fetching objects took: " + took + " milliseconds.");
@@ -589,8 +609,8 @@ public class Client <V extends Visitor>
 
 	
 	
-	
-	
+	//  NOT NEEDED ANYMORE!!!!!
+	//  STAYS JUST FOR SHOW FOR A LIL WHILE.
 	
 	private void receiveAllPlayers()
 	{
@@ -599,7 +619,6 @@ public class Client <V extends Visitor>
 		for (int i = 0; i < 100; i++)
 		{
 			getme.getIds().add(new IdsType(i));
-
 		}
 		try
 		{
@@ -612,7 +631,7 @@ public class Client <V extends Visitor>
 				try
 				{
 					player = conn.receiveFrame(net.thousandparsec.netlib.tp03.Player.class);
-					stout.println(j + "'th player: " + player.toString());
+					stout.println(player.getId() + "'th player: " + player.getName());
 				}
 				catch (TPException ignore){stout.print(".");}
 			}
@@ -660,7 +679,7 @@ public class Client <V extends Visitor>
 			
 			//if there is an exception, print trace if verbose debug mode is on.
 			if (exc != null)
-				Utils.PrintTraceIfDebug(exc, verboseDebugMode);
+				Utils.PrintTraceIfDebug(exc, this);
 			
 			
 			
@@ -678,7 +697,7 @@ public class Client <V extends Visitor>
 		catch (Exception e)
 		{
 			stout.println("Error on exit. Quitting application.");
-			Utils.PrintTraceIfDebug(e, verboseDebugMode);
+			Utils.PrintTraceIfDebug(e, this);
 			System.exit(ABNORMAL_EXIT);
 		}
 	}

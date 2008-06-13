@@ -21,6 +21,6 @@ public class GCTP03Visitor extends TP03Visitor
     @Override
     public void frame(Fail frame)
     {
-            System.err.println("Failed to receive expected frame.");
+            System.err.println("Request failed. Frame Seq. num.: " + frame.getSequenceNumber() + "| Reason: " + frame.getResult());
     }
 }

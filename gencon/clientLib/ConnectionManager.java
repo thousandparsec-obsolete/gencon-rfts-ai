@@ -21,12 +21,14 @@ import java.util.concurrent.*;
 public class ConnectionManager<V extends Visitor>
 {
 	private final PipelinedConnection<V> pConn;
-	private final List<SequentialConnection<V>> pipelines;
+	private List<SequentialConnection<V>> pipelines;
+	private final Client client;
 	
-	public ConnectionManager(Connection<V> connection)
+	public ConnectionManager(Connection<V> connection, Client client)
 	{
 		pConn = new PipelinedConnection<V>(connection);
 		pipelines = Collections.synchronizedList(new Vector<SequentialConnection<V>>());
+		this.client = client;
 	}
 	
 	/**
@@ -60,7 +62,7 @@ public class ConnectionManager<V extends Visitor>
 		catch (Exception e)
 		{
 			System.err.println("Failed to close pipelined connection.");
-			Utils.PrintTraceIfDebug(e, true);
+			Utils.PrintTraceIfDebug(e, client);
 		}
 	}
 	
