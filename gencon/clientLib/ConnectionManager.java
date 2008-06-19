@@ -1,14 +1,13 @@
 package gencon.clientLib;
 
-//import gencon.*;
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
-import net.thousandparsec.util.*;
-import gencon.utils.*;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
+
+import gencon.Master;
 
 /**
  * Very simple connection manager, which implements an underlying {@link PipelinedConnection}.
@@ -18,17 +17,15 @@ import java.util.concurrent.*;
  * @author Victor Ivri
  *
  */
-public class ConnectionManager<V extends Visitor>
+public class ConnectionManager<V extends TP03Visitor>
 {
 	private final PipelinedConnection<V> pConn;
 	private List<SequentialConnection<V>> pipelines;
-	private final Client client;
 	
-	public ConnectionManager(Connection<V> connection, Client client)
+	public ConnectionManager(Connection<V> connection)
 	{
 		pConn = new PipelinedConnection<V>(connection);
 		pipelines = Collections.synchronizedList(new Vector<SequentialConnection<V>>());
-		this.client = client;
 	}
 	
 	/**
@@ -44,7 +41,28 @@ public class ConnectionManager<V extends Visitor>
 		
 	}
 	
-	public synchronized void close()
+	/**
+	 * Closes and removes all active pipelines to free up memory.
+	 */
+	public synchronized void purgePipelines()
+	{
+		for (int i = 0; i < pipelines.size(); i++)
+			if (pipelines.get(i) != null)
+			{
+				try
+				{
+					pipelines.get(i).close();
+				}
+				catch (Exception e)
+				{
+					Master.stout.println("Failed to close pipeline.");
+				}
+				pipelines.remove(i);
+			}
+	}
+	
+	
+	public synchronized void close() throws IOException, ExecutionException
 	{
 		for (SequentialConnection<V> conn : pipelines)
 		{
@@ -55,15 +73,7 @@ public class ConnectionManager<V extends Visitor>
 			catch (Exception ignore){}
 		}
 		
-		try
-		{
-			pConn.close();
-		}
-		catch (Exception e)
-		{
-			System.err.println("Failed to close pipelined connection.");
-			Utils.PrintTraceIfDebug(e, client);
-		}
+		pConn.close();
 	}
 	
 	

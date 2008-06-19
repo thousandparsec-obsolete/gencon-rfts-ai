@@ -1,6 +1,7 @@
 package gencon;
 
 import gencon.clientLib.Client;
+import gencon.clientLib.GCTP03Visitor;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
 
 public class GenConRunner {
@@ -20,8 +21,9 @@ public class GenConRunner {
 	
 	public static void main(String[] args) 
 	{
-		Client<TP03Visitor> genConClient = new Client<TP03Visitor>();
-		genConClient.runClient(args);
+		Master<TP03Visitor> master = new Master<TP03Visitor>(args);
+		Client<TP03Visitor> genConClient = new Client<TP03Visitor>(master);
+		
 	}
 
 }

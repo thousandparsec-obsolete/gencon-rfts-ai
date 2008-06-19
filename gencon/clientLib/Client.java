@@ -4,9 +4,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import gencon.Master;
 import gencon.gamelib.FullGameStatus;
 import gencon.gamelib.ObjectConverter;
-import gencon.gamelib.Universe;
+import gencon.gamelib.gameobjects.Universe;
 import gencon.utils.*;
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.util.*;
@@ -29,12 +30,9 @@ public class Client <V extends Visitor>
 	//
 	//	MAINTANANCE
 	//
-	public static final int NORMAL_EXIT = 0;
-	public static final int ABNORMAL_EXIT = -1;
-	private static final PrintStream stout = System.out; 
-	public static final String QUIT = "q";
+	private final Master<V> master;
 	
-	private final ScannerListener stin;
+	private static final PrintStream stout = System.out; 
 	private boolean verboseDebugMode = true; // True by default.
 	private boolean autorun;
 	
@@ -42,18 +40,27 @@ public class Client <V extends Visitor>
 	//	CONNECTION-RELATED
 	//
 	private URI serverURI;
-	//private PipelinedConnection<TP03Visitor> PipeConn;
 	private ConnectionManager<TP03Visitor> connMgr;
 	private final LoggerConnectionListener<TP03Visitor> eventLogger;
 	private final TP03Visitor visitor;
 
 
 	//game-related
-	private FullGameStatus gameStatus; //initialized in startPlay()
 	private String myUsername;
-	private short difficulty = 5;
+	private int difficulty = 5;
 	
 	
+	
+	/**
+	 * The default constructor.
+	 *
+	 */
+	public Client(Master<V> master)
+	{
+		this.master = master;
+		eventLogger = new LoggerConnectionListener<TP03Visitor>();
+		visitor = new GCTP03Visitor();
+	}
 	
 	/**
 	 * Run this method to start the client.
@@ -66,27 +73,8 @@ public class Client <V extends Visitor>
 	 * 
 	 * If no argument provided, client will start in 'normal' mode; that is, it will rely on standard user input. 
 	 */
-	
-	/**
-	 * The default constructor.
-	 *
-	 */
-	public Client()
+	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException
 	{
-		//starting up the input listener
-		stin = new ScannerListener(new Scanner(System.in), this);
-		eventLogger = new LoggerConnectionListener<TP03Visitor>();
-		visitor = new GCTP03Visitor();
-	}
-	
-	
-	
-	public void runClient(String[] args)
-	{
-		
-		stout.println("GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.");
-		stout.println("To quit at any time, enter '" + QUIT + "', then press RETURN.\n");
-		
 		String URIstr = "";
 		
 		if (args.length == 0) {/* NORMAL OPERATION OF CLIENT */}
@@ -95,27 +83,17 @@ public class Client <V extends Visitor>
 		else if ((args.length == 2 || args.length == 3) && args[0].equals("-a"))
 		{
 			URIstr = args[1];
-			try
-			{
 				if (args.length == 3)
 				{
 					difficulty = new Short(args[2]).shortValue();
 					if (!(difficulty > 0 && difficulty < 10)) //difficulty between 1-9
-						throw new Exception();
+						throw new IllegalArgumentException("Illegal Arguments. See documentation for proper syntax. Try again.");
 				}
 				stout.println("Difficulty set to " + difficulty);
 					
-			}
-			catch (Exception e)
-			{
-				exit("Input error in arguments.", ABNORMAL_EXIT,
-						new IllegalArgumentException("Illegal Arguments. See documentation for proper syntax. Try again."));
-			}
 		}
-		
 		else
-			exit("Input error in arguments.", ABNORMAL_EXIT, 
-				new IllegalArgumentException("Illegal Arguments. See documentation for proper syntax. Try again."));
+			throw new IllegalArgumentException("Illegal Arguments. See documentation for proper syntax. Try again.");
 		
 		
 		if (URIstr.equals(""))
@@ -137,30 +115,22 @@ public class Client <V extends Visitor>
 	 * Initializes client. URI string provided by standard input.
 	 * No autologin.
 	 */
-	private void initNoAutorun()
+	private void initNoAutorun() throws IOException, TPException, EOFException
 	{
 		autorun = false;
 		
 		stout.println("Follow the instructions...");
 		//set verbose debug mode on/off
-		setVerboseDebug();
+		Utils.setVerboseDebug();
 		
 		//set URI
-		manualSetURI();
-		
-		//set AI difficulty
-		setDifficulty();
+		serverURI = Utils.manualSetURI();
 		
 		// establish a connection with the server, no autologin.
-		establishPipelinedConnection();
+		connect();
 
 		//login as existing user, or create new user and then login
 		loginOrCreateUser();
-		
-		//let the games begin!
-		startPlay();
-		
-		exit("Finished playing.", NORMAL_EXIT, null);
 	}
 	
 	/*
@@ -168,135 +138,48 @@ public class Client <V extends Visitor>
 	 * Initializes client with previously specified URI string. Autologin enabled.
 	 * @param URI {@link URI} string (with user info).
 	 */
-	private void initAutorun(String URIstring)
+	private void initAutorun(String URIstring) throws IllegalArgumentException, IOException, TPException
 	{
 		stout.println("Autorun mode. Initializing...");
 		
 		autorun = true;
 		
 		if (setURI(URIstring)) //if URI is valid, proceed with normal operation
-		{
-			// establish a connection with the server. autologins as player.
-			establishPipelinedConnection();
-		
-			//let the games begin!
-			startPlay();
-		}
-		 //Quit client otherwise. 
-		 //The rationale is that autorun will most likely be part of a test suite, 
-		 //and there will be no room for user corrections.
+			connect();
+
+		 /*	
+		    Throw exception otherwise. 
+		 	The rationale is that autorun will most likely be part of a test suite, 
+		 	and there will be no room for user corrections.
+		 */
 		else 
-			exit("Invalid URI. Exiting autorun.", ABNORMAL_EXIT, null);
+			throw new IllegalArgumentException("Invalid URI. Exiting autorun.");
 
-		exit("Finished playing.", NORMAL_EXIT, null);
 	}
 	
-
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 * 
-	 *	METHODS FOR USER INPUT IN NORMAL OPERATION OF CLIENT
-	 * 
-	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 */
-	
-	private void setVerboseDebug()
-	{
-		boolean ok = true;
-		do {
-			stout.print("Verbose debug mode? (y / n) : ");
-			String in = stin.next();
-			if (in.equals("y"))
-			{
-				verboseDebugMode = true;
-				stout.println("Verbose debug mode set to : " + verboseDebugMode);
-				return;
-			}
-			else if (in.equals("n"))
-			{
-				verboseDebugMode = false;
-				stout.println("Verbose debug mode set to : " + verboseDebugMode);
-				return;
-			}
-			else
-			{
-				stout.println("Please enter 'y' or 'n'.");
-				ok = false;
-			}
-		} while (!ok);
-	}
-	
-	/* 
-	 * set the URI by standard user input.
-	 */
-	private void manualSetURI()
-	{
-		// setting the URI:
-		boolean uriOk = false;
-		do {
-	 		stout.print("Enter the URI of the server (without user info; autologin disabled) : ");
-			String URIString = stin.next();
-			
-			//quitIfEncounterExitString(URIString);
-			
-			uriOk = setURI(URIString);
-		} while (!uriOk);
-	}
-
-
-
 	/*
 	 * Making the server URI from a string.
 	 * Retrurns true if successful, false otherwise.
 	 */
 	private boolean setURI(String URIString)
 	{
-		URI trySetURI;
-		try
+		URI uri = Utils.setURI(URIString);
+		
+		if (uri != null)
 		{
-			trySetURI = new URI(URIString);
-			this.serverURI = trySetURI;
+			serverURI = uri;
+			return true;
 		}
-		catch (URISyntaxException e)
-		{
-			stout.println("Error: URI syntax incorrect.");
-			Utils.PrintTraceIfDebug(e, this);
+		else
 			return false;
-		}
-		return true;
 	}
 
-
-
-	/*
-	 * Sets the difficulty of the AI opponent.
+	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 * 
+	 *	CONNECTS.
+	 * 
+	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	 */
-	private void setDifficulty()
-	{
-		boolean ok = false;
-		do {
-			stout.print("Set difficulty of AI player (1 to 9) : ");
-			short num = -1; 
-			try
-			{
-				num = new Short(stin.next()).shortValue();
-				if (num > 0 && num < 10)
-					ok = true;
-				else
-					throw new Exception();
-			}
-			catch (Exception e)
-			{
-				stout.println("Invalid input. Enter a number between 1 to 9. Try again.");
-				ok = false;
-			}
-			if (ok)
-			{
-				difficulty = num;
-				stout.println("Difficulty set to : " + difficulty);
-			}
-		} while (!ok);
-	}
-
 
 
 	/*
@@ -304,22 +187,18 @@ public class Client <V extends Visitor>
 	 * Uses TP03 protocol classes.
 	 * Autologin on/off, depends on the user
 	 */
-	private void establishPipelinedConnection()
+	private void connect() throws IOException, TPException
 	{
 		TP03Decoder decoder = new TP03Decoder();
-		try
-		{
 			stout.print("Establishing connection to server... ");
 			
 			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autorun, visitor);
-			
 			basicCon.addConnectionListener(eventLogger);
 			
-			connMgr = new ConnectionManager<TP03Visitor>(basicCon, this);
+			connMgr = new ConnectionManager<TP03Visitor>(basicCon);
 			
 			//PipelinedConnection<TP03Visitor> pConn = new PipelinedConnection<TP03Visitor>(basicCon);
 			//this.PipeConn = pConn;
-			
 			
 			if (autorun)
 			{
@@ -338,12 +217,6 @@ public class Client <V extends Visitor>
 				stout.println("connection established to : " + serverURI);
 			}
 				
-				
-		}
-		catch (Exception e)
-		{
-			exit("Error connecting to server.", ABNORMAL_EXIT, e);
-		}
 	}
 	
 
@@ -364,18 +237,18 @@ public class Client <V extends Visitor>
 	 * ~Appears to be the case
 	 * 
 	 */
-	private void loginOrCreateUser()
+	private void loginOrCreateUser() throws EOFException
 	{
 		boolean retry = false;
 		do 
 		{
 			stout.print("Create new account or login as existing user? (new / login) : ");
-			String choose = stin.next();
+			String choose = Master.in.next();
 		//	quitIfEncounterExitString(choose);
 			
 			if (choose.equals("login"))
 			{
-				String[] user = enterUserDetails();
+				String[] user = Utils.enterUserDetails();
 				String username = user[0];
 				String password = user[1];
 				
@@ -386,7 +259,7 @@ public class Client <V extends Visitor>
 			}
 			else if (choose.equals("new"))
 			{
-				String[] user = enterUserDetails();
+				String[] user = Utils.enterUserDetails();
 				String username = user[0];
 				String password = user[1];
 				if (createNewAccount(username, password))
@@ -413,27 +286,9 @@ public class Client <V extends Visitor>
 		} while (retry);
 	}
 	
-	/*
-	 * Simple method that queries for user details.
-	 * Returns String[], where the first index holds username, and the second holds password.
-	 * TO DO: Make password entry invisible on screen!!!
-	 */
-	private String[] enterUserDetails()
-	{
-		String[] userDetails = new String[2];
-		
-		stout.print("Enter username: ");
-		String usrname = stin.next();
-		userDetails[0] = usrname;
-		
-		stout.print("Enter password: ");
-		String pwd = stin.next();
-		userDetails[1] = pwd;
-		
-		return userDetails;
-	}
+
 	
-	private boolean login(String username, String password)
+	private boolean login(String username, String password) throws EOFException 
 	{
 		Login loginFrame = new Login();
 		loginFrame.setUsername(username);
@@ -451,26 +306,20 @@ public class Client <V extends Visitor>
 		catch (TPException tpe)
 		{
 			stout.println("Failed to login as user. Possible cause: username and password don't match. Try again.");
-			Utils.PrintTraceIfDebug(tpe, this);
+			Utils.PrintTraceIfDebug(tpe, master.isVerboseDebugMode());
 			return false;
-		}
-		catch (EOFException eofe)
-		{
-			stout.println("Unexpected failure: End of stream reached. Exiting client.");
-			Utils.PrintTraceIfDebug(eofe, this);
-			exit("No more frames sent from server.", NORMAL_EXIT, eofe);
 		}
 		catch (IOException ioe)
 		{
 			stout.println("Unexpected failure. Failed to login. Try again.");
-			Utils.PrintTraceIfDebug(ioe, this);
+			Utils.PrintTraceIfDebug(ioe, master.isVerboseDebugMode());
 			return false;
 		}
 		return true;
 
 	}
 	
-	private boolean createNewAccount(String username, String password)
+	private boolean createNewAccount(String username, String password) throws EOFException
 	{
 		
 		CreateAccount newAccount = new CreateAccount();
@@ -486,34 +335,41 @@ public class Client <V extends Visitor>
 		catch (TPException tpe)
 		{
 			stout.println("Failed to create new account. Possible cause: user already exists. Try again.");
-			Utils.PrintTraceIfDebug(tpe, this);
+			Utils.PrintTraceIfDebug(tpe, master.isVerboseDebugMode());
 			return false;
-		}
-		catch (EOFException eofe)
-		{
-			stout.println("Unexpected failure: End of stream reached. Exiting client.");
-			Utils.PrintTraceIfDebug(eofe, this);
-			exit("No more frames sent from server.", NORMAL_EXIT, eofe);
 		}
 		catch (IOException ioe)
 		{
 			stout.println("Unexpected failure. Failed to login. Try again.");
-			Utils.PrintTraceIfDebug(ioe, this);
+			Utils.PrintTraceIfDebug(ioe, master.isVerboseDebugMode());
 			return false;
 		}
 		return true;
 		
 	}
 
+	
+	/**
+	 * 
+	 * @return A connection pipeline
+	 */
+	public SequentialConnection<TP03Visitor> getPipeline()
+	{
+		return connMgr.createPipeline();
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	 * 
-	 *	STARTING TO PLAY!
+	 *	NOT NEEDED ANYMORE; WILL BE REMOVED WHEN ALL USEFUL INFO WILL BE EXTRACTED FROM ITS CODE!
 	 * 
 	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 */
-	
-	/*
-	 * Start playing game.
 	 */
 	private void startPlay()
 	{
@@ -522,13 +378,13 @@ public class Client <V extends Visitor>
 		//printing time!
 		try
 		{
-			int time = ConnectionUtils.getTimeRemaining(connMgr.createPipeline());
+			int time = ConnectionMethods.getTimeRemaining(connMgr.createPipeline());
 			stout.println("Time remaining until end of turn : " + time);
 		}
 		catch (Exception e)
 		{
 			stout.println("Failed to retreive time.");
-			Utils.PrintTraceIfDebug(e, this);
+			Utils.PrintTraceIfDebug(e, master.isVerboseDebugMode());
 		}
 		/*
 		//getting universe!
@@ -549,46 +405,11 @@ public class Client <V extends Visitor>
 		*/
 		
 		
-		
-		
-		
-		
-		
-	
-		stout.println("Receiving objects...");
-		
-		long before = System.currentTimeMillis();
-		Vector<Pair<Integer, Object>> objects = recieveAllObjects();
-		long took = System.currentTimeMillis() - before;
-		
-		stout.println("Printing objects:");
-		for (Pair<Integer, Object> pair : objects)
-		{
-			Object obj = pair.right;
-			stout.println("id: " + obj.getId() + "; Object: " + obj.getObject().getClass().getSimpleName() + 
-						"" + "; depth: " + pair.left);
-			stout.println("--> Contains: " + pair.right.getContains().toString());
-			if (obj.getObject().getParameterType() == ObjectParams.Planet.PARAM_TYPE)
-			{
-				ObjectParams.Planet pl = (ObjectParams.Planet) obj.getObject();
-				stout.println("--> Owner: " + pl.getOwner() + "\n--> Resources: " + pl.getResources());
-			}
-			else if (obj.getObject().getParameterType() == ObjectParams.Fleet.PARAM_TYPE)
-			{
-				ObjectParams.Fleet fl = (ObjectParams.Fleet) obj.getObject();
-				stout.println("--> Owner: " + fl.getOwner() + "  Damage: " + fl.getDamage() +
-						"\n--> Ships: " + fl.getShips().toString());
-			}
-			stout.println();
-		}
-		
-		stout.println("Fetching objects took: " + took + " milliseconds.");
-		
 		stout.println("Receiving all players...");
 		Vector<Player> players;
 		try
 		{
-			players = ConnectionUtils.getAllPlayers(connMgr.createPipeline());
+			players = ConnectionMethods.getAllPlayers(connMgr.createPipeline());
 			//printing players:
 			for (Player pl : players)
 				stout.println("Pl. num: " + pl.getId() + " Pl. name: " + pl.getName()); 
@@ -596,118 +417,34 @@ public class Client <V extends Visitor>
 		catch (Exception e)
 		{
 			stout.println("Failed to retreive players.");
-			Utils.PrintTraceIfDebug(e, this);
+			Utils.PrintTraceIfDebug(e, master.isVerboseDebugMode());
 		}
-	}
-	
-
-	//  NOT NEEDED ANYMORE!!!!!
-	//  STAYS JUST FOR SHOW FOR A LIL WHILE.
-	
-	/*
-	 * REALLY, A TEST METHOD
-	 */
-	private Vector<Pair<Integer, Object>> recieveAllObjects()
-	{
-		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
-		ObjectHierarchyIterator ohi = new ObjectHierarchyIterator(conn, 0);
-		Vector<Pair<Integer, Object>> collection = new Vector<Pair<Integer,Object>>();
 		
-		while (ohi.hasNext())
-		{
-			try
-			{
-				collection.add(ohi.next());
-			}
-			catch (Exception e)
-			{
-				stout.println("failed to fetch object.");
-			}
-		}
+		stout.println("Receiving all objects...");		
 		try
 		{
-			conn.close();
-		}
-		catch (IOException e)
-		{
-			stout.println("failed to close pipeline");
-		}
-		return collection;
-	}
-	
-
-	
-
-	
-
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 * 
-	 *	MAINTANANCE METHODS
-	 * 
-	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 */
-	
-	
-	/*
-	 * Closing connection, and exiting client.
-	 * @param message Exit message.
-	 */
-	private synchronized void exit(String message, int exitType, Exception exc)
-	{
-		try
-		{
-			stout.println("\n______________________________________");
-			stout.println("\nClosing GenCon: " + message);
-			if (connMgr != null)
-			{
-				stout.print("Closing connection... ");
-				connMgr.close();
-				stout.println("done.");
-			}
-			
-			//if there is an exception, print trace if verbose debug mode is on.
-			if (exc != null)
-				Utils.PrintTraceIfDebug(exc, this);
-			
-			
-			
-			// interrupting the ScannerListener.
-			stout.print("Closing input listener... ");
-			stin.close();
-			stout.println("done.");
-			
-			stout.println("\nClean exit.");
-			//closing standard out.
-			stout.close();
-			
-			System.exit(exitType);
+			Vector<Object> objects = ConnectionMethods.receiveAllObjects(connMgr.createPipeline());
+			for (Object obj : objects)
+				stout.println("--> " + obj.toString());
 		}
 		catch (Exception e)
 		{
-			stout.println("Error on exit. Quitting application.");
-			Utils.PrintTraceIfDebug(e, this);
-			System.exit(ABNORMAL_EXIT);
+			stout.println("Failed to retreive players");
+			Utils.PrintTraceIfDebug(e, master.isVerboseDebugMode());
 		}
 	}
 	
 	/**
-	 * Used by the {@link ScannerListener} class, to notify the Client that
-	 * the exit string has been encountered. 
-	 * Not intended to be used otherwise.
+	 * Closing connection, and exiting client.
+	 * @param message Exit message.
 	 */
-	public void exitOnEncounteringExitString()
+	public synchronized void exit() throws Exception
 	{
-		exit("Exit string '" + QUIT + "' encountered. Exiting Client...", NORMAL_EXIT, null);
+		if (connMgr != null)
+		{
+			stout.print("Closing connection... ");
+			connMgr.close();
+			stout.println("done.");
+		}
 	}
-	
-	
-	/**
-	 * 
-	 * @return true if the client is currently in verbose debug mode; false otherwise.
-	 */
-	public boolean isVerboseDebugMode()
-	{
-		return verboseDebugMode;
-	}
-		
 }

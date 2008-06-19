@@ -5,7 +5,15 @@ Victor Ivri
 
 Copyright: This software is developed and distributed under GNU GENERAL PUBLIC LICENSE. See COPYRIGHT for details.
 
-This is an AI client that builds on libtpproto-java, and utilizes genetic algorithms to find good solutions.
+This is an AI client that builds on libtpproto-java. Implementation details to follow soon!
 
-Running the client: (type in without braces)
-java Runner [URI_address] [Difficulty]
+Running the client:
+
+Compile and run 'GenConRunner' (a simple harness for testing)
+
+Arguments: (Optional) 
+	 * Optional argument: '-a serverURI $' 
+	 * To autorun client, supply argument '-a', followed by the 'serverURI' and by game difficulty '$', 
+	 * which should be replaced by any number 1 to 9. If no game difficulty provided, default is 5.
+	 * The serverURI must include user info for autologin, e.g.: "tp://guest:guest@thousandparsec.net/tp".
+	 * In this case, verbose debug mode will be automatically on.

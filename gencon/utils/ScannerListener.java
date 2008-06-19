@@ -1,6 +1,6 @@
 package gencon.utils;
 
-import gencon.clientLib.Client;
+import gencon.Master;
 
 import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 /**
  * A wrapper class for {@link Scanner}. 
- * Periodically (every second) listens on the input scanner in a separate thread, 
+ * Periodically (every second) listens on the input {@link Scanner} in a separate thread, 
  * to see whether the special QUIT string has been encountered in {@link System}.in.
  * 
  * @author Victor Ivri
@@ -16,7 +16,7 @@ import java.util.Scanner;
 public class ScannerListener
 {
 	private final Scanner scanner;
-	private final Client<?> client;
+	private Master master;
 	private final Thread listenThread;
 	
 	private boolean quit = false;
@@ -28,13 +28,21 @@ public class ScannerListener
 	 * @param sc usually, a new {@link Scanner}.
 	 * @param cl the specific {@link Client} that's meant to be monitored.
 	 */
-	public ScannerListener(Scanner sc, Client<?> cl)
+	public ScannerListener(Scanner sc)
 	{
 		scanner = sc;
-		client = cl;
 		
 		listenThread = new Thread(new Listener());
 		listenThread.start();
+	}
+	
+	/**
+	 * Must call this method for this {@link ScannerListener} to be operational.
+	 * @param master The target to be shut down in case of exit string.
+	 */
+	public void activate (Master master)
+	{
+		this.master = master;
 	}
 	
 	/**
@@ -51,7 +59,7 @@ public class ScannerListener
 		synchronized (scanner)
 		{
 			in = scanner.next();
-			if (in.equals(Client.QUIT))
+			if (in.equals(Master.QUIT))
 				quit = true;
 		}
 		scannerLocked = false;
@@ -72,7 +80,7 @@ public class ScannerListener
 		synchronized (scanner)
 		{
 			in = scanner.next();
-			if (in.equals(Client.QUIT))
+			if (in.equals(Master.QUIT))
 				quit = true;
 		}
 		scannerLocked = false;
@@ -107,11 +115,14 @@ public class ScannerListener
 			return quit || hasNextQuit(); 
 	}
 	
+	/*
+	 * Monitors whether the next string is the exit string.
+	 */
 	private boolean hasNextQuit()
 	{
 		synchronized (scanner)
 		{
-			return scanner.hasNext(Client.QUIT);
+			return scanner.hasNext(Master.QUIT);
 		}
 	}
 	
@@ -131,9 +142,9 @@ public class ScannerListener
 				try
 				{
 					Thread.sleep(1000);
-					if (check())
+					if (check() && master != null)
 					{
-						client.exitOnEncounteringExitString();
+						master.stop("Exit string '" + Master.QUIT + "' encountered. Exiting Client...", Master.NORMAL_EXIT, null);
 						return;
 					}
 				}

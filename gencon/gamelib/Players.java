@@ -91,7 +91,7 @@ public class Players
 	/**
 	 * A class representing a player in the game.
 	 */
-	class Game_Player
+	public class Game_Player
 	{
 		public final int NUM;
 		public final String NAME;
