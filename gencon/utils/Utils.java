@@ -40,7 +40,7 @@ public class Utils
 		
 		if (debug)
 		{
-			stout.println("______________________________________");
+			stout.println("\n______________________________________");
 			stout.println("DEBUG:");
 			stout.println("Exception in : " + e.getClass().getName());
 			stout.println("Cause : " + e.getMessage());

@@ -101,6 +101,7 @@ public class ScannerListener
 	 */
 	public void close()
 	{
+		scanner.close();
 		listenThread.interrupt();
 	}
 
@@ -144,7 +145,7 @@ public class ScannerListener
 					Thread.sleep(1000);
 					if (check() && master != null)
 					{
-						master.stop("Exit string '" + Master.QUIT + "' encountered. Exiting Client...", Master.NORMAL_EXIT, null);
+						master.exit("Exit string '" + Master.QUIT + "' encountered. Exiting Client...", Master.NORMAL_EXIT, null);
 						return;
 					}
 				}

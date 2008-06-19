@@ -13,13 +13,13 @@ public class FullGameStatus
 	private Pair<UniverseMap, UniverseTree> currentStatus;
 	private Vector<Pair<UniverseMap, UniverseTree>> gameHistory;
 	private Players players;
-	public final int DIFFICULTY;
+	public final short DIFFICULTY;
 	/**
 	 * The depth of game-history this class holds in memory.
 	 */
 	public final short HISTORY_DEPTH = 10;
 	
-	public FullGameStatus(int difficulty, String playerName)
+	public FullGameStatus(short difficulty, String playerName)
 	{
 		players = new Players(playerName);
 		DIFFICULTY = difficulty;

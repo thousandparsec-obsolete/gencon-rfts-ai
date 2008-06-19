@@ -47,7 +47,7 @@ public class Client <V extends Visitor>
 
 	//game-related
 	private String myUsername;
-	private int difficulty = 5;
+	private short difficulty = 5;
 	
 	
 	
@@ -73,7 +73,7 @@ public class Client <V extends Visitor>
 	 * 
 	 * If no argument provided, client will start in 'normal' mode; that is, it will rely on standard user input. 
 	 */
-	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException
+	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
 	{
 		String URIstr = "";
 		
@@ -121,7 +121,7 @@ public class Client <V extends Visitor>
 		
 		stout.println("Follow the instructions...");
 		//set verbose debug mode on/off
-		Utils.setVerboseDebug();
+		master.setVerboseDebugMode(Utils.setVerboseDebug());
 		
 		//set URI
 		serverURI = Utils.manualSetURI();
@@ -138,15 +138,20 @@ public class Client <V extends Visitor>
 	 * Initializes client with previously specified URI string. Autologin enabled.
 	 * @param URI {@link URI} string (with user info).
 	 */
-	private void initAutorun(String URIstring) throws IllegalArgumentException, IOException, TPException
+	private void initAutorun(String URIstring) throws IllegalArgumentException, IOException, TPException, URISyntaxException
 	{
 		stout.println("Autorun mode. Initializing...");
 		
 		autorun = true;
 		
+		//verbose debug mode always true in autorun
+		master.setVerboseDebugMode(true);
+		
 		if (setURI(URIstring)) //if URI is valid, proceed with normal operation
+		{
+			serverURI = new URI(URIstring);
 			connect();
-
+		}
 		 /*	
 		    Throw exception otherwise. 
 		 	The rationale is that autorun will most likely be part of a test suite, 
@@ -359,7 +364,15 @@ public class Client <V extends Visitor>
 	}
 	
 	
+	public String getPlayerName()
+	{
+		return myUsername;
+	}
 	
+	public short getDifficulty()
+	{
+		return difficulty;
+	}
 	
 	
 	
@@ -435,7 +448,8 @@ public class Client <V extends Visitor>
 	}
 	
 	/**
-	 * Closing connection, and exiting client.
+	 * Closing connection, and exiting Client.
+	 * 
 	 * @param message Exit message.
 	 */
 	public synchronized void exit() throws Exception

@@ -55,7 +55,7 @@ public class ConnectionManager<V extends TP03Visitor>
 				}
 				catch (Exception e)
 				{
-					Master.stout.println("Failed to close pipeline.");
+					Master.out.println("Failed to close pipeline.");
 				}
 				pipelines.remove(i);
 			}
