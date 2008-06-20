@@ -15,4 +15,9 @@ public class Galaxy extends Body
 	{
 		super(gameId, modTime, Body.BodyType.GALAXY, name, position, parent, children);
 	}
+	
+	public Galaxy(Galaxy other)
+	{
+		super(other);
+	}
 }

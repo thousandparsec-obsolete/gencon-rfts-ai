@@ -25,12 +25,12 @@ import net.thousandparsec.netlib.tp03.Object.ContainsType;
  * @author Victor Ivri
  *
  */
-public class Client <V extends Visitor>
+public class Client
 {
 	//
 	//	MAINTANANCE
 	//
-	private final Master<V> master;
+	private final Master master;
 	
 	private static final PrintStream stout = System.out; 
 	private boolean verboseDebugMode = true; // True by default.
@@ -41,7 +41,7 @@ public class Client <V extends Visitor>
 	//
 	private URI serverURI;
 	private ConnectionManager<TP03Visitor> connMgr;
-	private final LoggerConnectionListener<TP03Visitor> eventLogger;
+	public final LoggerConnectionListener<TP03Visitor> eventLogger;
 	private final TP03Visitor visitor;
 
 
@@ -55,7 +55,7 @@ public class Client <V extends Visitor>
 	 * The default constructor.
 	 *
 	 */
-	public Client(Master<V> master)
+	public Client(Master master)
 	{
 		this.master = master;
 		eventLogger = new LoggerConnectionListener<TP03Visitor>();
@@ -356,24 +356,83 @@ public class Client <V extends Visitor>
 	
 	/**
 	 * 
-	 * @return A connection pipeline
+	 * @return A connection pipeline. Optimally, it should be closed after usage, but will otherwise close upon clean exit.
 	 */
-	public SequentialConnection<TP03Visitor> getPipeline()
+	public synchronized SequentialConnection<TP03Visitor> getPipeline()
 	{
 		return connMgr.createPipeline();
 	}
 	
 	
-	public String getPlayerName()
+	public synchronized String getPlayerName()
 	{
 		return myUsername;
 	}
 	
-	public short getDifficulty()
+	public synchronized short getDifficulty()
 	{
 		return difficulty;
 	}
 	
+	
+	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 * 
+	 *	CONNECTION METHODS:
+	 * 
+	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 */
+	
+	
+	public synchronized Object getUniverse() throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Object universe = ConnectionMethods.getUniverse(conn);
+		conn.close();
+		return universe;
+	}
+	
+	public synchronized int getTimeRemaining() throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		int time = ConnectionMethods.getTimeRemaining(conn);
+		conn.close();
+		return time;
+	}
+	
+	public synchronized Player getPlayerById(int id) throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Player pl = ConnectionMethods.getPlayerById(id, conn);
+		conn.close();
+		return pl;
+	}
+
+	public synchronized Vector<Player> getAllPlayers() throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Vector<Player> pls = ConnectionMethods.getAllPlayers(conn);
+		conn.close();
+		return pls;
+	}
+	
+	public synchronized Vector<Object> receiveAllObjects() throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Vector<Object> obj = ConnectionMethods.receiveAllObjects(conn);
+		conn.close();
+		return obj;
+	}
+	
+	
+	public synchronized boolean sendOrder(int objectId, int orderType, int locationInQueue) throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		boolean ok = ConnectionMethods.sendOrder(objectId, orderType, locationInQueue, conn);
+		conn.close();
+		return ok;
+	}
+
+
 	
 	
 	

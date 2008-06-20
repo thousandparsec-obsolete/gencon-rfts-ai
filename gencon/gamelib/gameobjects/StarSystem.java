@@ -1,7 +1,5 @@
 package gencon.gamelib.gameobjects;
 
-import gencon.gamelib.gameobjects.Body.BodyType;
-
 import java.util.List;
 
 /**
@@ -12,10 +10,13 @@ import java.util.List;
  */
 public class StarSystem extends Body
 {
-
 	public StarSystem(int gameId, long modTime, String name, long[] position, int parent, List<Integer> children) 
 	{
 		super(gameId, modTime, Body.BodyType.STAR_SYSTEM, name, position, parent, children);
 	}
-
+	
+	public StarSystem(StarSystem other)
+	{
+		super(other);
+	}
 }

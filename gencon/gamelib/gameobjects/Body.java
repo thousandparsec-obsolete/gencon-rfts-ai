@@ -28,14 +28,8 @@ public class Body
 	}
 	
 	/**
+	 * Normal constructor.
 	 * 
-	 * @param gameId
-	 * @param modTime
-	 * @param type
-	 * @param name
-	 * @param position
-	 * @param parent
-	 * @param children
 	 */
 	public Body(int gameId, long modTime, BodyType type, String name, long[] position, int parent, List<Integer> children)
 	{
@@ -46,5 +40,14 @@ public class Body
 		CHILDREN = children;
 		POSITION = position;
 		MODTIME = modTime;
+	}
+	
+	/**
+	 * Copy constructor. 
+	 */
+	public Body(Body b)
+	{
+		this(b.GAME_ID, b.MODTIME, b.TYPE, b.NAME, b.POSITION, b.PARENT, b.CHILDREN);
+		
 	}
 }

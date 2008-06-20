@@ -10,7 +10,14 @@ import gencon.clientLib.*;
 import gencon.gamelib.FullGameStatus;
 import gencon.utils.*;
 
-public class Master <V extends Visitor> implements Runnable
+/**
+ * The controller class, that regulates the operation of the system as a whole.
+ * This class is run by any harness, by first constructing it (with optional arguments),
+ * and then using the <code>run()</code> method (possibly in a separate thread). 
+ *
+ * @author Victor Ivri
+ */
+public class Master implements Runnable
 {
 	//in/out
 	public final static ScannerListener in = new ScannerListener(new Scanner(System.in));
@@ -19,20 +26,25 @@ public class Master <V extends Visitor> implements Runnable
 	
 	
 	//maintanance
-	private boolean verboseDebugMode;
+	private boolean verboseDebugMode = true; //true by default
 	public final static int NORMAL_EXIT = 0;
 	public final static int ABNORMAL_EXIT = -1;
 	
 	
 	//connection related
-	private Client<V> client;
+	public final Client CLIENT;
 	
 	
 	private FullGameStatus gameStatus;
 	
 	
+	/**
+	 * 
+	 * @param args For correct argument syntax, see README.
+	 */
 	public Master(String[] args)
 	{
+		CLIENT = new Client(this);
 		init(args);
 	}
 	
@@ -45,26 +57,24 @@ public class Master <V extends Visitor> implements Runnable
 		out.println("To quit at any time, enter 'q', then press RETURN.");
 		
 		//initializing client
-		client = new Client<V>(this);
 		try
 		{
-			client.runClient(args);
+			CLIENT.runClient(args);
 		}
 		catch (Exception e)
 		{
 			exit("Failed initializing client.", ABNORMAL_EXIT, e);
 		}
 		
-		
 		//initializing game status
-		gameStatus = new FullGameStatus(client.getDifficulty(), client.getPlayerName());
-		
-		
+		gameStatus = new FullGameStatus(CLIENT, CLIENT.getDifficulty(), CLIENT.getPlayerName());
 		
 		out.println("Done initializing GenCon.");
 	}
 	
-	
+	/**
+	 * Runs GenCon, possibly in a separate thread.
+	 */
 	public void run()
 	{
 		
@@ -74,15 +84,28 @@ public class Master <V extends Visitor> implements Runnable
 	
 	private void gameCycle()
 	{
-		
+		startOfTurnRoutine();
 	}
 	
 	private void startOfTurnRoutine()
 	{
+		try
+		{
+			gameStatus.incrementTurn();
+			//CLIENT.eventLogger.dumpLogStd();
+		}
+		catch (Exception e) /// IN REALITY, IT SHOULDN'T QUIT AT THIS POINT
+		{
+			exit("Unsuccessful updating game status.", ABNORMAL_EXIT, e);
+		}
+	}
+	
+	private void endOfTurnRoutine()
+	{
 		
 	}
 	
-	private void startRobot(SequentialConnection<V> conn)
+	private void startRobot()
 	{
 		
 	}
@@ -93,10 +116,22 @@ public class Master <V extends Visitor> implements Runnable
 	}
 	
 	
+	public void setVerboseDebugMode(boolean mode)
+	{
+		verboseDebugMode = mode;
+	}
+
+	/**
+	 * Properly exits GenCon.
+	 * 
+	 * @param message To be displayed on exit.
+	 * @param exitType Specifies if it was a normal, or abnormal exit (0 or otherwise).
+	 * @param e The exception, which triggered the exit, if it exists.
+	 */
 	public void exit(String message, int exitType, Exception e)
 	{
 		out.println("\n______________________________________");
-		out.println("Exiting GenCon. Reason: " + message);
+		out.println("Exiting GenCon.\nReason: " + message);
 		
 		if (e != null)
 		{
@@ -112,7 +147,7 @@ public class Master <V extends Visitor> implements Runnable
 			out.println("done.");
 			
 			//exiting client
-			client.exit();
+			CLIENT.exit();
 			
 			out.println("Clean exit.");
 			
@@ -126,11 +161,6 @@ public class Master <V extends Visitor> implements Runnable
 			System.exit(ABNORMAL_EXIT);
 		}
 		
-	}
-	
-	public void setVerboseDebugMode(boolean mode)
-	{
-		verboseDebugMode = mode;
 	}
 	
 	public boolean isVerboseDebugMode()

@@ -1,8 +1,8 @@
 package gencon.gamelib;
 
 
+import gencon.clientLib.Client;
 import gencon.clientLib.ConnectionMethods;
-import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Galaxy;
@@ -36,7 +36,7 @@ public class ObjectConverter
 	private ObjectConverter(){} //dummy constructor.
 	
 	
-	public static synchronized Body ConvertToBody(Object object, int parent, SequentialConnection<TP03Visitor> conn)
+	public static synchronized Body ConvertToBody(Object object, int parent, Client client, Players currentPlayers)
 	{
 		//Generic parameters:
 		//-----------------------
@@ -68,7 +68,6 @@ public class ObjectConverter
 		{
 			case (ObjectParams.Universe.PARAM_TYPE): 
 				return new Universe(game_id, modtime, name, children);
-	
 			case (ObjectParams.Galaxy.PARAM_TYPE):
 				return new Galaxy(game_id, modtime, name, position, parent, children);
 
@@ -79,7 +78,7 @@ public class ObjectConverter
 			{
 				//getting owner:
 				ObjectParams.Planet pl = (ObjectParams.Planet) object.getObject();
-				Game_Player owner = new Game_Player(pl.getOwner(), ConnectionMethods.getPlayerById(pl.getOwner(), conn).getName());
+				Game_Player owner = new Game_Player(pl.getOwner(), client.getPlayerById(pl.getOwner()).getName());
 				
 				//getting orders:
 				
@@ -94,7 +93,7 @@ public class ObjectConverter
 			{
 				//getting owner:
 				ObjectParams.Fleet fl = (ObjectParams.Fleet) object.getObject();
-				Game_Player owner = new Game_Player(fl.getOwner(), ConnectionMethods.getPlayerById(fl.getOwner(), conn).getName());
+				Game_Player owner = new Game_Player(fl.getOwner(), client.getPlayerById(fl.getOwner()).getName());
 				
 				//getting damage:
 				int damage = fl.getDamage();

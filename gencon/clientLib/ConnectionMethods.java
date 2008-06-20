@@ -22,6 +22,8 @@ import net.thousandparsec.netlib.tp03.TP03Visitor;
 import net.thousandparsec.netlib.tp03.TimeRemaining;
 import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
 import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
+import net.thousandparsec.netlib.tp03.ObjectParams.Fleet;
+import net.thousandparsec.netlib.tp03.ObjectParams.Planet;
 
 import gencon.utils.*;
 
@@ -53,31 +55,62 @@ public class ConnectionMethods
 	{
 		GetPlayer get = new GetPlayer();
 		get.getIds().add(new IdsType(id));
-		conn.receiveFrame(Sequence.class);
-		return conn.receiveFrame(Player.class);
+		return conn.sendFrame(get, Player.class);
 	}
 	
 	public synchronized static Vector<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
-		GetPlayer getplayers = new GetPlayer();
-		for (int i = 1; i < 1000; i++)
+		//FIRST: RETREIVE ALL OBJECTS, AND CHECK ALL AVAILABLE PLAYER-IDS:
+		//A redundancy, but works fast enough, plus it avoids unnecessary clutter in code. 
+		Vector<Object> objects = receiveAllObjects(conn); 
+		
+		Vector<Integer> playerIds = new Vector<Integer>(objects.size());
+		final int NEUTRAL = -1; //the standard demarcation of neutral objects.
+		
+		//add to list of ids if object is a fleet or non-neutral planet.
+		for (Object obj : objects)
 		{
-			getplayers.getIds().add(new IdsType(i));
-		}
-
-		Sequence seq = conn.sendFrame(getplayers, net.thousandparsec.netlib.tp03.Sequence.class);
-		Vector<Player> players = new Vector<Player>(seq.getNumber());
-		for (int j = 0; j < seq.getNumber(); j++)
-		{
-			try
+			if (obj != null)
 			{
-				players.add(conn.receiveFrame(net.thousandparsec.netlib.tp03.Player.class));
+				if (obj.getOtype() == ObjectParams.Fleet.PARAM_TYPE)
+				{
+					int owner = ((Fleet)obj.getObject()).getOwner();
+					if (!checkIfOnList(playerIds, owner))
+						playerIds.add(new Integer(owner));
+				}
+				else if (obj.getOtype() == ObjectParams.Planet.PARAM_TYPE)
+				{
+					int owner = ((Planet)obj.getObject()).getOwner();
+					if (!checkIfOnList(playerIds, owner) && owner != NEUTRAL)
+						playerIds.add(new Integer(owner));
+				}
 			}
-			catch (TPException ignore){}
 		}
 		
+		
+		//THEN, RETREIVE ALL PLAYER FRAMES, BASED ON THAT LIST:
+		Vector<Player> players = new Vector<Player>();
+		for (Integer id : playerIds)
+			if (id != null)
+			{
+				players.add(getPlayerById(id, conn));
+				stout.print(".");
+			}
+
 		return players;
 	}
+	
+	private synchronized static boolean checkIfOnList(List<Integer> list, int num)
+	{
+		for (Integer i : list)
+			if (i != null && i.intValue() == num)
+				return true;
+		
+		//if not found:
+		return false;
+	}
+	
+	
 	
 	public synchronized static Vector<Object> receiveAllObjects(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
@@ -110,8 +143,9 @@ public class ConnectionMethods
 		return objects;
 	}
 	
-	public synchronized static void /* or boolean? */ sendOrder(/*...*/)
+	public synchronized static boolean sendOrder(int objectId, int orderType, int locationInQueue, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
+		// TO DO !!!!!
 		
 	}
 }

@@ -21,9 +21,9 @@ public class GenConRunner {
 	
 	public static void main(String[] args) 
 	{
-		Master<TP03Visitor> master = new Master<TP03Visitor>(args);
-		Client<TP03Visitor> genConClient = new Client<TP03Visitor>(master);
+		Master master = new Master(args);
 		
+		master.run();
 	}
 
 }
