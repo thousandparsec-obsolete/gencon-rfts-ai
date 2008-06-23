@@ -2,16 +2,11 @@ package gencon.gamelib;
 
 import gencon.clientLib.Client;
 import gencon.gamelib.gameobjects.Body;
-import gencon.gamelib.gameobjects.Universe;
 
 import java.io.IOException;
 import java.util.*;
 
 import net.thousandparsec.netlib.TPException;
-import net.thousandparsec.netlib.tp03.Object;
-import net.thousandparsec.netlib.tp03.ObjectParams;
-import net.thousandparsec.netlib.tp03.Player;
-import net.thousandparsec.netlib.tp03.Object.ContainsType;
 import net.thousandparsec.util.*;
 
 /**
@@ -54,7 +49,7 @@ public class FullGameStatus
 			gameHistory.remove(0); 
 		
 		//retreive new list of players:
-		Players pl = makePlayers();
+		Players pl = getPlayers();
 		System.out.println("Players retreived.");
 		//generate new map:
 		UniverseMap map = makeMap(pl);
@@ -65,59 +60,18 @@ public class FullGameStatus
 		
 	}
 	
-	
-	private Players makePlayers() throws IOException, TPException
+	private Players getPlayers() throws IOException, TPException
 	{
-		Vector<Player> gotPlayers = CLIENT.getAllPlayers();
-			//this line throws the exceptions!
-		Vector<Game_Player> newPlayers = new Vector<Game_Player>();
-		
-		
-		for (Player player : gotPlayers)
-			if (player != null)
-				newPlayers.add(new Game_Player(player.getId(), player.getName()));
-		
+		Vector<Game_Player> newPlayers = CLIENT.getAllPlayers();
 		return new Players(PLAYER_NAME, newPlayers);
 	}
 	
 	private UniverseMap makeMap(Players pl) throws IOException, TPException
 	{
-		Vector<Object> objects = CLIENT.receiveAllObjects();
-		Vector<Body> bodies = new Vector<Body>(objects.size());
-		
-		for (Object obj : objects)
-		{
-			if (obj != null)
-			{
-				int parent = -2;
-				
-				if (obj.getObject().getParameterType() == ObjectParams.Universe.PARAM_TYPE)
-					parent = Universe.UNIVERSE_PARENT;
-				else
-					parent = findParent(objects, obj).getId(); //if it's not a universe, it must have a parent! If rule broken, null pointer will be thrown/
-			
-					bodies.add(ObjectConverter.ConvertToBody(obj, parent, CLIENT, pl));
-			}
-		}
-		
+		Vector<Body> bodies = CLIENT.receiveAllObjects();
 		return new UniverseMap(bodies);
 	}
 	
-	/*
-	 * Helper method for makeMap().
-	 * Returns the immediate parent of the object
-	 */
-	private Object findParent(Vector<Object> objects, Object child)
-	{
-		for (Object obj : objects)
-			if (obj != null)
-				for (ContainsType ct : obj.getContains())
-					if (ct.getId() == child.getId())
-						return obj;	
-		
-		//IF NOT FOUND:
-		return null;
-	}
 	
 	/**  
 	 * @return A deep copy of the current status.

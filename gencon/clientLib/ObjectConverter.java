@@ -1,14 +1,18 @@
-package gencon.gamelib;
+package gencon.clientLib;
 
 
 import gencon.clientLib.Client;
 import gencon.clientLib.ConnectionMethods;
+import gencon.gamelib.Game_Player;
+import gencon.gamelib.Players;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Galaxy;
 import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
+import gencon.gamelib.gameobjects.Fleet.Ship;
+import gencon.gamelib.gameobjects.Planet.Resources;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +21,12 @@ import java.util.Vector;
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.tp03.ObjectParams;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
+import net.thousandparsec.netlib.tp03.Object.OrdertypesType;
 import net.thousandparsec.netlib.tp03.Object.PosType;
 import net.thousandparsec.netlib.tp03.Object.ContainsType;
 import net.thousandparsec.netlib.tp03.Object.VelType;
 import net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType;
+import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
 import net.thousandparsec.netlib.tp03.Object;
 
 import gencon.utils.*;
@@ -36,7 +42,7 @@ public class ObjectConverter
 	private ObjectConverter(){} //dummy constructor.
 	
 	
-	public static synchronized Body ConvertToBody(Object object, int parent, Client client, Players currentPlayers)
+	public static synchronized Body ConvertToBody(Object object, int parent, Client client)
 	{
 		//Generic parameters:
 		//-----------------------
@@ -78,29 +84,31 @@ public class ObjectConverter
 			{
 				//getting owner:
 				ObjectParams.Planet pl = (ObjectParams.Planet) object.getObject();
-				Game_Player owner = new Game_Player(pl.getOwner(), client.getPlayerById(pl.getOwner()).getName());
+				Game_Player owner = client.getPlayerById(pl.getOwner());
 				
 				//getting orders:
 				
 				//getting resources:
+				Resources resources = convertResources(pl.getResources());
 				
-				//getting pdbs:
-				
-				
-				return new Planet(game_id, modtime, name, position, parent, children, owner, orders, resources, pdbs);
+				return new Planet(game_id, modtime, name, position, parent, children, owner, orders, resources);
 			}
 			case (ObjectParams.Fleet.PARAM_TYPE):
 			{
 				//getting owner:
 				ObjectParams.Fleet fl = (ObjectParams.Fleet) object.getObject();
-				Game_Player owner = new Game_Player(fl.getOwner(), client.getPlayerById(fl.getOwner()).getName());
+				Game_Player owner = client.getPlayerById(fl.getOwner());
 				
 				//getting damage:
 				int damage = fl.getDamage();
 				
 				//getting ships:
 				List<ShipsType> shipList = fl.getShips();
-				//........ GOTTA LEARN THE ACTUAL STRING NAMES, AND CONVERT THEM TO TYPES...
+				List<Ship> ships = new Vector<Ship>(shipList.size());
+				for (ShipsType st : shipList)
+					if (st != null)
+						ships.add(convertShip(st));
+				
 				
 				//getting velocity:
 				VelType vel = object.getVel();
@@ -123,7 +131,7 @@ public class ObjectConverter
 		
 	}
 	
-	public static synchronized gencon.gamelib.gameobjects.Planet.Resources convertResources(Vector<net.thousandparsec.netlib.tp03.Resource> resources)
+	public static synchronized gencon.gamelib.gameobjects.Planet.Resources convertResources(List<ResourcesType> resources)
 	{
 		
 	}

@@ -6,7 +6,9 @@ import java.util.*;
 
 import gencon.Master;
 import gencon.gamelib.FullGameStatus;
-import gencon.gamelib.ObjectConverter;
+import gencon.gamelib.Game_Player;
+import gencon.gamelib.Players;
+import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Universe;
 import gencon.utils.*;
 import net.thousandparsec.netlib.*;
@@ -382,7 +384,7 @@ public class Client
 	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	 */
 	
-	
+	//DONT REALLY NEED. PLUS, IT RETURNS OBJECT AND NOT UNIVERSE
 	public synchronized Object getUniverse() throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
@@ -399,30 +401,72 @@ public class Client
 		return time;
 	}
 	
-	public synchronized Player getPlayerById(int id) throws IOException, TPException
+	public synchronized Game_Player getPlayerById(int id) throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
 		Player pl = ConnectionMethods.getPlayerById(id, conn);
 		conn.close();
-		return pl;
+		
+		Game_Player player = new Game_Player(pl.getId(), pl.getName());
+		return player;
 	}
 
-	public synchronized Vector<Player> getAllPlayers() throws IOException, TPException
+	public synchronized Vector<Game_Player> getAllPlayers() throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
 		Vector<Player> pls = ConnectionMethods.getAllPlayers(conn);
 		conn.close();
-		return pls;
+		
+		Vector<Game_Player> players = new Vector<Game_Player>();
+		
+		for (Player player : pls)
+			if (player != null)
+				players.add(new Game_Player(player.getId(), player.getName()));
+		
+		return players;
 	}
 	
-	public synchronized Vector<Object> receiveAllObjects() throws IOException, TPException
+	public synchronized Vector<Body> receiveAllObjects() throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Vector<Object> obj = ConnectionMethods.receiveAllObjects(conn);
+		Vector<Object> objects = ConnectionMethods.receiveAllObjects(conn);
 		conn.close();
-		return obj;
+		
+		Vector<Body> bodies = new Vector<Body>(objects.size());
+		
+		for (Object obj : objects)
+		{
+			if (obj != null)
+			{
+				int parent = -2;
+				
+				if (obj.getObject().getParameterType() == ObjectParams.Universe.PARAM_TYPE)
+					parent = Universe.UNIVERSE_PARENT;
+				else
+					parent = findParent(objects, obj).getId(); //if it's not a universe, it must have a parent! If rule broken, null pointer will be thrown/
+			
+					bodies.add(ObjectConverter.ConvertToBody(obj, parent, this));
+			}
+		}
+		
+		return bodies;
 	}
 	
+	/*
+	 * Helper method for receiveAllObjects().
+	 * Returns the immediate parent of the object
+	 */
+	private Object findParent(Vector<Object> objects, Object child)
+	{
+		for (Object obj : objects)
+			if (obj != null)
+				for (ContainsType ct : obj.getContains())
+					if (ct.getId() == child.getId())
+						return obj;	
+		
+		//IF NOT FOUND:
+		return null;
+	}
 	
 	public synchronized boolean sendOrder(int objectId, int orderType, int locationInQueue) throws IOException, TPException
 	{
@@ -432,80 +476,6 @@ public class Client
 		return ok;
 	}
 
-
-	
-	
-	
-	
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 * 
-	 *	NOT NEEDED ANYMORE; WILL BE REMOVED WHEN ALL USEFUL INFO WILL BE EXTRACTED FROM ITS CODE!
-	 * 
-	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 */
-	private void startPlay()
-	{
-		stout.println("Starting to play game... ");
-		
-		//printing time!
-		try
-		{
-			int time = ConnectionMethods.getTimeRemaining(connMgr.createPipeline());
-			stout.println("Time remaining until end of turn : " + time);
-		}
-		catch (Exception e)
-		{
-			stout.println("Failed to retreive time.");
-			Utils.PrintTraceIfDebug(e, master.isVerboseDebugMode());
-		}
-		/*
-		//getting universe!
-		Object un = null;
-		try
-		{
-			un = ConnectionUtils.getUniverse(connMgr.createPipeline(), this);
-		}
-		catch (Exception e)
-		{
-			stout.println("Could not get universe. Exiting.");
-			exit("Failed to instantiate game.", ABNORMAL_EXIT, e);
-		}
-		Universe universe = (Universe)ObjectConverter.ConvertToBody(un, Universe.UNIVERSE_PARENT, 
-				connMgr.createPipeline());
-		gameStatus = new FullGameStatus(difficulty, universe, myUsername);
-		
-		*/
-		
-		
-		stout.println("Receiving all players...");
-		Vector<Player> players;
-		try
-		{
-			players = ConnectionMethods.getAllPlayers(connMgr.createPipeline());
-			//printing players:
-			for (Player pl : players)
-				stout.println("Pl. num: " + pl.getId() + " Pl. name: " + pl.getName()); 
-		}
-		catch (Exception e)
-		{
-			stout.println("Failed to retreive players.");
-			Utils.PrintTraceIfDebug(e, master.isVerboseDebugMode());
-		}
-		
-		stout.println("Receiving all objects...");		
-		try
-		{
-			Vector<Object> objects = ConnectionMethods.receiveAllObjects(connMgr.createPipeline());
-			for (Object obj : objects)
-				stout.println("--> " + obj.toString());
-		}
-		catch (Exception e)
-		{
-			stout.println("Failed to retreive players");
-			Utils.PrintTraceIfDebug(e, master.isVerboseDebugMode());
-		}
-	}
-	
 	/**
 	 * Closing connection, and exiting Client.
 	 * 

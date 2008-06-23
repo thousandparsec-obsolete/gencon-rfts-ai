@@ -65,6 +65,13 @@ public class ConnectionMethods
 		Vector<Object> objects = receiveAllObjects(conn); 
 		
 		Vector<Integer> playerIds = new Vector<Integer>(objects.size());
+		
+		//make sure player ids don't repeat:
+		boolean[] flags = new boolean[objects.size()]; 
+		for (int i = 0; i < flags.length; i++)
+			flags[i] = false; //initializing to false. may be redundant, but just a safeguard against future changes in standards.
+		
+		
 		final int NEUTRAL = -1; //the standard demarcation of neutral objects.
 		
 		//add to list of ids if object is a fleet or non-neutral planet.
@@ -75,14 +82,20 @@ public class ConnectionMethods
 				if (obj.getOtype() == ObjectParams.Fleet.PARAM_TYPE)
 				{
 					int owner = ((Fleet)obj.getObject()).getOwner();
-					if (!checkIfOnList(playerIds, owner))
+					if (flags[owner] == false)
+					{
 						playerIds.add(new Integer(owner));
+						flags[owner] = true;
+					}
 				}
 				else if (obj.getOtype() == ObjectParams.Planet.PARAM_TYPE)
 				{
 					int owner = ((Planet)obj.getObject()).getOwner();
-					if (!checkIfOnList(playerIds, owner) && owner != NEUTRAL)
+					if (owner != NEUTRAL && flags[owner] == false)
+					{
 						playerIds.add(new Integer(owner));
+						flags[owner] = true;
+					}
 				}
 			}
 		}
@@ -137,7 +150,10 @@ public class ConnectionMethods
 		//receiving objects:
 		for (int i = 0; i < seq.getNumber(); i++)
 		{
-			objects.add(conn.receiveFrame(Object.class));
+			Object o = conn.receiveFrame(Object.class);
+			if (o.getOtype() == ObjectParams.Planet.PARAM_TYPE)
+				stout.println("--> " + o.toString());
+			objects.add(o);
 		}
 		
 		return objects;
