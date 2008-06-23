@@ -2,6 +2,7 @@ package gencon.gamelib;
 
 import gencon.clientLib.Client;
 import gencon.gamelib.gameobjects.Body;
+import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
 import java.util.*;
@@ -42,6 +43,23 @@ public class FullGameStatus
 	 */
 	public void incrementTurn() throws IOException, TPException
 	{
+//////	TESTING:::
+//		CLIENT.getResourceDescs();
+		UniverseMap um = currentStatus.left;
+		
+		List<StarSystem> sss = um.STAR_SYSTEMS;
+		
+		for (StarSystem ss : sss)
+			if (ss != null)
+			{
+				System.out.println("Star system: " + ss.NAME + " : " + ss.GAME_ID);
+				List<Body> contents = um.getContents(ss);
+				for (Body bod: contents)
+					System.out.println("--> " + bod.NAME + " : " + bod.GAME_ID);
+			}
+///////////////
+		
+		
 		//first, archive the previous status.
 		gameHistory.add(getCurrentStatus());
 		//remove oldest element from archive, if it exceeds specified size.
@@ -57,6 +75,9 @@ public class FullGameStatus
 		
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMap, Players>(map, pl); 
+		
+		
+		
 		
 	}
 	
@@ -101,7 +122,7 @@ public class FullGameStatus
 	private Pair<UniverseMap, Players> deepCopyOfStatus(Pair<UniverseMap, Players> status)
 	{
 		return new Pair<UniverseMap, Players>
-			(new UniverseMap(status.left.BODIES), 
+			(new UniverseMap(status.left.ALL_BODIES), 
 				new Players(status.right.ME, status.right.PLAYERS));
 	}
 	

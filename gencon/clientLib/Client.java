@@ -476,6 +476,48 @@ public class Client
 		return ok;
 	}
 
+	
+	
+	public synchronized void getResourceDescs() 
+	{
+		try
+		{
+			SequentialConnection<TP03Visitor> conn = getPipeline();
+			GetResourceIDs gri = new GetResourceIDs();
+			gri.setKey(-1);
+			gri.setAmount(-1);
+			ResourceIDs ris = conn.sendFrame(gri, ResourceIDs.class);
+			
+			stout.println(ris.toString());
+			
+			GetResource grs = new GetResource(); 
+			List<IdsType> list = grs.getIds();
+			for (int i = 0; i < ris.getModtimes().size(); i++)
+				list.add(new IdsType(ris.getModtimes().get(i).getId()));
+			
+			Sequence seq = conn.sendFrame(grs, Sequence.class);
+			
+			for (int i = 0; i < seq.getNumber(); i++)
+			{
+				Frame f = conn.receiveFrame(Frame.class);
+				stout.println("Resource: " + f.toString());
+			}
+		}
+		catch (Exception e)
+		{
+			stout.println("Failed to retreive resources.");
+			e.printStackTrace();
+			return;
+		}
+		
+		
+	}
+	
+	
+	
+	
+	
+	
 	/**
 	 * Closing connection, and exiting Client.
 	 * 

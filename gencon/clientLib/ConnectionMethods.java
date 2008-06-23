@@ -5,7 +5,6 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Vector;
 
-import net.thousandparsec.netlib.Frame;
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.GetObjectIDs;
@@ -15,7 +14,6 @@ import net.thousandparsec.netlib.tp03.GetTimeRemaining;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.ObjectIDs;
 import net.thousandparsec.netlib.tp03.ObjectParams;
-import net.thousandparsec.netlib.tp03.Order;
 import net.thousandparsec.netlib.tp03.Player;
 import net.thousandparsec.netlib.tp03.Sequence;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
@@ -25,12 +23,10 @@ import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
 import net.thousandparsec.netlib.tp03.ObjectParams.Fleet;
 import net.thousandparsec.netlib.tp03.ObjectParams.Planet;
 
-import gencon.utils.*;
-
 public class ConnectionMethods 
 {
 	private ConnectionMethods(){}	//dummy constructor: static class.
-	private final static PrintStream stout = System.out;
+	//private final static PrintStream stout = System.out;
 	
 	public synchronized static Object getUniverse(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
@@ -105,10 +101,7 @@ public class ConnectionMethods
 		Vector<Player> players = new Vector<Player>();
 		for (Integer id : playerIds)
 			if (id != null)
-			{
 				players.add(getPlayerById(id, conn));
-				stout.print(".");
-			}
 
 		return players;
 	}
@@ -151,8 +144,6 @@ public class ConnectionMethods
 		for (int i = 0; i < seq.getNumber(); i++)
 		{
 			Object o = conn.receiveFrame(Object.class);
-			if (o.getOtype() == ObjectParams.Planet.PARAM_TYPE)
-				stout.println("--> " + o.toString());
 			objects.add(o);
 		}
 		

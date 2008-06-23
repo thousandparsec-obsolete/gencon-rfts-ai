@@ -44,10 +44,18 @@ public class Planet extends Body
 		public final short SOCIAL_ENV;
 		public final short PLANETARY_ENV;
 		public final short POP_MAINTANENCE;
-		public final short PDBS;
+		public final short COLONIST;
+		public final short SHIP_TECH;
+		public final short PDB1S;
+		public final short PDB1_MAINT;
+		public final short PDB2S;
+		public final short PDB2_MAINT;
+		public final short PDB3S;
+		public final short PDB3_MAINT;
 		
 		public Resources(short resource_pts, short industry, short population, short social_env,
-				short planetary_env, short pop_maintanance, short pdbs)
+				short planetary_env, short pop_maintanance, short colonist, short ship_tech, short pdb1, short pdb1_m,
+				short pdb2, short pdb2_m, short pdb3, short pdb3_m)
 		{
 			RESOURCE_POINTS = resource_pts;
 			INDUSTRY = industry;
@@ -55,7 +63,14 @@ public class Planet extends Body
 			SOCIAL_ENV = social_env;
 			PLANETARY_ENV = planetary_env;
 			POP_MAINTANENCE = pop_maintanance;
-			PDBS = pdbs;
+			COLONIST = colonist;
+			SHIP_TECH = ship_tech;
+			PDB1S = pdb1;
+			PDB1_MAINT = pdb1_m;
+			PDB2S = pdb2;
+			PDB2_MAINT = pdb2_m;
+			PDB3S = pdb3;
+			PDB3_MAINT = pdb3_m;
 		}
 	}
 	
