@@ -44,7 +44,8 @@ public class FullGameStatus
 	public void incrementTurn() throws IOException, TPException
 	{
 //////	TESTING:::
-//		CLIENT.getResourceDescs();
+		CLIENT.getResourceDescs();
+		/*
 		UniverseMap um = currentStatus.left;
 		
 		List<StarSystem> sss = um.STAR_SYSTEMS;
@@ -57,6 +58,7 @@ public class FullGameStatus
 				for (Body bod: contents)
 					System.out.println("--> " + bod.NAME + " : " + bod.GAME_ID);
 			}
+		*/
 ///////////////
 		
 		

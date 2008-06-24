@@ -1,0 +1,30 @@
+A convenience file to store resource types for RFTS:
+
+Resource: {Resource; id: 1; singularname: Resource Point; pluralname: Resource Points; singularunitname: point; pluralunitname: points; description: Resource points; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 2; singularname: Industry; pluralname: Industry; singularunitname: units; pluralunitname: units; description: Industrial strength; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 3; singularname: Population; pluralname: Population; singularunitname: unit; pluralunitname: units; description: Population of the planet; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 4; singularname: Social Environment; pluralname: Social Environment; singularunitname: point; pluralunitname: points; description: Social Env. describes the health of the population. (Influences Population); weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 5; singularname: Planetary Environment; pluralname: Planetary Environment; singularunitname: point; pluralunitname: points; description: Planetary Env. describes the health of the planet. (Influences Social Env.); weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 6; singularname: Population Maintenance; pluralname: Population Maintenance; singularunitname: point; pluralunitname: points; description: Population Maintenance is the cost required to maintain the current population.                         A 1:1 ratio with population is required for healthy populations.; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 7; singularname: Colonist; pluralname: Colonists; singularunitname: unit; pluralunitname: units; description: Population available for colonisation; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 8; singularname: Ship Technology; pluralname: Ship Technology; singularunitname: point; pluralunitname: points; description: Research points in ship/pdb technology; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 9; singularname: PDB1; pluralname: PDB1s; singularunitname: unit; pluralunitname: units; description: Planetary Defense Bases: defend against attacking fleets!; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 10; singularname: PDB1 Maintenance; pluralname: PDB1 Maintenance; singularunitname: unit; pluralunitname: units; description: Planetary Defense Bases Maintenance: keep your bases in working order!                           (1:1 ration to PDBs required); weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 11; singularname: PDB2; pluralname: PDB2s; singularunitname: unit; pluralunitname: units; description: Planetary Defense Bases: defend against attacking fleets!; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 12; singularname: PDB2 Maintenance; pluralname: PDB2 Maintenance; singularunitname: unit; pluralunitname: units; description: Planetary Defense Bases Maintenance: keep your bases in working order!                           (1:1 ration to PDBs required); weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 13; singularname: PDB3; pluralname: PDB3s; singularunitname: unit; pluralunitname: units; description: Planetary Defense Bases: defend against attacking fleets!; weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+
+Resource: {Resource; id: 14; singularname: PDB3 Maintenance; pluralname: PDB3 Maintenance; singularunitname: unit; pluralunitname: units; description: Planetary Defense Bases Maintenance: keep your bases in working order!                           (1:1 ration to PDBs required); weight: 0; size: 0; modtime: 1214241994; super:{Response}}
+

@@ -12,7 +12,7 @@ import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
 import gencon.gamelib.gameobjects.Fleet.Ship;
-import gencon.gamelib.gameobjects.Planet.Resources;
+import gencon.gamelib.gameobjects.Resources;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +20,7 @@ import java.util.Vector;
 
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.tp03.ObjectParams;
+import net.thousandparsec.netlib.tp03.ResourceIDs;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
 import net.thousandparsec.netlib.tp03.Object.OrdertypesType;
 import net.thousandparsec.netlib.tp03.Object.PosType;
@@ -131,9 +132,39 @@ public class ObjectConverter
 		
 	}
 	
-	public static synchronized gencon.gamelib.gameobjects.Planet.Resources convertResources(List<ResourcesType> resources)
+	public static synchronized Resources convertResources(List<ResourcesType> resources)
 	{
+		//initializing variables to nill:
+		int resource_pts = 0; int industry = 0; int population = 0;
+		int social_env = 0; int planetary_env = 0; int pop_maintanance = 0; 
+		int colonist = 0; int ship_tech = 0; int pdb1 = 0; int pdb1_m = 0;
+		int pdb2 = 0; int pdb2_m = 0; int pdb3 = 0; int pdb3_m = 0;
 		
+		// retreiving data:
+		for (ResourcesType rt : resources)  
+			if (rt != null)
+			{
+				switch (rt.getId())  //rfts-specific mapping.
+				{
+					case (1): resource_pts = rt.getUnits();
+					case (2): industry = rt.getUnits();
+					case (3): population = rt.getUnits();
+					case (4): social_env = rt.getUnits();
+					case (5): planetary_env = rt.getUnits();
+					case (6): pop_maintanance = rt.getUnits();
+					case (7): colonist = rt.getUnits();
+					case (8): ship_tech = rt.getUnits();
+					case (9): pdb1 = rt.getUnits();
+					case (10): pdb1_m = rt.getUnits();
+					case (11): pdb2 = rt.getUnits();
+					case (12): pdb2_m = rt.getUnits();
+					case (13): pdb3 = rt.getUnits();
+					case (14): pdb3_m = rt.getUnits();
+				}
+			}
+		
+		return new Resources(resource_pts, industry, population, social_env, planetary_env,
+				pop_maintanance, colonist, ship_tech, pdb1, pdb1_m, pdb2, pdb2_m, pdb3, pdb3_m);
 	}
 	
 	public static synchronized gencon.gamelib.gameobjects.Fleet.Ship convertShip(net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType ship)
