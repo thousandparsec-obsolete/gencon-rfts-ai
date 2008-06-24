@@ -63,7 +63,7 @@ public class ConnectionMethods
 		Vector<Integer> playerIds = new Vector<Integer>(objects.size());
 		
 		//make sure player ids don't repeat:
-		boolean[] flags = new boolean[objects.size()]; 
+		boolean[] flags = new boolean[Integer.MAX_VALUE]; 
 		for (int i = 0; i < flags.length; i++)
 			flags[i] = false; //initializing to false. may be redundant, but just a safeguard against future changes in standards.
 		
@@ -78,10 +78,10 @@ public class ConnectionMethods
 				if (obj.getOtype() == ObjectParams.Fleet.PARAM_TYPE)
 				{
 					int owner = ((Fleet)obj.getObject()).getOwner();
-					if (flags[owner] == false)
+					if (flags[owner] == false) //if the id hasn't been encountered yet!
 					{
 						playerIds.add(new Integer(owner));
-						flags[owner] = true;
+						flags[owner] = true; //flag the id.
 					}
 				}
 				else if (obj.getOtype() == ObjectParams.Planet.PARAM_TYPE)
@@ -105,19 +105,7 @@ public class ConnectionMethods
 
 		return players;
 	}
-	
-	private synchronized static boolean checkIfOnList(List<Integer> list, int num)
-	{
-		for (Integer i : list)
-			if (i != null && i.intValue() == num)
-				return true;
 		
-		//if not found:
-		return false;
-	}
-	
-	
-	
 	public synchronized static Vector<Object> receiveAllObjects(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		GetObjectIDs gids = new GetObjectIDs();
