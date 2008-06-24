@@ -30,23 +30,4 @@ public class Planet extends Body
 	{
 		this(p.GAME_ID, p.MODTIME, p.NAME, p.POSITION, p.PARENT, p.CHILDREN, p.OWNER, p.ORDERS, p.RESOURCES);
 	}
-
-
-	public class PlanetOrders
-	{
-		public final Vector<POrder> ORDERS;
-		
-		public PlanetOrders(Vector<POrder> orders)
-		{
-			ORDERS = orders;
-		}
-		
-		public class POrder extends Order
-		{
-			public POrder(int order_type, int object_id, int place_in_queue) 
-			{
-				super(order_type, object_id, place_in_queue);
-			}
-		}
-	}
 }

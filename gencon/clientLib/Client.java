@@ -477,7 +477,10 @@ public class Client
 	}
 
 	
-	
+	/**
+	 * REALLY, JUST A TEST METHOD TO MAP RESOURCE IDS TO RESOURCE TYPES.
+	 * WILL GO AWAY WHEN I'M 101% SURE I DON'T NEED IT ANYMORE.
+	 */
 	public synchronized void getResourceDescs() 
 	{
 		try

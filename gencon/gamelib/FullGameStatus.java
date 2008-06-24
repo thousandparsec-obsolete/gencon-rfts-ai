@@ -44,7 +44,7 @@ public class FullGameStatus
 	public void incrementTurn() throws IOException, TPException
 	{
 //////	TESTING:::
-		CLIENT.getResourceDescs();
+//		CLIENT.getResourceDescs();
 		/*
 		UniverseMap um = currentStatus.left;
 		

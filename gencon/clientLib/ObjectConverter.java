@@ -8,10 +8,11 @@ import gencon.gamelib.Players;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Galaxy;
+import gencon.gamelib.gameobjects.GenericOrder;
 import gencon.gamelib.gameobjects.Planet;
+import gencon.gamelib.gameobjects.Ships;
 import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
-import gencon.gamelib.gameobjects.Fleet.Ship;
 import gencon.gamelib.gameobjects.Resources;
 
 import java.util.ArrayList;
@@ -104,11 +105,7 @@ public class ObjectConverter
 				int damage = fl.getDamage();
 				
 				//getting ships:
-				List<ShipsType> shipList = fl.getShips();
-				List<Ship> ships = new Vector<Ship>(shipList.size());
-				for (ShipsType st : shipList)
-					if (st != null)
-						ships.add(convertShip(st));
+				Ships ships = convertShip(fl);
 				
 				
 				//getting velocity:
@@ -127,7 +124,7 @@ public class ObjectConverter
 	}
 
 	
-	public static synchronized gencon.gamelib.gameobjects.Order convertOrder(net.thousandparsec.netlib.tp03.Order order)
+	public static synchronized GenericOrder convertOrder(net.thousandparsec.netlib.tp03.Order order)
 	{
 		
 	}
@@ -167,7 +164,7 @@ public class ObjectConverter
 				pop_maintanance, colonist, ship_tech, pdb1, pdb1_m, pdb2, pdb2_m, pdb3, pdb3_m);
 	}
 	
-	public static synchronized gencon.gamelib.gameobjects.Fleet.Ship convertShip(net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType ship)
+	public static synchronized Ships convertShip(ObjectParams.Fleet fleet)
 	{
 		
 	}

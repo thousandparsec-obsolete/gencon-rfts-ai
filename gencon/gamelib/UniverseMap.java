@@ -13,7 +13,14 @@ import java.util.Vector;
  */
 public class UniverseMap 
 {
+	/**
+	 * The de-jure atomic unit of the {@link UniverseMap}.
+	 */
 	public final Vector<StarSystem> STAR_SYSTEMS;
+	
+	/**
+	 * The de-facto atomic unit of the {@link UniverseMap}.
+	 */
 	public final Vector<Body> ALL_BODIES;
 	
 	public UniverseMap(Vector<Body> bodies)
@@ -120,7 +127,7 @@ public class UniverseMap
 	 * Find n closest {@link StarSystem}s to the specified {@link Body}, and return a {@link Vector} of them.
 	 * The {@link Vector} will contain <= n {@link StarSystem}s.
 	 */
-	public Vector<StarSystem> getNclosestStarSys(StarSystem ssys, int n)
+	public Vector<StarSystem> getNclosestStarSystems(StarSystem ssys, int n)
 	{
 		TreeMap<Long, StarSystem> distance_to_body = new TreeMap<Long, StarSystem>();
 		

@@ -1,13 +1,9 @@
 package gencon;
 
-import gencon.clientLib.Client;
-import gencon.clientLib.GCTP03Visitor;
-import net.thousandparsec.netlib.tp03.TP03Visitor;
-
 public class GenConRunner {
 
 	/**
-	 * A very simple harness to run the client. 
+	 * A very simple harness to run GenCon. 
 	 * 
 	 * @param args Optional argument: '-a serverURI $' 
 	 * To autorun client, supply argument '-a', followed by the 'serverURI' and by game difficulty '$', 
