@@ -20,7 +20,6 @@ public class FullGameStatus
 	private final Client CLIENT;
 	
 	public final String PLAYER_NAME;
-	public final short DIFFICULTY;
 	
 	private Pair<UniverseMap, Players> currentStatus;
 	private Vector<Pair<UniverseMap, Players>> gameHistory;
@@ -30,11 +29,10 @@ public class FullGameStatus
 	 */
 	public final byte HISTORY_DEPTH = 5; 
 	
-	public FullGameStatus(Client client, short difficulty, String playerName)
+	public FullGameStatus(Client client, String playerName)
 	{
 		CLIENT = client;
 		PLAYER_NAME = playerName;
-		DIFFICULTY = difficulty;
 		gameHistory = new Vector<Pair<UniverseMap,Players>>(HISTORY_DEPTH);
 	}
 	

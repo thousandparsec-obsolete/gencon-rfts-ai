@@ -34,8 +34,12 @@ public class Master implements Runnable
 	//connection related
 	public final Client CLIENT;
 	
-	
+	//game-related
 	private FullGameStatus gameStatus;
+	private final byte WORK_TIME = 30; //The time, in seconds, required to complete a turn. 
+						//if remaining time in some turn is less than that, robot will not execute.
+						//ONLY AN ESTIMATE NOW!!! NEED TO CALCULATE ACTUAL TIMES! (MAY DEPEND ON PING).
+	private boolean quit = false; //the flag that tells gameCycle to quit!
 	
 	
 	/**
@@ -75,7 +79,7 @@ public class Master implements Runnable
 		}
 		
 		//initializing game status
-		gameStatus = new FullGameStatus(CLIENT, CLIENT.getDifficulty(), CLIENT.getPlayerName());
+		gameStatus = new FullGameStatus(CLIENT, CLIENT.getPlayerName());
 		
 		out.println("Done initializing GenCon.");
 	}
@@ -92,8 +96,62 @@ public class Master implements Runnable
 	
 	private void gameCycle()
 	{
-		startOfTurnRoutine();
+		
+		//UNCOMMENT! :
+		//while (!quit)
+		//{
+			delayUntilReady(); //delay operation until GenCon can fully execute!
+			startOfTurnRoutine();
+		//}
 	}
+	
+	
+	/*
+	 * DELAYS START OF NEW TURN, UNTIL GENCON HAS ENOUGH TIME TO OPERATE.
+	 */
+	private void delayUntilReady()
+	{
+		int timeRemaining = 0;
+		
+		//retreive time from client: (should be successful!)
+		boolean ok = false;
+		byte counter = 0;
+		do 
+		{
+			try 
+			{
+				timeRemaining = CLIENT.getTimeRemaining();
+				ok = true;
+				counter ++;
+			} 
+			catch (Exception e)
+			{
+				counter ++;
+				if (counter > 20) //if try to do it over 20 times, quit!!
+					exit("Permanently failed to fetch time", ABNORMAL_EXIT, e);
+			}
+		} while (!ok);
+		
+		
+		long waitMillis = (timeRemaining - WORK_TIME) * 1000; //the difference between time remaining, and time necessary to operate, in milliseconds.
+		
+		if (waitMillis <= 0) //if I indeed need to wait!!!
+		{
+			out.println("Waiting until next turn to start operation... Time remaining : " + timeRemaining + " seconds.");
+			try
+			{
+				Thread.sleep(waitMillis); //wait for the specified amount of time!
+			}
+			catch (InterruptedException ie)
+			{
+				exit("Thread interrupted!", ABNORMAL_EXIT, ie);
+			}
+		}
+		
+		
+	}
+	
+	
 	
 	private void startOfTurnRoutine()
 	{
@@ -106,6 +164,10 @@ public class Master implements Runnable
 		{
 			exit("Unsuccessful updating game status.", ABNORMAL_EXIT, e);
 		}
+		
+		
+		
+		
 	}
 	
 	private void endOfTurnRoutine()
@@ -124,11 +186,6 @@ public class Master implements Runnable
 	}
 	
 	
-	public void setVerboseDebugMode(boolean mode)
-	{
-		verboseDebugMode = mode;
-	}
-
 	/**
 	 * Properly exits GenCon.
 	 * 
@@ -140,6 +197,9 @@ public class Master implements Runnable
 	{
 		out.println("\n______________________________________");
 		out.println("Exiting GenCon.\nReason: " + message);
+		
+		//telling gameCycle that it's time to go home! (if it hasn't shut down already...)
+		quit = true;
 		
 		if (e != null)
 		{
@@ -174,5 +234,10 @@ public class Master implements Runnable
 	public boolean isVerboseDebugMode()
 	{
 		return verboseDebugMode;
+	}
+
+	public void setVerboseDebugMode(boolean mode)
+	{
+		verboseDebugMode = mode;
 	}
 }

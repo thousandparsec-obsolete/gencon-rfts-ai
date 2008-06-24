@@ -62,39 +62,25 @@ public class ConnectionMethods
 		
 		Vector<Integer> playerIds = new Vector<Integer>(objects.size());
 		
-		//make sure player ids don't repeat:
-		boolean[] flags = new boolean[Integer.MAX_VALUE]; 
-		for (int i = 0; i < flags.length; i++)
-			flags[i] = false; //initializing to false. may be redundant, but just a safeguard against future changes in standards.
-		
-		
 		final int NEUTRAL = -1; //the standard demarcation of neutral objects.
 		
-		//add to list of ids if object is a fleet or non-neutral planet.
+		//add to list of ids if object is a fleet or non-neutral planet, unless the id has been encountered already.
 		for (Object obj : objects)
-		{
 			if (obj != null)
 			{
 				if (obj.getOtype() == ObjectParams.Fleet.PARAM_TYPE)
 				{
 					int owner = ((Fleet)obj.getObject()).getOwner();
-					if (flags[owner] == false) //if the id hasn't been encountered yet!
-					{
+					if (!checkIfInList(playerIds, owner)) //if the id hasn't been encountered yet!
 						playerIds.add(new Integer(owner));
-						flags[owner] = true; //flag the id.
-					}
 				}
 				else if (obj.getOtype() == ObjectParams.Planet.PARAM_TYPE)
 				{
 					int owner = ((Planet)obj.getObject()).getOwner();
-					if (owner != NEUTRAL && flags[owner] == false)
-					{
+					if (owner != NEUTRAL && !checkIfInList(playerIds, owner))
 						playerIds.add(new Integer(owner));
-						flags[owner] = true;
-					}
 				}
 			}
-		}
 		
 		
 		//THEN, RETREIVE ALL PLAYER FRAMES, BASED ON THAT LIST:
@@ -105,7 +91,19 @@ public class ConnectionMethods
 
 		return players;
 	}
+	
+	private synchronized static boolean checkIfInList(List<Integer> list, int owner)
+	{
+		for (Integer i : list)
+			if (i != null && i.intValue() == owner)
+				return true;
 		
+		//in case not found!
+		return false;
+	}
+	
+	
+	
 	public synchronized static Vector<Object> receiveAllObjects(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		GetObjectIDs gids = new GetObjectIDs();
