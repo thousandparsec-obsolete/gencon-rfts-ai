@@ -2,6 +2,7 @@ package gencon.gamelib;
 
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.StarSystem;
+import gencon.gamelib.gameobjects.Universe;
 
 import java.util.TreeMap;
 import java.util.Vector;
@@ -103,19 +104,26 @@ public class UniverseMap
 	{
 		TreeMap<Long, Body> distance_to_body = new TreeMap<Long, Body>();
 		
-		//puts all bodies in the map
+		System.out.println("For body: " + body.NAME);
+		
+		//puts all bodies in the map, except for the one in question, and the universe itself!
 		for (Body b1 : ALL_BODIES)
-			if (b1 != null)
-			distance_to_body.put(getDistance(b1, body), b1);
+			if (b1 != null && b1.GAME_ID != body.GAME_ID && b1.TYPE != Body.BodyType.UNIVERSE)
+			{
+				distance_to_body.put(getDistance(b1, body), b1);
+				//System.out.println(b1.NAME + " dist: " + getDistance(b1, body));
+			}
 		
 		//finds n-closest, or as long as there are bodies
+		System.out.println("Find " + n + " closest:");
 		Vector<Body> nclosest = new Vector<Body>(n);
 		for (int i = 0; i < n && i < ALL_BODIES.size(); i++) //assumption: a body should exist, as long as i < ALL_BODIES.size().
 		{
 			long id = distance_to_body.ceilingKey((long)0); //gets the closest distance to 0.
 			Body b2 = distance_to_body.get(id);
 			nclosest.add(b2);
-			distance_to_body.remove(b2); //removes the selected body from the object-distance mapping 
+			System.out.println(i + ") " + b2.NAME + " dist: " + id);
+			distance_to_body.remove(id); //removes the selected body from the object-distance mapping, so it won't be counted twice
 		}
 		
 		return nclosest;
@@ -129,21 +137,29 @@ public class UniverseMap
 	 */
 	public Vector<StarSystem> getNclosestStarSystems(StarSystem ssys, int n)
 	{
+		//System.out.println("For star system: " + ssys.NAME);
+		
 		TreeMap<Long, StarSystem> distance_to_body = new TreeMap<Long, StarSystem>();
 		
-		//puts all bodies in the map
+		//puts all bodies in the map, except for the star system in question, or the universe itself
+		//System.out.println("Getting distances from all others:");
 		for (StarSystem s1 : STAR_SYSTEMS)
-			if (s1 != null)
-			distance_to_body.put(getDistance(s1, ssys), s1);
+			if (s1 != null && s1.GAME_ID != ssys.GAME_ID && s1.TYPE != Body.BodyType.UNIVERSE)
+			{
+				distance_to_body.put(getDistance(s1, ssys), s1);
+		//		System.out.println("S.Sys: " + s1.NAME + " Pos: " + s1.POSITION[0] + "-" + s1.POSITION[1] + "-" + s1.POSITION[2] + " dist: " + getDistance(s1, ssys));
+			}
 		
 		//finds n-closest, or as long as there are bodies
+		//System.out.println("finding " + n + " closest:");
 		Vector<StarSystem> nclosest = new Vector<StarSystem>(n);
-		for (int i = 0; i < n && i < ALL_BODIES.size(); i++) //assumption: a body should exist, as long as i < ALL_BODIES.size().
+		for (int i = 0; i < n && i < STAR_SYSTEMS.size(); i++) //assumption: a star system should exist, as long as i < STAR_SYSTEMS.size().
 		{
 			long id = distance_to_body.ceilingKey((long)0); //gets the closest distance to 0.
 			StarSystem s2 = distance_to_body.get(id);
 			nclosest.add(s2);
-			distance_to_body.remove(s2); //removes the selected body from the object-distance mapping 
+			//System.out.println(i + ") " + s2.NAME + " dist: " + id);
+			distance_to_body.remove(id); //removes the selected body from the object-distance mapping, so it won't be counted twice
 		}
 		
 		return nclosest;
@@ -156,10 +172,12 @@ public class UniverseMap
 	 */
 	public long getDistance (Body a, Body b)
 	{
-		long x_dist = a.POSITION[0] - b.POSITION[0];
-		long y_dist = a.POSITION[1] - b.POSITION[1];
-		long z_dist = a.POSITION[2] - b.POSITION[2];
+		//CALCULATIONS TOO LARGE FOR LONG, CASTING TO DOUBLE:
+		double x_dist = a.POSITION[0] - b.POSITION[0];
+		double y_dist = a.POSITION[1] - b.POSITION[1];
+		double z_dist = a.POSITION[2] - b.POSITION[2];
 		
-		return new Double(Math.sqrt(x_dist^2 + y_dist^2 + z_dist^2)).longValue(); //a very close approximation.. will do!
+		//System.out.println(x_dist * x_dist + y_dist * y_dist + z_dist *  z_dist); //
+		return new Double(Math.sqrt(x_dist * x_dist + y_dist * y_dist + z_dist *  z_dist)).longValue(); 
 	}
 }

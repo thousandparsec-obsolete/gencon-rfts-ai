@@ -4,15 +4,14 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+
 import gencon.Master;
-import gencon.gamelib.FullGameStatus;
 import gencon.gamelib.Game_Player;
-import gencon.gamelib.Players;
 import gencon.gamelib.gameobjects.Body;
+import gencon.gamelib.gameobjects.FleetOrders;
 import gencon.gamelib.gameobjects.Universe;
 import gencon.utils.*;
 import net.thousandparsec.netlib.*;
-import net.thousandparsec.util.*;
 import net.thousandparsec.netlib.tp03.*;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
@@ -33,9 +32,6 @@ public class Client
 	//	MAINTANANCE
 	//
 	private final Master master;
-	
-	private static final PrintStream stout = System.out; 
-	private boolean verboseDebugMode = true; // True by default.
 	private boolean autorun;
 	
 	//
@@ -91,7 +87,7 @@ public class Client
 					if (!(difficulty > 0 && difficulty < 10)) //difficulty between 1-9
 						throw new IllegalArgumentException("Illegal Arguments. See documentation for proper syntax. Try again.");
 				}
-				stout.println("Difficulty set to " + difficulty);
+				pl("Difficulty set to " + difficulty);
 					
 		}
 		else
@@ -121,7 +117,7 @@ public class Client
 	{
 		autorun = false;
 		
-		stout.println("Follow the instructions...");
+		pl("Follow the instructions... (input is CAPSLOCK sensitive)");
 		//set verbose debug mode on/off
 		master.setVerboseDebugMode(Utils.setVerboseDebug());
 		
@@ -142,7 +138,7 @@ public class Client
 	 */
 	private void initAutorun(String URIstring) throws IllegalArgumentException, IOException, TPException, URISyntaxException
 	{
-		stout.println("Autorun mode. Initializing...");
+		pl("Autorun mode. Initializing...");
 		
 		autorun = true;
 		
@@ -197,7 +193,7 @@ public class Client
 	private void connect() throws IOException, TPException
 	{
 		TP03Decoder decoder = new TP03Decoder();
-			stout.print("Establishing connection to server... ");
+			pr("Establishing connection to server... ");
 			
 			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autorun, visitor);
 			basicCon.addConnectionListener(eventLogger);
@@ -209,9 +205,9 @@ public class Client
 			
 			if (autorun)
 			{
-				stout.println("connection established to : " + serverURI);
+				pl("connection established to : " + serverURI);
 				myUsername = Utils.getUsrnameFromURI(serverURI);
-				stout.println("Logged in successfully as : " + myUsername);
+				pl("Logged in successfully as : " + myUsername);
 			}
 			else //send connect frame...
 			{
@@ -221,7 +217,7 @@ public class Client
 				conn.sendFrame(connect, Okay.class);
 				conn.close();
 				//if reach here, then ok.
-				stout.println("connection established to : " + serverURI);
+				pl("connection established to : " + serverURI);
 			}
 				
 	}
@@ -249,7 +245,7 @@ public class Client
 		boolean retry = false;
 		do 
 		{
-			stout.print("Create new account or login as existing user? (new / login) : ");
+			pr("Create new account or login as existing user? (new / login) : ");
 			String choose = Master.in.next();
 		//	quitIfEncounterExitString(choose);
 			
@@ -273,7 +269,7 @@ public class Client
 				{
 					if (!login(username, password))
 					{
-						stout.println("Unexpected failure to login after creating account. Try logging as the new user manually.");
+						pl("Unexpected failure to login after creating account. Try logging as the new user manually.");
 						retry = true;
 					}
 					else
@@ -281,13 +277,13 @@ public class Client
 				}
 				else
 				{
-					stout.println("Failed to create account. Try again.");
+					pl("Failed to create account. Try again.");
 					retry = true;
 				}
 			}
 			else //other input
 			{
-				stout.println("Invalid input. Try again.");
+				pl("Invalid input. Try again.");
 				retry = true;
 			}
 		} while (retry);
@@ -305,20 +301,20 @@ public class Client
 		{
 			//will be supplanted by the ThreadedPipelineManager methods... sometime... in the future...
 			SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
-			stout.print("Logging in...");
+			pr("Logging in...");
 			conn.sendFrame(loginFrame, Okay.class);
 			conn.close();
-			stout.println("Logged in successfully as : " + username);
+			pl("Logged in successfully as : " + username);
 		}
 		catch (TPException tpe)
 		{
-			stout.println("Failed to login as user. Possible cause: username and password don't match. Try again.");
+			pl("Failed to login as user. Possible cause: username and password don't match. Try again.");
 			Utils.PrintTraceIfDebug(tpe, master.isVerboseDebugMode());
 			return false;
 		}
 		catch (IOException ioe)
 		{
-			stout.println("Unexpected failure. Failed to login. Try again.");
+			pl("Unexpected failure. Failed to login. Try again.");
 			Utils.PrintTraceIfDebug(ioe, master.isVerboseDebugMode());
 			return false;
 		}
@@ -341,13 +337,13 @@ public class Client
 		}
 		catch (TPException tpe)
 		{
-			stout.println("Failed to create new account. Possible cause: user already exists. Try again.");
+			pl("Failed to create new account. Possible cause: user already exists. Try again.");
 			Utils.PrintTraceIfDebug(tpe, master.isVerboseDebugMode());
 			return false;
 		}
 		catch (IOException ioe)
 		{
-			stout.println("Unexpected failure. Failed to login. Try again.");
+			pl("Unexpected failure. Failed to login. Try again.");
 			Utils.PrintTraceIfDebug(ioe, master.isVerboseDebugMode());
 			return false;
 		}
@@ -384,15 +380,57 @@ public class Client
 	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	 */
 	
-	//DONT REALLY NEED. PLUS, IT RETURNS OBJECT AND NOT UNIVERSE
-	public synchronized Object getUniverse() throws IOException, TPException
+	public synchronized Object getObjectById(int id) throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Object universe = ConnectionMethods.getUniverse(conn);
+		Object object = ConnectionMethods.getObjectById(conn, id);
 		conn.close();
-		return universe;
+		return object;
 	}
 	
+	public synchronized Vector<Body> getAllObjects() throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Vector<Object> objects = ConnectionMethods.getAllObjects(conn);
+		conn.close();
+		
+		Vector<Body> bodies = new Vector<Body>(objects.size());
+		
+		for (Object obj : objects)
+		{
+			if (obj != null)
+			{
+				int parent = -2;
+				
+				if (obj.getObject().getParameterType() == ObjectParams.Universe.PARAM_TYPE)
+					parent = Universe.UNIVERSE_PARENT;
+				else
+					parent = findParent(objects, obj).getId(); 
+				//if it's not a universe, it must have a parent! If rule broken, null pointer will be thrown.
+			
+					bodies.add(ObjectConverter.ConvertToBody(obj, parent, this));
+			}
+		}
+		
+		return bodies;
+	}
+
+	/*
+	 * Helper method for receiveAllObjects().
+	 * Returns the immediate parent of the object
+	 */
+	private Object findParent(Vector<Object> objects, Object child)
+	{
+		for (Object obj : objects)
+			if (obj != null)
+				for (ContainsType ct : obj.getContains())
+					if (ct.getId() == child.getId())
+						return obj;	
+		
+		//IF NOT FOUND:
+		return null;
+	}
+
 	public synchronized int getTimeRemaining() throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
@@ -411,10 +449,10 @@ public class Client
 		return player;
 	}
 
-	public synchronized Vector<Game_Player> getAllPlayers() throws IOException, TPException
+	public synchronized Vector<Game_Player> getAllPlayers(List<Body> game_objects) throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Vector<Player> pls = ConnectionMethods.getAllPlayers(conn);
+		Vector<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
 		conn.close();
 		
 		Vector<Game_Player> players = new Vector<Game_Player>();
@@ -424,56 +462,6 @@ public class Client
 				players.add(new Game_Player(player.getId(), player.getName()));
 		
 		return players;
-	}
-	
-	public synchronized Vector<Body> receiveAllObjects() throws IOException, TPException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Vector<Object> objects = ConnectionMethods.receiveAllObjects(conn);
-		conn.close();
-		
-		Vector<Body> bodies = new Vector<Body>(objects.size());
-		
-		for (Object obj : objects)
-		{
-			if (obj != null)
-			{
-				int parent = -2;
-				
-				if (obj.getObject().getParameterType() == ObjectParams.Universe.PARAM_TYPE)
-					parent = Universe.UNIVERSE_PARENT;
-				else
-					parent = findParent(objects, obj).getId(); //if it's not a universe, it must have a parent! If rule broken, null pointer will be thrown/
-			
-					bodies.add(ObjectConverter.ConvertToBody(obj, parent, this));
-			}
-		}
-		
-		return bodies;
-	}
-	
-	/*
-	 * Helper method for receiveAllObjects().
-	 * Returns the immediate parent of the object
-	 */
-	private Object findParent(Vector<Object> objects, Object child)
-	{
-		for (Object obj : objects)
-			if (obj != null)
-				for (ContainsType ct : obj.getContains())
-					if (ct.getId() == child.getId())
-						return obj;	
-		
-		//IF NOT FOUND:
-		return null;
-	}
-	
-	public synchronized boolean sendOrder(int objectId, int orderType, int locationInQueue) throws IOException, TPException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		boolean ok = ConnectionMethods.sendOrder(objectId, orderType, locationInQueue, conn);
-		conn.close();
-		return ok;
 	}
 
 	
@@ -491,7 +479,7 @@ public class Client
 			gri.setAmount(-1);
 			ResourceIDs ris = conn.sendFrame(gri, ResourceIDs.class);
 			
-			stout.println(ris.toString());
+			pl(ris.toString());
 			
 			GetResource grs = new GetResource(); 
 			List<IdsType> list = grs.getIds();
@@ -503,18 +491,102 @@ public class Client
 			for (int i = 0; i < seq.getNumber(); i++)
 			{
 				Frame f = conn.receiveFrame(Frame.class);
-				stout.println("Resource: " + f.toString());
+				pl("Resource: " + f.toString());
 			}
 		}
 		catch (Exception e)
 		{
-			stout.println("Failed to retreive resources.");
+			pl("Failed to retreive resources.");
 			e.printStackTrace();
 			return;
 		}
 		
 		
 	}
+	
+	/**
+	 * REALLY, JUST A TEST METHOD TO EXAMINE ORDERS.
+	 * WILL GO AWAY WHEN I'M 101% SURE I DON'T NEED IT ANYMORE.
+	 */
+	public void getOrdersDesc()
+	{
+		try
+		{
+			SequentialConnection<TP03Visitor> conn = getPipeline();
+			GetOrderDescIDs ged = new GetOrderDescIDs();
+			ged.setKey(-1);
+			ged.setAmount(-1);
+			OrderDescIDs ris = conn.sendFrame(ged, OrderDescIDs.class);
+			
+			pl(ris.toString());
+			
+			GetOrderDesc grs = new GetOrderDesc(); 
+			List<IdsType> list = grs.getIds();
+			for (int i = 0; i < ris.getModtimes().size(); i++)
+				list.add(new IdsType(ris.getModtimes().get(i).getId()));
+			
+			Sequence seq = conn.sendFrame(grs, Sequence.class);
+			
+			for (int i = 0; i < seq.getNumber(); i++)
+			{
+				OrderDesc od = conn.receiveFrame(OrderDesc.class);
+				pl("Order: " + od.toString());
+			}
+		}
+		catch (Exception e)
+		{
+			pl("Failed to retreive orders.");
+			e.printStackTrace();
+			return;
+		}
+		
+		
+		
+		
+	}
+	
+	
+	
+	
+	
+	public void getOrdersForMyObjects()
+	{
+		try
+		{
+			getOrdersForObject(139, 3);
+		}
+		catch (Exception e)
+		{
+			pl("unsuccessful. " + e.getMessage());
+		}
+	}
+	
+	//VOID FOR NOW... WANT TO SEE HOW IT PRINTS THEM OUT.
+	public void getOrdersForObject(int objectId, int order_num) throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Vector<Order> orders = ConnectionMethods.getOrdersForObject(conn, objectId, order_num);
+		
+		//just print them out for now, and see..
+		pl("Orders for object: " + objectId);
+		for (Order o : orders)
+			if (o != null)
+			{
+					pl("--> " + o.toString() + " Details:\n------>");
+					OrderDesc od = new OrderDesc();
+					od.setId(o.getOtype());
+					List<OrderParams> params = o.getOrderparams(od);
+					for (OrderParams op : params)
+					{
+						OrderParams.OrderParamObject opo = (OrderParams.OrderParamObject) op;
+						pr("Object: " + opo.getObjectid());
+						OrderParams.OrderParamString ops = (OrderParams.OrderParamString) op;
+						pr("  Destination : " + opo.getObjectid() + "\n");
+					}
+			}
+		conn.close();
+	}
+	
 	
 	
 	
@@ -530,9 +602,22 @@ public class Client
 	{
 		if (connMgr != null)
 		{
-			stout.print("Closing connection... ");
+			pr("Closing connection... ");
 			connMgr.close();
-			stout.println("done.");
+			pl("done.");
 		}
+	}
+	
+	/*
+	 * CONVENIENCE METHODS :
+	 */
+	private void pl(String st)
+	{
+		System.out.println(st);
+	}
+	
+	private void pr(String st)
+	{
+		System.out.print(st);
 	}
 }

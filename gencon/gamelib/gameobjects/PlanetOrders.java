@@ -14,7 +14,7 @@ public class PlanetOrders
 	
 	public enum POrderType
 	{
-		INDUSTRY, SOC_ENV, PLAN_ENV, POP_MAINT, COLONIZE; //ETC!!!
+		INDUSTRY, SOC_ENV, PLAN_ENV, POP_MAINT, COLONIZE, BUILD_FLEET; //ETC!!!
 	}
 	
 	public class POrder extends GenericOrder

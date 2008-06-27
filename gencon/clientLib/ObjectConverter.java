@@ -15,11 +15,13 @@ import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
 import gencon.gamelib.gameobjects.Resources;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
 import net.thousandparsec.netlib.SequentialConnection;
+import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.ObjectParams;
 import net.thousandparsec.netlib.tp03.ResourceIDs;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
@@ -44,7 +46,7 @@ public class ObjectConverter
 	private ObjectConverter(){} //dummy constructor.
 	
 	
-	public static synchronized Body ConvertToBody(Object object, int parent, Client client)
+	public static synchronized Body ConvertToBody(Object object, int parent, Client client) throws IOException, TPException
 	{
 		//Generic parameters:
 		//-----------------------
@@ -55,10 +57,6 @@ public class ObjectConverter
 		long[] position = {pt.getX(), pt.getY(), pt.getZ()};
 		
 		long modtime = object.getModtime();
-		
-			//3D velocity:
-		VelType vt = object.getVel();
-		long[] velocity = {vt.getX(), vt.getY(), vt.getZ()};
 		
 			//setting children:
 		List<ContainsType> contains = object.getContains();
@@ -86,9 +84,10 @@ public class ObjectConverter
 			{
 				//getting owner:
 				ObjectParams.Planet pl = (ObjectParams.Planet) object.getObject();
-				Game_Player owner = client.getPlayerById(pl.getOwner());
+				int owner = pl.getOwner(); 
 				
-				//getting orders:
+				//getting number of orders on object:
+				int orders = object.getOrders();
 				
 				//getting resources:
 				Resources resources = convertResources(pl.getResources());
@@ -99,7 +98,7 @@ public class ObjectConverter
 			{
 				//getting owner:
 				ObjectParams.Fleet fl = (ObjectParams.Fleet) object.getObject();
-				Game_Player owner = client.getPlayerById(fl.getOwner());
+				int owner = fl.getOwner();
 				
 				//getting damage:
 				int damage = fl.getDamage();
@@ -112,8 +111,8 @@ public class ObjectConverter
 				VelType vel = object.getVel();
 				long[] speed = {vel.getX(), vel.getY(), vel.getZ()};
 				
-				//getting orders:
-				
+				//getting number of orders on object:
+				int orders = object.getOrders();
 				
 				return new Fleet(game_id, modtime, name, position, owner, parent, children, damage, ships, orders, speed);
 				
@@ -123,7 +122,6 @@ public class ObjectConverter
 		}
 	}
 
-	
 	public static synchronized GenericOrder convertOrder(net.thousandparsec.netlib.tp03.Order order)
 	{
 		
@@ -166,6 +164,11 @@ public class ObjectConverter
 	
 	public static synchronized Ships convertShip(ObjectParams.Fleet fleet)
 	{
+		List<ShipsType> shipTypes = fleet.getShips();
+		
+		
+		//FOR NOW!!!
+		return null;
 		
 	}
 }

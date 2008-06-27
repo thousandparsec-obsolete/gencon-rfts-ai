@@ -41,24 +41,11 @@ public class FullGameStatus
 	 */
 	public void incrementTurn() throws IOException, TPException
 	{
-//////	TESTING:::
+//////	SOME TESTING:::
 //		CLIENT.getResourceDescs();
-		/*
-		UniverseMap um = currentStatus.left;
-		
-		List<StarSystem> sss = um.STAR_SYSTEMS;
-		
-		for (StarSystem ss : sss)
-			if (ss != null)
-			{
-				System.out.println("Star system: " + ss.NAME + " : " + ss.GAME_ID);
-				List<Body> contents = um.getContents(ss);
-				for (Body bod: contents)
-					System.out.println("--> " + bod.NAME + " : " + bod.GAME_ID);
-			}
-		*/
-///////////////
-		
+//		CLIENT.getOrdersDesc();
+//		CLIENT.getOrdersForMyObjects();
+		/////////////////////////////////////
 		
 		//first, archive the previous status.
 		gameHistory.add(getCurrentStatus());
@@ -66,32 +53,45 @@ public class FullGameStatus
 		if (gameHistory.indexOf(getCurrentStatus()) >= HISTORY_DEPTH)
 			gameHistory.remove(0); 
 		
-		//retreive new list of players:
-		Players pl = getPlayers();
-		System.out.println("Players retreived.");
+
 		//generate new map:
-		UniverseMap map = makeMap(pl);
+		UniverseMap map = makeMap();
 		System.out.println("Map generated.");
+		//retreive new list of players:
+		Players pl = setPlayers(map.ALL_BODIES);
+		System.out.println("Players retreived.");
 		
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMap, Players>(map, pl); 
 		
 		
 		
+		/////SOME MORE TESTING:
+		UniverseMap um = currentStatus.left;
+		System.out.println("Getting 7 closest Bodies for each Star System:");
+		
+		Vector<StarSystem> sss = um.STAR_SYSTEMS;
+		for (StarSystem ss : sss)
+			um.getNclosestBodies(ss, 7);
+		
+		////////////////////////
 		
 	}
+
 	
-	private Players getPlayers() throws IOException, TPException
+	private UniverseMap makeMap() throws IOException, TPException
 	{
-		Vector<Game_Player> newPlayers = CLIENT.getAllPlayers();
+		Vector<Body> bodies = CLIENT.getAllObjects();
+		return new UniverseMap(bodies);
+	}
+	
+	private Players setPlayers(List<Body> game_objects) throws IOException, TPException
+	{
+		Vector<Game_Player> newPlayers = CLIENT.getAllPlayers(game_objects);
 		return new Players(PLAYER_NAME, newPlayers);
 	}
 	
-	private UniverseMap makeMap(Players pl) throws IOException, TPException
-	{
-		Vector<Body> bodies = CLIENT.receiveAllObjects();
-		return new UniverseMap(bodies);
-	}
+
 	
 	
 	/**  
@@ -106,7 +106,7 @@ public class FullGameStatus
 	}
 	
 	/**
-	 * @return A deep copy of the game history, up to (and including) the <code>HISTORY_DEPTH</code>.
+	 * @return A deep copy of the game history, up to (and including) the <code>HISTORY_DEPTH</code>. Does not include the current status.
 	 */
 	public Vector<Pair<UniverseMap, Players>> getHistory()
 	{

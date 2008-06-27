@@ -13,12 +13,12 @@ import java.util.Vector;
  */
 public class Planet extends Body 
 {
-	public final Game_Player OWNER;
-	public final PlanetOrders ORDERS;
+	public final int OWNER;
+	public final int ORDERS;
 	public final Resources RESOURCES;
 
 	public Planet(int gameId, long modTime, String name, long[] position, int parent, 
-			List<Integer> children, Game_Player owner, PlanetOrders orders, Resources resources) 
+			List<Integer> children, int owner, int orders, Resources resources) 
 	{
 		super(gameId, modTime, Body.BodyType.PLANET, name, position, parent, children);
 		OWNER = owner;

@@ -13,15 +13,15 @@ import java.util.Vector;
  */
 public class Fleet extends Body
 {
-	public final Game_Player OWNER;
-	public final FleetOrders ORDERS;
+	public final int OWNER;
+	public final int ORDERS;
 	public final long[] SPEED;
 	public final Ships SHIPS;
 	public final float DAMAGE; //not sure how it would show.
 
-	public Fleet(int gameId, long modTime, String name, long[] position, Game_Player owner, 
+	public Fleet(int gameId, long modTime, String name, long[] position, int owner, 
 			int parent, List<Integer> children, float damage, 
-			Ships ships, FleetOrders orders, long[] speed) 
+			Ships ships, int orders, long[] speed) 
 	{
 		super(gameId, modTime, Body.BodyType.FLEET, name, position, parent, children);
 		OWNER = owner;

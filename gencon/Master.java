@@ -36,7 +36,7 @@ public class Master implements Runnable
 	
 	//game-related
 	private FullGameStatus gameStatus;
-	private final byte WORK_TIME = 30; //The time, in seconds, required to complete a turn. 
+	private final byte WORK_TIME = 7; //The time, in seconds, required to complete a turn. 
 						//if remaining time in some turn is less than that, robot will not execute.
 						//ONLY AN ESTIMATE NOW!!! NEED TO CALCULATE ACTUAL TIMES! (MAY DEPEND ON PING).
 	private boolean quit = false; //the flag that tells gameCycle to quit!
@@ -133,14 +133,14 @@ public class Master implements Runnable
 		} while (!ok);
 		
 		
-		long waitMillis = (timeRemaining - WORK_TIME) * 1000; //the difference between time remaining, and time necessary to operate, in milliseconds.
+		long timeDiff = (timeRemaining - WORK_TIME) * 1000; //the difference between time remaining, and time necessary to operate, in milliseconds.
 		
-		if (waitMillis <= 0) //if I indeed need to wait!!!
+		if (timeDiff <= 0) //if I indeed need to wait!!!
 		{
 			out.println("Waiting until next turn to start operation... Time remaining : " + timeRemaining + " seconds.");
 			try
 			{
-				Thread.sleep(waitMillis); //wait for the specified amount of time!
+				Thread.sleep((timeRemaining * 1000) + 1000); //wait until next turn + 1 second.
 			}
 			catch (InterruptedException ie)
 			{

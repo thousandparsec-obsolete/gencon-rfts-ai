@@ -4,6 +4,14 @@ import java.util.Vector;
 
 public class FleetOrders
 {
+	public final static int MOVE_ORDER = 2;
+	public final static int SPLIT_ORDER = 3;
+	public final static int MERGE_ORDER = 4;
+	public final static int RENAME_ORDER = 5;
+	public final static int COLONISE_ORDER = 6;
+	public final static int BOMBARD_ORDER = 7;
+	
+	
 	public final Vector<FOrder> ORDERS;
 	
 	public FleetOrders(Vector<FOrder> orders)
