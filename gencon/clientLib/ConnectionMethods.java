@@ -13,6 +13,7 @@ import java.util.Vector;
 import net.thousandparsec.netlib.Frame;
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
+import net.thousandparsec.netlib.tp03.Fail;
 import net.thousandparsec.netlib.tp03.GetObjectIDs;
 import net.thousandparsec.netlib.tp03.GetObjectsByID;
 import net.thousandparsec.netlib.tp03.GetOrder;
@@ -21,11 +22,13 @@ import net.thousandparsec.netlib.tp03.GetTimeRemaining;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.ObjectIDs;
 import net.thousandparsec.netlib.tp03.ObjectParams;
+import net.thousandparsec.netlib.tp03.Okay;
 import net.thousandparsec.netlib.tp03.Order;
 import net.thousandparsec.netlib.tp03.OrderDesc;
 import net.thousandparsec.netlib.tp03.OrderInsert;
 import net.thousandparsec.netlib.tp03.OrderParams;
 import net.thousandparsec.netlib.tp03.Player;
+import net.thousandparsec.netlib.tp03.Response;
 import net.thousandparsec.netlib.tp03.Sequence;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
 import net.thousandparsec.netlib.tp03.TimeRemaining;
@@ -33,6 +36,7 @@ import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
 import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
 import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
 import net.thousandparsec.netlib.tp03.Object.OrdertypesType;
+import net.thousandparsec.netlib.tp03.OrderParams.OrderParamObject;
 
 public class ConnectionMethods 
 {
@@ -170,39 +174,33 @@ public class ConnectionMethods
 	}
 		
 	
-	
-	
-	
-	
-	
-	public synchronized static boolean sendOrder(int objectId, int orderType, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
-	{
-
-		
-		
-		
-		
-		
-		
-	}
-	
-	public synchronized static boolean orderMove(int objectId, int from_starsys, int to_starsys, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	public synchronized static boolean orderMove(int fleet_id, int destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderInsert order = new OrderInsert();
-		order.setSlot(-1); //sets the location of the order at the end of the queue.
 		order.setOtype(FleetOrders.MOVE_ORDER); //the type of the order
-		order.setId(objectId); //the object at hand.
+		order.setId(fleet_id); //the object at hand.
+		
+		if (!urgent)
+			order.setSlot(-1); //sets the location of the order at the end of the queue.
+		else
+			order.setSlot(0); //sets the location of the order at the beginning of the queue.
 		
 		OrderDesc od = new OrderDesc();
 		od.setId(FleetOrders.MOVE_ORDER);
 		
-		List<OrderParams> params = order.getOrderparams(od);
-		//setting id:
-		OrderParams.OrderParamObject id_param = (OrderParams.OrderParamObject)params.get(0);
-		id_param.setObjectid(objectId);
+		//setting destination:
+		OrderParams.OrderParamObject id_param = new OrderParams.OrderParamObject();
+		id_param.setObjectid(destination_star_system);
+		order.setOrderparams(id_param);
 		
-		//setting 
+		Response response = conn.sendFrame(order, Response.class);
 		
+		if (response.getFrameType() == Okay.FRAME_TYPE)
+			return true;
+		else if (response.getFrameType() == Fail.FRAME_TYPE)
+			return false;
+		else
+			throw new TPException("Unexpected response while trying to insert order.");
 		
 	}
 }

@@ -8,6 +8,7 @@ import java.util.*;
 import gencon.Master;
 import gencon.gamelib.Game_Player;
 import gencon.gamelib.gameobjects.Body;
+import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.FleetOrders;
 import gencon.gamelib.gameobjects.Universe;
 import gencon.utils.*;
@@ -587,8 +588,19 @@ public class Client
 		conn.close();
 	}
 	
-	
-	
+	/**
+	 * Moving a fleet to some star-system.
+	 * 
+	 * @param urgent if true, puts the order to the start of the order queue; if false, to the end.
+	 * @return true if the order was successfully passed to server, and false otherwise.
+	 */
+	public synchronized boolean moveFleet(int fleet_id, int destination_star_system, boolean urgent) throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		boolean result = ConnectionMethods.orderMove(fleet_id, destination_star_system, urgent, conn);
+		conn.close();
+		return result;
+	}
 	
 	
 	
@@ -609,15 +621,17 @@ public class Client
 	}
 	
 	/*
-	 * CONVENIENCE METHODS :
+	 * STD IN / OUT:  (only prints with verbose debug mode)
 	 */
 	private void pl(String st)
 	{
-		System.out.println(st);
+		if (master.isVerboseDebugMode())
+			System.out.println(st);
 	}
 	
 	private void pr(String st)
 	{
-		System.out.print(st);
+		if (master.isVerboseDebugMode())
+			System.out.print(st);
 	}
 }

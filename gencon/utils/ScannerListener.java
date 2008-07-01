@@ -109,7 +109,7 @@ public class ScannerListener
 		}
 		catch (IOException ioe)
 		{
-			Master.out.println(ioe.getMessage());
+			System.out.println(ioe.getMessage());
 		}
 	}
 

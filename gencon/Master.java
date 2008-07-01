@@ -21,7 +21,6 @@ public class Master implements Runnable
 {
 	//in/out
 	public final static ScannerListener in = new ScannerListener(new Scanner(System.in));
-	public final static PrintStream out = System.out;
 	public final static String QUIT = "q";
 	
 	
@@ -62,11 +61,11 @@ public class Master implements Runnable
 	
 	private void init(String[] args) 
 	{
-		out.println("Welcome to GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.");
+		pl("Welcome to GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.");
 		
 		//initializing input listener.
 		in.activate(this);
-		out.println("To quit at any time, enter 'q', then press RETURN.");
+		pl("To quit at any time, enter 'q', then press RETURN.");
 		
 		//initializing client
 		try
@@ -81,7 +80,7 @@ public class Master implements Runnable
 		//initializing game status
 		gameStatus = new FullGameStatus(CLIENT, CLIENT.getPlayerName());
 		
-		out.println("Done initializing GenCon.");
+		pl("Done initializing GenCon.");
 	}
 	
 	/**
@@ -137,7 +136,7 @@ public class Master implements Runnable
 		
 		if (timeDiff <= 0) //if I indeed need to wait!!!
 		{
-			out.println("Waiting until next turn to start operation... Time remaining : " + timeRemaining + " seconds.");
+			pl("Waiting until next turn to start operation... Time remaining : " + timeRemaining + " seconds.");
 			try
 			{
 				Thread.sleep((timeRemaining * 1000) + 1000); //wait until next turn + 1 second.
@@ -155,8 +154,11 @@ public class Master implements Runnable
 	
 	private void startOfTurnRoutine()
 	{
+		
 		try
 		{
+			int time = CLIENT.getTimeRemaining();
+			pl("Start of turn routine commencing... " + time + " seconds to end of turn.");
 			gameStatus.incrementTurn();
 			//CLIENT.eventLogger.dumpLogStd();
 		}
@@ -195,36 +197,36 @@ public class Master implements Runnable
 	 */
 	public void exit(String message, int exitType, Exception e)
 	{
-		out.println("\n______________________________________");
-		out.println("Exiting GenCon.\nReason: " + message);
+		System.out.println("\n______________________________________");
+		System.out.println("Exiting GenCon.\nReason: " + message);
 		
 		//telling gameCycle that it's time to go home! (if it hasn't shut down already...)
 		quit = true;
 		
 		if (e != null)
 		{
-			out.println("! Fatal exception ! (If Verbose Debug Mode is on, see details below)");
+			System.out.println("! Fatal exception ! (If Verbose Debug Mode is on, see details below)");
 			Utils.PrintTraceIfDebug(e, isVerboseDebugMode());
 		}
 		
 		try
 		{
 			//closing input listener
-			out.print("Closing input listener... ");
+			System.out.print("Closing input listener... ");
 			in.close();
-			out.println("done.");
+			System.out.println("done.");
 			
 			//exiting client
 			CLIENT.exit();
 			
-			out.println("Clean exit.");
+			System.out.println("Clean exit.");
 			
-			out.close();
+			System.out.close();
 			System.exit(NORMAL_EXIT);
 		}
 		catch (Exception exc)
 		{
-			out.println("Error on closing GenCon. Exiting anyway.");
+			System.out.println("Error on closing GenCon. Exiting anyway.");
 			Utils.PrintTraceIfDebug(exc, isVerboseDebugMode());
 			System.exit(ABNORMAL_EXIT);
 		}
@@ -239,5 +241,20 @@ public class Master implements Runnable
 	public void setVerboseDebugMode(boolean mode)
 	{
 		verboseDebugMode = mode;
+	}
+	
+	/*
+	 * STD IN / OUT: (only prints with verbose debug mode)
+	 */
+	private void pl(String st)
+	{
+		if (isVerboseDebugMode())
+			System.out.println(st);
+	}
+	
+	private void pr(String st)
+	{
+		if (isVerboseDebugMode())
+			System.out.print(st);
 	}
 }

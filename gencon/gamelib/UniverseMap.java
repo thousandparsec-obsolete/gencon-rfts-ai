@@ -53,7 +53,9 @@ public class UniverseMap
 		return retreiveRecurs(stsys);
 	}
 	
-	
+	/*
+	 * Helper for getContents
+	 */
 	private Vector<Body> retreiveRecurs(Body body) 
 	{
 		if (body.CHILDREN.isEmpty()) //BASE CASE
@@ -97,42 +99,7 @@ public class UniverseMap
 	}
 	
 	/**
-	 * Find n closest game-objects to the specified {@link Body}, and return a {@link Vector} of them.
-	 * The {@link Vector} will contain <= n {@link Body}s.
-	 */
-	public Vector<Body> getNclosestBodies(Body body, int n)
-	{
-		TreeMap<Long, Body> distance_to_body = new TreeMap<Long, Body>();
-		
-		System.out.println("For body: " + body.NAME);
-		
-		//puts all bodies in the map, except for the one in question, and the universe itself!
-		for (Body b1 : ALL_BODIES)
-			if (b1 != null && b1.GAME_ID != body.GAME_ID && b1.TYPE != Body.BodyType.UNIVERSE)
-			{
-				distance_to_body.put(getDistance(b1, body), b1);
-				//System.out.println(b1.NAME + " dist: " + getDistance(b1, body));
-			}
-		
-		//finds n-closest, or as long as there are bodies
-		System.out.println("Find " + n + " closest:");
-		Vector<Body> nclosest = new Vector<Body>(n);
-		for (int i = 0; i < n && i < ALL_BODIES.size(); i++) //assumption: a body should exist, as long as i < ALL_BODIES.size().
-		{
-			long id = distance_to_body.ceilingKey((long)0); //gets the closest distance to 0.
-			Body b2 = distance_to_body.get(id);
-			nclosest.add(b2);
-			System.out.println(i + ") " + b2.NAME + " dist: " + id);
-			distance_to_body.remove(id); //removes the selected body from the object-distance mapping, so it won't be counted twice
-		}
-		
-		return nclosest;
-	}
-	
-	
-	
-	/**
-	 * Find n closest {@link StarSystem}s to the specified {@link Body}, and return a {@link Vector} of them.
+	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem}, and return a {@link Vector} of them.
 	 * The {@link Vector} will contain <= n {@link StarSystem}s.
 	 */
 	public Vector<StarSystem> getNclosestStarSystems(StarSystem ssys, int n)
@@ -178,6 +145,6 @@ public class UniverseMap
 		double z_dist = a.POSITION[2] - b.POSITION[2];
 		
 		//System.out.println(x_dist * x_dist + y_dist * y_dist + z_dist *  z_dist); //
-		return new Double(Math.sqrt(x_dist * x_dist + y_dist * y_dist + z_dist *  z_dist)).longValue(); 
+		return new Double(Math.sqrt(x_dist * x_dist + y_dist * y_dist + z_dist *  z_dist)).longValue(); //close enough approximation!
 	}
 }

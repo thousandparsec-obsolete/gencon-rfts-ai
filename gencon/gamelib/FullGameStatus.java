@@ -1,5 +1,6 @@
 package gencon.gamelib;
 
+import gencon.Master;
 import gencon.clientLib.Client;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.StarSystem;
@@ -29,6 +30,12 @@ public class FullGameStatus
 	 */
 	public final byte HISTORY_DEPTH = 5; 
 	
+	/**
+	 * The only constructor for {@link FullGameStatus}.
+	 * 
+	 * @param client The {@link Client} that the {@link Master} class has.
+	 * @param playerName The name of the player represented by this client.
+	 */
 	public FullGameStatus(Client client, String playerName)
 	{
 		CLIENT = client;
@@ -37,16 +44,10 @@ public class FullGameStatus
 	}
 	
 	/**
-	 * Requests new info from the client, and archives the old.
+	 * Gets new info about the game, and archives the old, up to a set number (HISTORY_DEPTH).
 	 */
 	public void incrementTurn() throws IOException, TPException
 	{
-//////	SOME TESTING:::
-//		CLIENT.getResourceDescs();
-//		CLIENT.getOrdersDesc();
-//		CLIENT.getOrdersForMyObjects();
-		/////////////////////////////////////
-		
 		//first, archive the previous status.
 		gameHistory.add(getCurrentStatus());
 		//remove oldest element from archive, if it exceeds specified size.
@@ -63,19 +64,6 @@ public class FullGameStatus
 		
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMap, Players>(map, pl); 
-		
-		
-		
-		/////SOME MORE TESTING:
-		UniverseMap um = currentStatus.left;
-		System.out.println("Getting 7 closest Bodies for each Star System:");
-		
-		Vector<StarSystem> sss = um.STAR_SYSTEMS;
-		for (StarSystem ss : sss)
-			um.getNclosestBodies(ss, 7);
-		
-		////////////////////////
-		
 	}
 
 	
