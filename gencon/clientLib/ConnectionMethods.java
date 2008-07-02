@@ -4,6 +4,7 @@ import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.FleetOrders;
 import gencon.gamelib.gameobjects.Planet;
+import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -27,6 +28,7 @@ import net.thousandparsec.netlib.tp03.Order;
 import net.thousandparsec.netlib.tp03.OrderDesc;
 import net.thousandparsec.netlib.tp03.OrderInsert;
 import net.thousandparsec.netlib.tp03.OrderParams;
+import net.thousandparsec.netlib.tp03.OrderProbe;
 import net.thousandparsec.netlib.tp03.Player;
 import net.thousandparsec.netlib.tp03.Response;
 import net.thousandparsec.netlib.tp03.Sequence;
@@ -173,8 +175,15 @@ public class ConnectionMethods
 		return orders;
 	}
 		
-	
-	public synchronized static boolean orderMove(int fleet_id, int destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	/**
+	 * Order a fleet to move to any star-system in the game-world.
+	 * 
+	 * @param fleet_id The fleet in question.
+	 * @param destination_star_system The ultimate destination.
+	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
+	 * @return The number of turns for the order to complete, or -1 if it's a bad order.
+	 */
+	public synchronized static int orderMove(int fleet_id, int destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderInsert order = new OrderInsert();
 		order.setOtype(FleetOrders.MOVE_ORDER); //the type of the order
@@ -185,22 +194,70 @@ public class ConnectionMethods
 		else
 			order.setSlot(0); //sets the location of the order at the beginning of the queue.
 		
-		OrderDesc od = new OrderDesc();
-		od.setId(FleetOrders.MOVE_ORDER);
-		
 		//setting destination:
-		OrderParams.OrderParamObject id_param = new OrderParams.OrderParamObject();
-		id_param.setObjectid(destination_star_system);
-		order.setOrderparams(id_param);
+		OrderParams.OrderParamObject destination_param = new OrderParams.OrderParamObject();
+		//destination_param.setObjectid(destination_star_system.GAME_ID);
+		destination_param.setObjectid(destination_star_system); //for testing.
+		
+		order.setOrderparams(destination_param); //registering the parameter.
 		
 		Response response = conn.sendFrame(order, Response.class);
 		
+		//if the order is legal, probe for the amount of turns:
 		if (response.getFrameType() == Okay.FRAME_TYPE)
-			return true;
-		else if (response.getFrameType() == Fail.FRAME_TYPE)
-			return false;
-		else
-			throw new TPException("Unexpected response while trying to insert order.");
+		{
+			//setting template params:
+			OrderDesc template = new OrderDesc();   
+			template.setId(FleetOrders.MOVE_ORDER); 
+			
+			//probing the order to get the amt of turns.
+			return orderProbeGetTurns(order, template, conn); 
+		}
+		
+		//if order illegal.
+		else if (response.getFrameType() == Fail.FRAME_TYPE) 
+			return -1;
+		
+		else //unexpected frame.
+			throw new TPException("Unexpected frame while trying to insert move order.");
 		
 	}
+	
+	
+	/*
+	 * Probes the server, and returns the amount of turns to complete the order,
+	 * or -1 if it's illegal, or else a TPException for anything else (which is unexpected).
+	 * 
+	 * The OrderDesc needs to be already set to the order type, to serve as the template for OrderParams.
+	 */
+	private synchronized static int orderProbeGetTurns(Order order, OrderDesc od, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	{
+		OrderProbe probe = new OrderProbe();
+		
+		//setting values:
+		probe.setId(order.getId());
+		probe.setOtype(order.getOtype());
+		probe.setSlot(order.getSlot());
+		
+		List<OrderParams> ops = order.getOrderparams(od);
+		for (OrderParams op : ops)
+			{
+				System.out.println(op); //for testing!!
+				probe.setOrderparams(op);
+			}
+		
+		//probling:
+		Response whatIf = conn.sendFrame(probe, Response.class);
+		
+		if (whatIf.getFrameType() == Order.FRAME_TYPE)
+			return ((Order) whatIf).getTurns();
+		
+		else if (whatIf.getFrameType() == Fail.FRAME_TYPE)
+			return -1;
+		
+		else 
+			throw new TPException("Unexpected frame while probing order.");
+	}
+	
+	
 }

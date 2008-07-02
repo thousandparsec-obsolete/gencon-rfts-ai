@@ -64,6 +64,11 @@ public class FullGameStatus
 		
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMap, Players>(map, pl); 
+		
+		//SOME TESTING:
+	    //CLIENT.getOrdersDesc();
+		CLIENT.testMove();
+		
 	}
 
 	

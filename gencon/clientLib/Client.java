@@ -10,6 +10,7 @@ import gencon.gamelib.Game_Player;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.FleetOrders;
+import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
 import gencon.utils.*;
 import net.thousandparsec.netlib.*;
@@ -34,6 +35,7 @@ public class Client
 	//
 	private final Master master;
 	private boolean autorun;
+	private String characterClasspath;
 	
 	//
 	//	CONNECTION-RELATED
@@ -589,19 +591,40 @@ public class Client
 	}
 	
 	/**
-	 * Moving a fleet to some star-system.
+	 * Order a fleet to move to any star-system in the game-world.
 	 * 
-	 * @param urgent if true, puts the order to the start of the order queue; if false, to the end.
-	 * @return true if the order was successfully passed to server, and false otherwise.
+	 * @param fleet_id The fleet in question.
+	 * @param destination_star_system The ultimate destination.
+	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
+	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
 	 */
-	public synchronized boolean moveFleet(int fleet_id, int destination_star_system, boolean urgent) throws TPException, IOException
+	public synchronized int moveFleet(int fleet_id, int destination_star_system, boolean urgent) throws TPException, IOException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		boolean result = ConnectionMethods.orderMove(fleet_id, destination_star_system, urgent, conn);
+		int result = ConnectionMethods.orderMove(fleet_id, destination_star_system, urgent, conn);
 		conn.close();
 		return result;
 	}
 	
+	public void testMove()
+	{
+		int myId = 121;
+		
+		int dest1 = 10; //Procyon
+		int dest2 = 108; //
+		
+		try
+		{
+			int turns1 = moveFleet(myId, dest1, false); //non-urgent
+			int turns2 = moveFleet(myId, dest2, true); //urgent
+			
+			pl("Fleet move will take " + turns1 + " to Procyon, and " + turns2 + " to Diphda.");
+		}
+		catch (Exception e)
+		{
+			pl(e.getMessage());
+		}
+	}
 	
 	
 	
@@ -619,6 +642,16 @@ public class Client
 			pl("done.");
 		}
 	}
+	
+	
+	public String getCharacterClasspath()
+	{
+		return characterClasspath;
+	}
+	
+	
+	
+	
 	
 	/*
 	 * STD IN / OUT:  (only prints with verbose debug mode)

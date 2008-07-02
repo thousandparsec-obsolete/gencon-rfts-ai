@@ -8,6 +8,7 @@ import net.thousandparsec.netlib.Visitor;
 
 import gencon.clientLib.*;
 import gencon.gamelib.FullGameStatus;
+import gencon.robolib.Robot;
 import gencon.utils.*;
 
 /**
@@ -28,17 +29,17 @@ public class Master implements Runnable
 	private boolean verboseDebugMode = true; //true by default
 	public final static int NORMAL_EXIT = 0;
 	public final static int ABNORMAL_EXIT = -1;
-	
+	private final byte WORK_TIME = 10; //The time, in seconds, required to complete a turn. 
+	//if remaining time in some turn is less than that, robot will not execute until next turn.
+	//ONLY AN ESTIMATE NOW!!! NEED TO CALCULATE ACTUAL TIMES! (MAY DEPEND ON PING).
+
 	
 	//connection related
 	public final Client CLIENT;
 	
 	//game-related
 	private FullGameStatus gameStatus;
-	private final byte WORK_TIME = 7; //The time, in seconds, required to complete a turn. 
-						//if remaining time in some turn is less than that, robot will not execute.
-						//ONLY AN ESTIMATE NOW!!! NEED TO CALCULATE ACTUAL TIMES! (MAY DEPEND ON PING).
-	private boolean quit = false; //the flag that tells gameCycle to quit!
+	private Robot robot;
 	
 	
 	/**
@@ -80,6 +81,10 @@ public class Master implements Runnable
 		//initializing game status
 		gameStatus = new FullGameStatus(CLIENT, CLIENT.getPlayerName());
 		
+		//initializing robot:
+		String character_classpath = CLIENT.getCharacterClasspath();
+		robot = new Robot(character_classpath, CLIENT.getDifficulty(), CLIENT); 
+		
 		pl("Done initializing GenCon.");
 	}
 	
@@ -97,10 +102,21 @@ public class Master implements Runnable
 	{
 		
 		//UNCOMMENT! :
-		//while (!quit)
+		//while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
 		//{
-			delayUntilReady(); //delay operation until GenCon can fully execute!
+			delayUntilReady(); //if necessary, delay operation until GenCon can fully execute!
 			startOfTurnRoutine();
+			try
+			{
+				startRobot(CLIENT.getTimeRemaining() - 3); 
+				//robot has the knowledge of how long to act 
+				//(time remaining, minus 3 seconds for confidence).
+			}
+			catch (Exception e)
+			{
+				exit("Could not fetch time from server while initializing robot.", ABNORMAL_EXIT, e);
+			}
+			
 		//}
 	}
 	
@@ -166,23 +182,11 @@ public class Master implements Runnable
 		{
 			exit("Unsuccessful updating game status.", ABNORMAL_EXIT, e);
 		}
-		
-		
-		
-		
 	}
 	
-	private void endOfTurnRoutine()
-	{
-		
-	}
+
 	
-	private void startRobot()
-	{
-		
-	}
-	
-	private void stopRobot()
+	private void startRobot(int seconds_remaining)
 	{
 		
 	}
@@ -199,9 +203,6 @@ public class Master implements Runnable
 	{
 		System.out.println("\n______________________________________");
 		System.out.println("Exiting GenCon.\nReason: " + message);
-		
-		//telling gameCycle that it's time to go home! (if it hasn't shut down already...)
-		quit = true;
 		
 		if (e != null)
 		{
@@ -243,16 +244,22 @@ public class Master implements Runnable
 		verboseDebugMode = mode;
 	}
 	
-	/*
-	 * STD IN / OUT: (only prints with verbose debug mode)
+	
+	/**
+	 * Use this method to substitute for {@link System}.out.println(). 
+	 * It prints to standard-out only if verbose-debug mode is on.
 	 */
-	private void pl(String st)
+	public void pl(String st)
 	{
 		if (isVerboseDebugMode())
 			System.out.println(st);
 	}
 	
-	private void pr(String st)
+	/**
+	 * Use this method to substitute for {@link System}.out.print(). 
+	 * It prints to standard-out only if verbose-debug mode is on.
+	 */
+	public void pr(String st)
 	{
 		if (isVerboseDebugMode())
 			System.out.print(st);
