@@ -22,7 +22,7 @@ import net.thousandparsec.util.Pair;
 
 
 /**
- * This is the basic client for GenCon. It complies with TP03 Protocol.
+ * This is the basic client for GenCon. As of now, it complies with TP03 Protocol.
  * Its sole functionality is to connect, log in, then send frames specified from outside,
  * and pass the received frames outside as well.
  * 
@@ -67,13 +67,7 @@ public class Client
 	/**
 	 * Run this method to start the client.
 	 * 
-	 * @param args Optional argument: '-a serverURI $' 
-	 * To autorun client, supply argument '-a', followed by the 'serverURI' and by game difficulty '$', 
-	 * which should be replaced by any number 1 to 9. If no game difficulty provided, default is 5.
-	 * The serverURI must include user info for autologin, e.g.: "tp://guest:guest@thousandparsec.net/tp".
-	 * In this case, verbose debug mode will be automatically on.
-	 * 
-	 * If no argument provided, client will start in 'normal' mode; that is, it will rely on standard user input. 
+	 * @param args Optional arguments. Please see README for details.
 	 */
 	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
 	{
