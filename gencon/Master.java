@@ -21,6 +21,9 @@ import gencon.utils.*;
 public class Master implements Runnable
 {
 	//in/out
+	/**
+	 * All standard input has to come from {@link Master}.in.
+	 */
 	public final static ScannerListener in = new ScannerListener(new Scanner(System.in));
 	public final static String QUIT = "q";
 	

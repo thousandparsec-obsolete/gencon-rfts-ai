@@ -18,6 +18,7 @@ import net.thousandparsec.netlib.tp03.*;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
 import net.thousandparsec.netlib.tp03.Object.ContainsType;
+import net.thousandparsec.util.Pair;
 
 
 /**
@@ -42,13 +43,13 @@ public class Client
 	//
 	private URI serverURI;
 	private ConnectionManager<TP03Visitor> connMgr;
-	public final LoggerConnectionListener<TP03Visitor> eventLogger;
+	public final LoggerConnectionListener<TP03Visitor> EVENT_LOGGER;
 	private final TP03Visitor visitor;
 
 
 	//game-related
 	private String myUsername;
-	private short difficulty = 5;
+	private short difficulty;
 	
 	
 	
@@ -59,7 +60,7 @@ public class Client
 	public Client(Master master)
 	{
 		this.master = master;
-		eventLogger = new LoggerConnectionListener<TP03Visitor>();
+		EVENT_LOGGER = new LoggerConnectionListener<TP03Visitor>();
 		visitor = new GCTP03Visitor();
 	}
 	
@@ -76,25 +77,17 @@ public class Client
 	 */
 	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
 	{
-		String URIstr = "";
+		Pair<Short, Pair<String, String>> parsedArgs = Utils.parseArgs(args);
 		
-		if (args.length == 0) {/* NORMAL OPERATION OF CLIENT */}
+		difficulty = parsedArgs.left.shortValue();
+		master.pl("Difficulty set to : " + difficulty);
 		
-		//configuring options for autorun.
-		else if ((args.length == 2 || args.length == 3) && args[0].equals("-a"))
-		{
-			URIstr = args[1];
-				if (args.length == 3)
-				{
-					difficulty = new Short(args[2]).shortValue();
-					if (!(difficulty > 0 && difficulty < 10)) //difficulty between 1-9
-						throw new IllegalArgumentException("Illegal Arguments. See documentation for proper syntax. Try again.");
-				}
-				pl("Difficulty set to " + difficulty);
-					
-		}
-		else
-			throw new IllegalArgumentException("Illegal Arguments. See documentation for proper syntax. Try again.");
+		String URIstr = parsedArgs.right.left;
+		if (!URIstr.equals(""))
+			master.pl("URI set to : " + URIstr);
+		
+		characterClasspath = parsedArgs.right.right;
+		master.pl("Character File classpath set to : " + characterClasspath);
 		
 		
 		if (URIstr.equals(""))
@@ -113,7 +106,7 @@ public class Client
 	
 	/*
 	 * NORMAL OPERATION.
-	 * Initializes client. URI string provided by standard input.
+	 * Initializes client. All relevant parameters set by user through standard input.
 	 * No autologin.
 	 */
 	private void initNoAutorun() throws IOException, TPException, EOFException
@@ -126,6 +119,9 @@ public class Client
 		
 		//set URI
 		serverURI = Utils.manualSetURI();
+		
+		//set character file classpath:
+		characterClasspath = Utils.manualSetChClasspath();
 		
 		// establish a connection with the server, no autologin.
 		connect();
@@ -141,14 +137,14 @@ public class Client
 	 */
 	private void initAutorun(String URIstring) throws IllegalArgumentException, IOException, TPException, URISyntaxException
 	{
-		pl("Autorun mode. Initializing...");
+		master.pl("Autorun mode. Initializing...");
 		
 		autorun = true;
 		
 		//verbose debug mode always true in autorun
 		master.setVerboseDebugMode(true);
 		
-		if (setURI(URIstring)) //if URI is valid, proceed with normal operation
+		if (setURI(URIstring)) //Set URI. If URI is valid, proceed with normal operation.
 		{
 			serverURI = new URI(URIstring);
 			connect();
@@ -196,10 +192,10 @@ public class Client
 	private void connect() throws IOException, TPException
 	{
 		TP03Decoder decoder = new TP03Decoder();
-			pr("Establishing connection to server... ");
+		master.pr("Establishing connection to server... ");
 			
 			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autorun, visitor);
-			basicCon.addConnectionListener(eventLogger);
+			basicCon.addConnectionListener(EVENT_LOGGER);
 			
 			connMgr = new ConnectionManager<TP03Visitor>(basicCon);
 			
@@ -208,9 +204,9 @@ public class Client
 			
 			if (autorun)
 			{
-				pl("connection established to : " + serverURI);
+				master.pl("connection established to : " + serverURI);
 				myUsername = Utils.getUsrnameFromURI(serverURI);
-				pl("Logged in successfully as : " + myUsername);
+				master.pl("Logged in successfully as : " + myUsername);
 			}
 			else //send connect frame...
 			{
@@ -220,7 +216,7 @@ public class Client
 				conn.sendFrame(connect, Okay.class);
 				conn.close();
 				//if reach here, then ok.
-				pl("connection established to : " + serverURI);
+				master.pl("connection established to : " + serverURI);
 			}
 				
 	}
@@ -236,12 +232,6 @@ public class Client
 	/*
 	 * Logs in as user, or else creates new account and logs in as that user.
 	 * User info gathered from standard input.
-	 * 
-	 * ~STILL IN PROTOTYPICAL FORM
-	 * ~ASSUMPTION: 'create new user' does not automatically log you in as that user; 
-	 * rather, the client needs to manually log in afterwards.
-	 * ~Appears to be the case
-	 * 
 	 */
 	private void loginOrCreateUser() throws EOFException
 	{
@@ -304,10 +294,10 @@ public class Client
 		{
 			//will be supplanted by the ThreadedPipelineManager methods... sometime... in the future...
 			SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
-			pr("Logging in...");
+			master.pr("Logging in...");
 			conn.sendFrame(loginFrame, Okay.class);
 			conn.close();
-			pl("Logged in successfully as : " + username);
+			master.pl("Logged in successfully as : " + username);
 		}
 		catch (TPException tpe)
 		{
@@ -582,7 +572,7 @@ public class Client
 					for (OrderParams op : params)
 					{
 						OrderParams.OrderParamObject opo = (OrderParams.OrderParamObject) op;
-						pr("Object: " + opo.getObjectid());
+						master.pr("Object: " + opo.getObjectid());
 						OrderParams.OrderParamString ops = (OrderParams.OrderParamString) op;
 						pr("  Destination : " + opo.getObjectid() + "\n");
 					}
@@ -637,9 +627,9 @@ public class Client
 	{
 		if (connMgr != null)
 		{
-			pr("Closing connection... ");
+			master.pr("Closing connection... ");
 			connMgr.close();
-			pl("done.");
+			master.pl("done.");
 		}
 	}
 	
@@ -649,22 +639,14 @@ public class Client
 		return characterClasspath;
 	}
 	
-	
-	
-	
-	
-	/*
-	 * STD IN / OUT:  (only prints with verbose debug mode)
-	 */
+	//std in/out that's not dependent on verbose debug mode:
 	private void pl(String st)
 	{
-		if (master.isVerboseDebugMode())
-			System.out.println(st);
+		System.out.println(st);
 	}
 	
 	private void pr(String st)
 	{
-		if (master.isVerboseDebugMode())
-			System.out.print(st);
+		System.out.print(st);
 	}
 }

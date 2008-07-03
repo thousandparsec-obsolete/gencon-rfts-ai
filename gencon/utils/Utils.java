@@ -7,6 +7,8 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import net.thousandparsec.util.Pair;
+
 /**
  * A collector class for general utility methods.
  * 
@@ -17,16 +19,56 @@ public class Utils
 {
 	private Utils(){} //DUMMY CONSTRUCTOR : STATIC CLASS
 
-	/**
-	 * Initialize this class.
-	 *
-	 */
-	public void init()
-	{
-		
-	}
-	
 	public static PrintStream stout = System.out;
+	
+	
+	/**
+	 * Parses the arguments at input. See documentation for proper syntax.
+	 * 
+	 * @param args The arguments given by the {@link Client}.
+	 * 
+	 * @return Pair<Short, Pair<String, String>>, where the {@link Short} is the robot difficulty, 
+	 * and the {@link String}s are the URI and the 'character-file' classPath, respectively.
+	 */
+	public synchronized static Pair<Short, Pair<String, String>> parseArgs(String[] args) 
+	{
+		//the variables to be returned.
+		String URIstr = "";
+		String characterClassPath = "";
+		short difficulty = 5; //the default difficulty
+		///////////
+		
+		try
+		{
+			if (args.length == 0)  {/*no arguments; normal operation*/}
+			
+			//configuring options for autorun:
+			//must have 4 arguments, and first one must be '-a'.
+			else if (args.length == 4 && args[0].equals("-a")) 
+			{
+				URIstr = args[1];
+				difficulty = new Short(args[2]).shortValue(); //must be a short; otherwise, will throw exception.
+				
+				//make sure difficulty in range:
+				if (difficulty <= 0 || difficulty >= 10)
+					throw new Exception();
+				
+				characterClassPath = args[3];
+			}
+			//for any other input:
+			else
+				throw new Exception();
+				
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException("Illegal Arguments. See documentation for proper syntax. Try again.");
+		}
+		
+		//composing the return:
+		Pair<Short, Pair<String, String>> pair = new Pair<Short, Pair<String, String>>(difficulty, new Pair<String, String>(URIstr, characterClassPath));
+		return pair; 
+	}
 	
 	/**
 	 * Prints exception stack trace, if verbose debug mode is on.
@@ -89,7 +131,7 @@ public class Utils
 		return vdm;
 	}
 	
-	/* 
+	/** 
 	 * set the URI by standard user input.
 	 */
 	public synchronized static URI manualSetURI()
@@ -105,6 +147,33 @@ public class Utils
 		
 		return uri;
 	}
+	
+	/**
+	 * Requests the classpath for the character-file from the user.
+	 * 
+	 * @return The classpath.
+	 */
+	public synchronized static String manualSetChClasspath()
+	{
+		String cp = "";
+		boolean ok = false;
+		
+		do
+		{
+			stout.print("Enter the classpath of the character-file for the robot: ");
+			cp = Master.in.next();
+			
+			if (!cp.equals(""))
+				ok = true;
+			else
+				ok = false;
+			
+		} while (!ok);
+		
+		return cp;
+	}
+	
+	
 	
 	/**
 	 * Making the server URI from a string.
