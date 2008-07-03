@@ -46,6 +46,12 @@ public class Client
 	public final LoggerConnectionListener<TP03Visitor> EVENT_LOGGER;
 	private final TP03Visitor visitor;
 
+	/* ~~~TO BE IMPLEMENTED INTO ALL CONNECTION-METHODS: RETRY FOR N-TIMES, IF FAILS.~~~~~~~~
+	/**
+	 * The number of times the connection will try to retrieve info before throwing an exception.
+	 *
+	public final static byte RETRIES = 5; 
+	*/
 
 	//game-related
 	private String myUsername;

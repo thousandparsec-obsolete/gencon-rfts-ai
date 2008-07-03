@@ -47,8 +47,7 @@ public class ConnectionMethods
 	
 	public synchronized static int getTimeRemaining(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
-		TimeRemaining tr = null;
-		tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
+     	TimeRemaining tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
 		return tr.getTime();
 	}
 
@@ -57,7 +56,7 @@ public class ConnectionMethods
 		GetObjectsByID get = new GetObjectsByID();
 		get.getIds().add(new IdsType(id));
 		
-		conn.receiveFrame(Sequence.class);
+		conn.sendFrame(get, Sequence.class);
 		Object object = conn.receiveFrame(Object.class);
 
 		return object;

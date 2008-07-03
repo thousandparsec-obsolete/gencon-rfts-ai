@@ -23,7 +23,7 @@ public class Character
 	/*
 	 * The map of the characteristics, in their corresponding place.
 	 */
-	private Map<Short, Float> characteristics; 
+	private Map<Traits, Float> characteristics; 
 	
 	/**
 	 * Constructs the class, and initializes the behavioral characteristics from the specified file.
@@ -31,7 +31,7 @@ public class Character
 	 */
 	public Character(String classPath)
 	{
-		characteristics = new HashMap<Short, Float>();
+		characteristics = new HashMap<Traits, Float>();
 		init(classPath);
 	}
 	
@@ -48,14 +48,14 @@ public class Character
 	/**
 	 * @return A deep copy of the full list of behavioral characteristics of this {@link Character}. 
 	 */
-	public Map<Short, Float> getCharacteristics()
+	public Map<Traits, Float> getCharacteristics()
 	{
-		HashMap<Short, Float> map = new HashMap<Short, Float>();
-		Set<Short> keyset = characteristics.keySet();
+		HashMap<Traits, Float> map = new HashMap<Traits, Float>();
+		Set<Traits> keyset = characteristics.keySet();
 		
 		//deep-copy babies..
-		for (Short key : keyset)
-			map.put(new Short(key.shortValue()), new Float(characteristics.get(key).floatValue()));
+		for (Traits key : keyset)
+			map.put(key, new Float(characteristics.get(key).floatValue()));
 		
 		return map;
 	}
@@ -65,15 +65,18 @@ public class Character
 	 */
 	public float getTraitValue(Traits trait)
 	{
-		return characteristics.get(new Short(parseTrait(trait))).floatValue();
+		return characteristics.get(trait).floatValue();
 	}
 	
-	private Short parseTrait(Traits trait)
+	/*
+	 * THE MAPPING B/W SHORT <--> TRAITS
+	 */
+	private Traits parseTrait(Short num)
 	{
-		switch (trait)
+		switch (num)
 		{
 		/*
-		 * THE MAPPING WILL BE CONTAINED HERE!
+		 * ALL CASES OF THE MAPPING WILL BE CONTAINED HERE!
 		 */
 		}
 	}
@@ -81,7 +84,7 @@ public class Character
 	/*
 	 * Parses a line from the character file.
 	 */
-	private static Pair<Short, Float> parseLine(String line)
+	private static Pair<Traits, Float> parseLine(String line)
 	{
 		
 	}

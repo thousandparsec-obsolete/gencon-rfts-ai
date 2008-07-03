@@ -85,8 +85,7 @@ public class Master implements Runnable
 		gameStatus = new FullGameStatus(CLIENT, CLIENT.getPlayerName());
 		
 		//initializing robot:
-		String character_classpath = CLIENT.getCharacterClasspath();
-		robot = new Robot(character_classpath, CLIENT.getDifficulty(), CLIENT); 
+		robot = new Robot(CLIENT.getCharacterClasspath(), CLIENT.getDifficulty(), CLIENT); 
 		
 		pl("Done initializing GenCon.");
 	}
@@ -96,8 +95,6 @@ public class Master implements Runnable
 	 */
 	public void run()
 	{
-		
-		
 		gameCycle();
 	}
 	
@@ -132,23 +129,14 @@ public class Master implements Runnable
 		int timeRemaining = 0;
 		
 		//retreive time from client: (should be successful!)
-		boolean ok = false;
-		byte counter = 0;
-		do 
+		try 
 		{
-			try 
-			{
-				timeRemaining = CLIENT.getTimeRemaining();
-				ok = true;
-				counter ++;
-			} 
-			catch (Exception e)
-			{
-				counter ++;
-				if (counter > 20) //if try to do it over 20 times, quit!!
-					exit("Permanently failed to fetch time", ABNORMAL_EXIT, e);
-			}
-		} while (!ok);
+			timeRemaining = CLIENT.getTimeRemaining();
+		} 
+		catch (Exception e)
+		{
+			exit("Permanently failed to fetch time", ABNORMAL_EXIT, e);
+		}
 		
 		
 		long timeDiff = (timeRemaining - WORK_TIME) * 1000; //the difference between time remaining, and time necessary to operate, in milliseconds.
