@@ -18,8 +18,10 @@ import net.thousandparsec.netlib.tp03.Fail;
 import net.thousandparsec.netlib.tp03.GetObjectIDs;
 import net.thousandparsec.netlib.tp03.GetObjectsByID;
 import net.thousandparsec.netlib.tp03.GetOrder;
+import net.thousandparsec.netlib.tp03.GetOrderDesc;
 import net.thousandparsec.netlib.tp03.GetPlayer;
 import net.thousandparsec.netlib.tp03.GetTimeRemaining;
+import net.thousandparsec.netlib.tp03.GetWithID;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.ObjectIDs;
 import net.thousandparsec.netlib.tp03.ObjectParams;
@@ -205,12 +207,9 @@ public class ConnectionMethods
 		//if the order is legal, probe for the amount of turns:
 		if (response.getFrameType() == Okay.FRAME_TYPE)
 		{
-			//setting template params:
-			OrderDesc template = new OrderDesc();   
-			template.setId(FleetOrders.MOVE_ORDER); 
 			
 			//probing the order to get the amt of turns.
-			return orderProbeGetTurns(order, template, conn); 
+			return orderProbeGetTurns(order, FleetOrders.MOVE_ORDER, conn); 
 		}
 		
 		//if order illegal.
@@ -229,7 +228,7 @@ public class ConnectionMethods
 	 * 
 	 * The OrderDesc needs to be already set to the order type, to serve as the template for OrderParams.
 	 */
-	private synchronized static int orderProbeGetTurns(Order order, OrderDesc od, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	private synchronized static int orderProbeGetTurns(Order order, int order_id, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderProbe probe = new OrderProbe();
 		
@@ -237,6 +236,8 @@ public class ConnectionMethods
 		probe.setId(order.getId());
 		probe.setOtype(order.getOtype());
 		probe.setSlot(order.getSlot());
+		
+		OrderDesc od = getODbyId(order_id, conn);
 		
 		List<OrderParams> ops = order.getOrderparams(od);
 		for (OrderParams op : ops)
@@ -258,5 +259,12 @@ public class ConnectionMethods
 			throw new TPException("Unexpected frame while probing order.");
 	}
 	
-	
+	private static synchronized OrderDesc getODbyId(int id, SequentialConnection<TP03Visitor> conn) throws TPException, IOException
+	{
+		GetOrderDesc god = new GetOrderDesc(); 
+		List<IdsType> list = god.getIds();
+		list.add(new IdsType(id));
+		
+		return conn.sendFrame(god, OrderDesc.class); 
+	}
 }

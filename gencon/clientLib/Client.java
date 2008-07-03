@@ -46,7 +46,7 @@ public class Client
 	public final LoggerConnectionListener<TP03Visitor> EVENT_LOGGER;
 	private final TP03Visitor visitor;
 
-	/* ~~~TO BE IMPLEMENTED INTO ALL CONNECTION-METHODS: RETRY FOR N-TIMES, IF FAILS.~~~~~~~~
+	/* ~~~TO BE IMPLEMENTED INTO ALL CONNECTION-METHODS: RETRY FOR N-TIMES, IF FAILS, THEN THROW EXCEPTION.~~~~~~~~
 	/**
 	 * The number of times the connection will try to retrieve info before throwing an exception.
 	 *
@@ -355,24 +355,6 @@ public class Client
 	}
 	
 	
-	public synchronized String getPlayerName()
-	{
-		return myUsername;
-	}
-	
-	public synchronized short getDifficulty()
-	{
-		return difficulty;
-	}
-	
-	
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 * 
-	 *	CONNECTION METHODS:
-	 * 
-	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 */
-	
 	public synchronized Object getObjectById(int id) throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
@@ -598,17 +580,17 @@ public class Client
 	
 	public void testMove()
 	{
-		int myId = 121;
+		int myId = 140;
 		
-		int dest1 = 10; //Procyon
-		int dest2 = 108; //
+		int dest1 = 115; //Procyon
+		int dest2 = 55; //
 		
 		try
 		{
 			int turns1 = moveFleet(myId, dest1, false); //non-urgent
 			int turns2 = moveFleet(myId, dest2, true); //urgent
 			
-			pl("Fleet move will take " + turns1 + " to Procyon, and " + turns2 + " to Diphda.");
+			pl("Fleet move will take " + turns1 + " to destination1, and " + turns2 + " to destination2.");
 		}
 		catch (Exception e)
 		{
@@ -639,6 +621,16 @@ public class Client
 		return characterClasspath;
 	}
 	
+	public synchronized short getDifficulty()
+	{
+		return difficulty;
+	}
+
+	public synchronized String getPlayerName()
+	{
+		return myUsername;
+	}
+
 	//std in/out that's not dependent on verbose debug mode:
 	private void pl(String st)
 	{
