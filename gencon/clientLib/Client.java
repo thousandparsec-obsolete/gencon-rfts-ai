@@ -17,7 +17,11 @@ import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp03.*;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
+import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
+import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
 import net.thousandparsec.netlib.tp03.Object.ContainsType;
+import net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType;
+import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
 import net.thousandparsec.util.Pair;
 
 
@@ -441,6 +445,104 @@ public class Client
 
 	
 	/**
+	 * Returns the dimensions of the game-world in the following format:
+	 * 
+	 * @return Pair<sizeUnitsSquare, Pair<centerX, centerY>>
+	 */
+	public synchronized Pair<Long, Pair<Long, Long>> getUniverseDimensions() throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Object o = ConnectionMethods.getObjectById(conn, 0);
+		conn.close();
+		
+		Long x = new Long(o.getPos().getX());
+		Long y = new Long(o.getPos().getY());
+		Pair<Long, Long> universePos = new Pair<Long, Long>(x, y);
+		
+		Long size = new Long(o.getSize());
+		
+		return new Pair<Long, Pair<Long,Long>>(size, universePos);
+	}
+
+	/**
+	 * Order a fleet to move to any star-system in the game-world.
+	 * 
+	 * @param fleet_id The fleet in question.
+	 * @param destination_star_system The ultimate destination.
+	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
+	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
+	 */
+	public synchronized int moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		int result = ConnectionMethods.orderMove(fleet.GAME_ID, destination_star_system.GAME_ID, urgent, conn);
+		conn.close();
+		return result;
+	}
+
+	
+	/**
+	 * Closing connection.
+	 * 
+	 * @param message Exit message.
+	 */
+	public synchronized void exit() throws Exception
+	{
+		if (connMgr != null)
+		{
+			master.pr("Closing connection... ");
+			connMgr.close();
+			master.pl("done.");
+		}
+	}
+	
+	
+	public String getCharacterClasspath()
+	{
+		return characterClasspath;
+	}
+	
+	public synchronized short getDifficulty()
+	{
+		return difficulty;
+	}
+
+	public synchronized String getPlayerName()
+	{
+		return myUsername;
+	}
+
+	//std in/out that's not dependent on verbose debug mode:
+	private void pl(String st)
+	{
+		System.out.println(st);
+	}
+	
+	private void pr(String st)
+	{
+		System.out.print(st);
+	}
+	
+	
+	
+	/////////////////////////////////////////////////////
+	/////
+	/////	TEST METHODS
+	/////
+	/////////////////////////////////////////////////////
+	/**
+	 * RUNS THE TEST METHODS NEEDED IN THE GIVEN MOMENT
+	 *
+	 */
+	public void testMethods() throws IOException, TPException
+	{
+		getResourceDescs();
+		seeWhatsInside();
+	}
+	
+	
+	
+	/**
 	 * REALLY, JUST A TEST METHOD TO MAP RESOURCE IDS TO RESOURCE TYPES.
 	 * WILL GO AWAY WHEN I'M 101% SURE I DON'T NEED IT ANYMORE.
 	 */
@@ -478,7 +580,45 @@ public class Client
 		
 		
 	}
-	
+
+	public void getOrdersForMyObjects()
+	{
+		try
+		{
+			getOrdersForObject(139, 3);
+		}
+		catch (Exception e)
+		{
+			pl("unsuccessful. " + e.getMessage());
+		}
+	}
+
+	//VOID FOR NOW... WANT TO SEE HOW IT PRINTS THEM OUT.
+	public void getOrdersForObject(int objectId, int order_num) throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Vector<Order> orders = ConnectionMethods.getOrdersForObject(conn, objectId, order_num);
+		
+		//just print them out for now, and see..
+		pl("Orders for object: " + objectId);
+		for (Order o : orders)
+			if (o != null)
+			{
+					pl("--> " + o.toString() + " Details:\n------>");
+					OrderDesc od = new OrderDesc();
+					od.setId(o.getOtype());
+					List<OrderParams> params = o.getOrderparams(od);
+					for (OrderParams op : params)
+					{
+						OrderParams.OrderParamObject opo = (OrderParams.OrderParamObject) op;
+						master.pr("Object: " + opo.getObjectid());
+						OrderParams.OrderParamString ops = (OrderParams.OrderParamString) op;
+						pr("  Destination : " + opo.getObjectid() + "\n");
+					}
+			}
+		conn.close();
+	}
+
 	/**
 	 * REALLY, JUST A TEST METHOD TO EXAMINE ORDERS.
 	 * WILL GO AWAY WHEN I'M 101% SURE I DON'T NEED IT ANYMORE.
@@ -519,65 +659,7 @@ public class Client
 		
 		
 	}
-	
-	
-	
-	
-	
-	public void getOrdersForMyObjects()
-	{
-		try
-		{
-			getOrdersForObject(139, 3);
-		}
-		catch (Exception e)
-		{
-			pl("unsuccessful. " + e.getMessage());
-		}
-	}
-	
-	//VOID FOR NOW... WANT TO SEE HOW IT PRINTS THEM OUT.
-	public void getOrdersForObject(int objectId, int order_num) throws TPException, IOException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Vector<Order> orders = ConnectionMethods.getOrdersForObject(conn, objectId, order_num);
-		
-		//just print them out for now, and see..
-		pl("Orders for object: " + objectId);
-		for (Order o : orders)
-			if (o != null)
-			{
-					pl("--> " + o.toString() + " Details:\n------>");
-					OrderDesc od = new OrderDesc();
-					od.setId(o.getOtype());
-					List<OrderParams> params = o.getOrderparams(od);
-					for (OrderParams op : params)
-					{
-						OrderParams.OrderParamObject opo = (OrderParams.OrderParamObject) op;
-						master.pr("Object: " + opo.getObjectid());
-						OrderParams.OrderParamString ops = (OrderParams.OrderParamString) op;
-						pr("  Destination : " + opo.getObjectid() + "\n");
-					}
-			}
-		conn.close();
-	}
-	
-	/**
-	 * Order a fleet to move to any star-system in the game-world.
-	 * 
-	 * @param fleet_id The fleet in question.
-	 * @param destination_star_system The ultimate destination.
-	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
-	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
-	 */
-	public synchronized int moveFleet(int fleet_id, int destination_star_system, boolean urgent) throws TPException, IOException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		int result = ConnectionMethods.orderMove(fleet_id, destination_star_system, urgent, conn);
-		conn.close();
-		return result;
-	}
-	
+
 	public void testMove()
 	{
 		int myId = 140;
@@ -599,46 +681,89 @@ public class Client
 	}
 	
 	
-	
-	/**
-	 * Closing connection, and exiting Client.
-	 * 
-	 * @param message Exit message.
-	 */
-	public synchronized void exit() throws Exception
+	public void displayDesigns() throws TPException, IOException
 	{
-		if (connMgr != null)
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+
+
+		GetDesignIDs gdids = new GetDesignIDs();
+		gdids.setAmount(-1);
+		gdids.setKey(-1);
+		DesignIDs dids = conn.sendFrame(gdids, DesignIDs.class);
+		
+		GetDesign gd = new GetDesign();
+		for (ModtimesType mdt : dids.getModtimes())
 		{
-			master.pr("Closing connection... ");
-			connMgr.close();
-			master.pl("done.");
+			gd.getIds().add(new IdsType(mdt.getId()));
 		}
+		
+		Sequence seq = conn.sendFrame(gd, Sequence.class);
+		
+		for (int i = 0; i < seq.getNumber(); i++)
+		{
+			Design des = conn.receiveFrame(Design.class);
+			pl(des.toString());
+		}
+		
+		conn.close();
 	}
 	
 	
-	public String getCharacterClasspath()
+	public void seeWhatsInside() throws TPException, IOException
 	{
-		return characterClasspath;
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		/*
+		Object o = getObjectById(146);
+		
+		ObjectParams.Fleet fl = (ObjectParams.Fleet)o.getObject();
+		
+		for (ShipsType st : fl.getShips())
+			pl(st.toString());
+		*/
+		
+		Object p = getObjectById(13);
+		
+		ObjectParams.Planet pl = (ObjectParams.Planet)p.getObject();
+		
+		for (ResourcesType rt : pl.getResources())
+			pl(rt.toString());
+		
+		
+		conn.close();
 	}
 	
-	public synchronized short getDifficulty()
+	
+	public void getMessages() throws IOException, TPException
 	{
-		return difficulty;
-	}
-
-	public synchronized String getPlayerName()
-	{
-		return myUsername;
-	}
-
-	//std in/out that's not dependent on verbose debug mode:
-	private void pl(String st)
-	{
-		System.out.println(st);
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		
+		GetBoardIDs gbids = new GetBoardIDs();
+		gbids.setAmount(-1);
+		gbids.setKey(-1);
+		BoardIDs bids = conn.sendFrame(gbids, BoardIDs.class);
+		
+		GetBoards gb = new GetBoards();
+		for(ModtimesType mdt : bids.getModtimes())
+			gb.getIds().add(new IdsType(mdt.getId()));
+		
+		Board b = conn.sendFrame(gb, Board.class);
+		pl(b.toString());
+		
+		
+		GetMessage gm = new GetMessage();
+		gm.setId(b.getId());
+		List<SlotsType> slots = gm.getSlots();
+		for (int i = 0; i < b.getMessages(); i ++)
+		{
+			////// will complete a bit later :)
+		}
+		conn.close();
 	}
 	
-	private void pr(String st)
-	{
-		System.out.print(st);
-	}
+	/////////////////////////////////////////////////////
+	/////
+	/////	END OF TEST METHODS
+	/////
+	/////////////////////////////////////////////////////
+	
 }

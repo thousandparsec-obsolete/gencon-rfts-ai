@@ -41,7 +41,7 @@ public class Master implements Runnable
 	public final Client CLIENT;
 	
 	//game-related
-	private FullGameStatus gameStatus;
+	public final FullGameStatus GAME_STATUS;
 	private Robot robot;
 	
 	
@@ -60,6 +60,7 @@ public class Master implements Runnable
 	public Master(String[] args)
 	{
 		CLIENT = new Client(this);
+		GAME_STATUS = new FullGameStatus(this);
 		init(args);
 	}
 	
@@ -82,10 +83,10 @@ public class Master implements Runnable
 		}
 		
 		//initializing game status
-		gameStatus = new FullGameStatus(CLIENT, CLIENT.getPlayerName());
+		GAME_STATUS.init();
 		
 		//initializing robot:
-		robot = new Robot(CLIENT.getCharacterClasspath(), CLIENT.getDifficulty(), CLIENT); 
+		robot = new Robot(this); 
 		
 		pl("Done initializing GenCon.");
 	}
@@ -166,7 +167,7 @@ public class Master implements Runnable
 		{
 			int time = CLIENT.getTimeRemaining();
 			pl("Start of turn routine commencing... " + time + " seconds to end of turn.");
-			gameStatus.incrementTurn();
+			GAME_STATUS.incrementTurn();
 			//CLIENT.eventLogger.dumpLogStd();
 		}
 		catch (Exception e) /// IN REALITY, IT SHOULDN'T QUIT AT THIS POINT

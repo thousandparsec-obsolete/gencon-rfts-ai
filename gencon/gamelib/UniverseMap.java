@@ -4,11 +4,14 @@ import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
 
+import java.util.List;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import net.thousandparsec.util.Pair;
+
 /**
- * A representation of the game-world based on star-systems. 
+ * A representation of the game-world based on star-systems, plus some logic to help navigate.
  * 
  * @author Victor Ivri
  */
@@ -24,10 +27,17 @@ public class UniverseMap
 	 */
 	public final Vector<Body> ALL_BODIES;
 	
-	public UniverseMap(Vector<Body> bodies)
+	/**
+	 * The dimensions of the universe, in the following format:
+	 * Pair<sizeUnitsSquare, Pair<centerX, centerY>>
+	 */
+	public final Pair<Long, Pair<Long, Long>> UNIVERSE_DIMENSIONS;
+	
+	public UniverseMap(Vector<Body> bodies, Pair<Long, Pair<Long, Long>> dimensions)
 	{
 		ALL_BODIES = bodies;
 		STAR_SYSTEMS = isolateStarSystems(ALL_BODIES);
+		UNIVERSE_DIMENSIONS = dimensions;
 	}
 	
 	private Vector<StarSystem> isolateStarSystems(Vector<Body> bodies)
@@ -99,33 +109,44 @@ public class UniverseMap
 	}
 	
 	/**
-	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem}, and return a {@link Vector} of them.
+	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from the whole game-world, and return a {@link Vector} of them.
 	 * The {@link Vector} will contain <= n {@link StarSystem}s.
 	 */
 	public Vector<StarSystem> getNclosestStarSystems(StarSystem ssys, int n)
+	{
+		return nclosest(ssys, STAR_SYSTEMS, n);
+	}
+	
+	
+	/**
+	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from some collection, and return a {@link Vector} of them.
+	 * The {@link Vector} will contain <= n {@link StarSystem}s.
+	 */
+	public Vector<StarSystem> getNclosestStarSystems(StarSystem ssys, List<StarSystem> collection, int n)
+	{
+		return nclosest(ssys, collection, n);
+	}
+	
+	
+	private Vector<StarSystem> nclosest(StarSystem ssys, List<StarSystem> collection, int n)
 	{
 		//System.out.println("For star system: " + ssys.NAME);
 		
 		TreeMap<Long, StarSystem> distance_to_body = new TreeMap<Long, StarSystem>();
 		
-		//puts all bodies in the map, except for the star system in question, or the universe itself
-		//System.out.println("Getting distances from all others:");
-		for (StarSystem s1 : STAR_SYSTEMS)
-			if (s1 != null && s1.GAME_ID != ssys.GAME_ID && s1.TYPE != Body.BodyType.UNIVERSE)
-			{
+		//puts all bodies in the map, except for the star system in question
+		for (StarSystem s1 : collection)
+			if (s1.GAME_ID != ssys.GAME_ID)
 				distance_to_body.put(getDistance(s1, ssys), s1);
-		//		System.out.println("S.Sys: " + s1.NAME + " Pos: " + s1.POSITION[0] + "-" + s1.POSITION[1] + "-" + s1.POSITION[2] + " dist: " + getDistance(s1, ssys));
-			}
+
 		
 		//finds n-closest, or as long as there are bodies
-		//System.out.println("finding " + n + " closest:");
 		Vector<StarSystem> nclosest = new Vector<StarSystem>(n);
-		for (int i = 0; i < n && i < STAR_SYSTEMS.size(); i++) //assumption: a star system should exist, as long as i < STAR_SYSTEMS.size().
+		for (int i = 0; i < n && i < collection.size(); i++) //assumption: a star system should exist, as long as i < STAR_SYSTEMS.size().
 		{
 			long id = distance_to_body.ceilingKey((long)0); //gets the closest distance to 0.
 			StarSystem s2 = distance_to_body.get(id);
 			nclosest.add(s2);
-			//System.out.println(i + ") " + s2.NAME + " dist: " + id);
 			distance_to_body.remove(id); //removes the selected body from the object-distance mapping, so it won't be counted twice
 		}
 		
@@ -140,11 +161,67 @@ public class UniverseMap
 	public long getDistance (Body a, Body b)
 	{
 		//CALCULATIONS TOO LARGE FOR LONG, CASTING TO DOUBLE:
-		double x_dist = a.POSITION[0] - b.POSITION[0];
-		double y_dist = a.POSITION[1] - b.POSITION[1];
-		double z_dist = a.POSITION[2] - b.POSITION[2];
+		double x_dist = shortestDistance(a, b, 'x');
+		double y_dist = shortestDistance(a, b, 'y');
 		
-		//System.out.println(x_dist * x_dist + y_dist * y_dist + z_dist *  z_dist); //
-		return new Double(Math.sqrt(x_dist * x_dist + y_dist * y_dist + z_dist *  z_dist)).longValue(); //close enough approximation!
+		return new Double(Math.sqrt(x_dist * x_dist + y_dist * y_dist)).longValue(); //close enough approximation!
 	}
+	
+	private double shortestDistance(Body a, Body b, char axis)
+	{
+		switch (axis)
+		{
+			case 'x':
+			{
+				
+			}
+			case 'y':
+			{
+				
+			}
+		}
+	}
+	
+	/*
+	 * side : 'a' up, 'b' down, 'c' left, 'd' right
+	 */
+	private double distToBoundary(Body b, char side)
+	{
+		switch (side)
+		{
+			case 'a': return b.POSITION[1];
+			
+			case 'b':
+				
+			case 'c':
+			
+			case 'd':
+		}
+	}
+	
+	/*
+	 * side : 'a' up, 'b' down, 'c' left, 'd' right
+	 */
+	private double universeBoundaryLocation(char side)
+	{
+		switch (side)
+		{
+			case 'a': return UNIVERSE_DIMENSIONS.
+			
+			case 'b':
+				
+			case 'c':
+			
+			case 'd':
+		}
+	}
+	
+	/*
+	 * returns the length of one 
+	 */
+	private double universeDimension()
+	{
+		return Math.sqrt(UNIVERSE_DIMENSIONS.left);
+	}
+
 }

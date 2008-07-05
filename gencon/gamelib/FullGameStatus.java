@@ -18,9 +18,10 @@ import net.thousandparsec.util.*;
  */
 public class FullGameStatus
 {
-	private final Client CLIENT;
+	private final Master MASTER;
 	
-	public final String PLAYER_NAME;
+	
+	private String player_name;
 	
 	private Pair<UniverseMap, Players> currentStatus;
 	private Vector<Pair<UniverseMap, Players>> gameHistory;
@@ -36,11 +37,20 @@ public class FullGameStatus
 	 * @param client The {@link Client} that the {@link Master} class has.
 	 * @param playerName The name of the player represented by this client.
 	 */
-	public FullGameStatus(Client client, String playerName)
+	public FullGameStatus(Master master)
 	{
-		CLIENT = client;
-		PLAYER_NAME = playerName;
+		MASTER = master;
+	}
+	
+	public void init()
+	{
+		player_name = MASTER.CLIENT.getPlayerName();
 		gameHistory = new Vector<Pair<UniverseMap,Players>>(HISTORY_DEPTH);
+	}
+	
+	public String getPlayerName()
+	{
+		return new String(player_name);
 	}
 	
 	/**
@@ -57,31 +67,31 @@ public class FullGameStatus
 
 		//generate new map:
 		UniverseMap map = makeMap();
-		System.out.println("Map generated.");
+		MASTER.pl("Map generated.");
 		//retreive new list of players:
 		Players pl = setPlayers(map.ALL_BODIES);
-		System.out.println("Players retreived.");
+		MASTER.pl("Players retreived.");
 		
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMap, Players>(map, pl); 
 		
 		//SOME TESTING:
-	    //CLIENT.getOrdersDesc();
-		CLIENT.testMove();
+		MASTER.CLIENT.testMethods();
 		
 	}
 
 	
 	private UniverseMap makeMap() throws IOException, TPException
 	{
-		Vector<Body> bodies = CLIENT.getAllObjects();
-		return new UniverseMap(bodies);
+		Vector<Body> bodies = MASTER.CLIENT.getAllObjects();
+		Pair<Long, Pair<Long, Long>> dimensions = MASTER.CLIENT.getUniverseDimensions();
+		return new UniverseMap(bodies, dimensions);
 	}
 	
 	private Players setPlayers(List<Body> game_objects) throws IOException, TPException
 	{
-		Vector<Game_Player> newPlayers = CLIENT.getAllPlayers(game_objects);
-		return new Players(PLAYER_NAME, newPlayers);
+		Vector<Game_Player> newPlayers = MASTER.CLIENT.getAllPlayers(game_objects);
+		return new Players(getPlayerName(), newPlayers);
 	}
 	
 
@@ -115,7 +125,7 @@ public class FullGameStatus
 	private Pair<UniverseMap, Players> deepCopyOfStatus(Pair<UniverseMap, Players> status)
 	{
 		return new Pair<UniverseMap, Players>
-			(new UniverseMap(status.left.ALL_BODIES), 
+			(new UniverseMap(status.left.ALL_BODIES, status.left.UNIVERSE_DIMENSIONS), 
 				new Players(status.right.ME, status.right.PLAYERS));
 	}
 	

@@ -102,8 +102,11 @@ public class Character
 	}
 	
 	/**
-	 * A static method, which will create a template for the character file. This method creates a new file.
-	 * @param name The file name. The end of the file will have a "_ch" suffix attached to it.
+	 * A static method, which will create a template for the character file. 
+	 * This method creates a new file in the specified location. 
+	 * The end of the file will have a "_ch" suffix attached to it.
+	 * 
+	 * @param name The file name. 
 	 * @param classPath The location of the file.
 	 * @return true if successful, false otherwise.
 	 */
