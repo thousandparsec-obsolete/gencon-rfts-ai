@@ -92,10 +92,10 @@ public class HigherLevelActions
 	{
 		switch (techLevel)
 		{
-			case (1): return ACT.createFleet(planet, new Ships(colonizers, 0, 10, 0, 0, 0));
-			case (2): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 10, 0, 0));
-			case (3): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, 10, 0));
-			case (4): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, 0, 10));
+			case (1): return ACT.createFleet(planet, new Ships(colonizers, 0, weak_fleet, 0, 0, 0));
+			case (2): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, weak_fleet, 0, 0));
+			case (3): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, weak_fleet, 0));
+			case (4): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, 0, weak_fleet));
 			default: return -2; //if happens, there's a bug!
 		}
 	}

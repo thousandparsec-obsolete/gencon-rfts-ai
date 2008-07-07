@@ -35,7 +35,7 @@ public class RoboUtils
 		return myplanets;
 	}
 	
-	Set<Fleet> getMyFleet()
+	Set<Fleet> getMyFleets()
 	{
 		UniverseMap um = AI.MASTER.GAME_STATUS.getCurrentStatus().left;
 		int myNum = AI.MASTER.GAME_STATUS.getCurrentStatus().right.getMe().NUM;
@@ -51,4 +51,10 @@ public class RoboUtils
 		
 		return myfleet;
 	}
+	
+	
+	
+	
+	
+	
 }
