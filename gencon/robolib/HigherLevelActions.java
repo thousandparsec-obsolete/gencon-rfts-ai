@@ -7,6 +7,9 @@ import gencon.gamelib.gameobjects.Ships;
 import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import net.thousandparsec.netlib.TPException;
@@ -146,17 +149,19 @@ public class HigherLevelActions
 	void patrolAroundSystem(Fleet fl, StarSystem target, short checkpointsPerLoop, short loops, StarSystem finish) throws IOException, TPException
 	{
 		//the checkpoints for patrol:
-		Vector<StarSystem> checkpoints = map.getNclosestStarSystems(target, checkpointsPerLoop);
+		Collection<StarSystem> checkpoints = map.getNclosestStarSystems(target, checkpointsPerLoop);
 		//---------
 		
 		//DO THE TOUR N-TIMES:
 		for (int i = 0; i < loops; i++)
-			ACT.tour(fl, checkpoints, target);
+			ACT.smartTour(fl, checkpoints, target);
 			//	note that the target star-system will be the last in each tour-round.
 		
 		//GO TO FINISH DESTINATION:
 		ACT.moveFleet(fl, finish, false);
 	}
+	
+	
 	
 	
 }

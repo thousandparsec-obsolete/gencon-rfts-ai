@@ -1,9 +1,10 @@
 package gencon.robolib;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.Vector;
 
 import net.thousandparsec.netlib.TPException;
 
@@ -71,7 +72,7 @@ public class ActionMethods
 	 * NOTE: THE ROUTE ISN'T FULLY OPTIMIZED, TO SAVE ON RUNTIME, BUT IT GIVES A DECENT ESTIMATE
 	 * 
 	 */
-	void tour(Fleet fleet, List<StarSystem> checkpoints, StarSystem finish) throws IOException, TPException
+	void smartTour(Fleet fleet, Collection<StarSystem> checkpoints, StarSystem finish) throws IOException, TPException
 	{
 		//Finding the starting-point:
 		Body b = map.getById(fleet.PARENT);
@@ -109,10 +110,10 @@ public class ActionMethods
 	 * @param finish The ultimate endpoint of the journey.
 	 * @return A decently optimized route (Much better than random!) from start to finish, through the checkpoints.
 	 */
-	List<StarSystem> findRoute(StarSystem start, List<StarSystem> checkpoints, StarSystem finish)
+	List<StarSystem> findRoute(StarSystem start, Collection<StarSystem> checkpoints, StarSystem finish)
 	{
 		byte K = findDecentK(checkpoints.size());
-		return findRouteRecurs(start, new Vector<StarSystem>(), checkpoints, finish, K);
+		return findRouteRecurs(start, new ArrayList<StarSystem>(), checkpoints, finish, K);
 //		note: put a new anonymous List in the 'routeSoFar' place, since there is no route so far yet!
 	}
 	
@@ -143,7 +144,7 @@ public class ActionMethods
 	}
 	
 	
-	private List<StarSystem> findRouteRecurs(StarSystem start, List<StarSystem> routeSoFar, List<StarSystem> remaining, StarSystem finish, byte K)
+	private List<StarSystem> findRouteRecurs(StarSystem start, List<StarSystem> routeSoFar, Collection<StarSystem> remaining, StarSystem finish, byte K)
 	{
 		
 		if (remaining.isEmpty()) //BASE CASE: NO MORE CHECKPOINTS REMAINING. APPENDING THE FINAL DESTINATION TO IT:
@@ -164,17 +165,17 @@ public class ActionMethods
 				//modifying values for each tree-branch:
 				
 				//adding the star-system to the route:
-				List<StarSystem> newRouteSoFar = new Vector<StarSystem>(routeSoFar);
+				List<StarSystem> newRouteSoFar = new ArrayList<StarSystem>(routeSoFar);
 				newRouteSoFar.add(ss);
 				//removing it from the 'remaining' collection:
-				List<StarSystem> newRemaining = new Vector<StarSystem>(remaining);
+				List<StarSystem> newRemaining = new ArrayList<StarSystem>(remaining);
 				newRemaining.remove(ss);
 				
 				//propogate downwards, with the star-system as the starting point:
 				List<StarSystem> theRoute = findRouteRecurs(ss, newRouteSoFar, newRemaining, finish, K);
 				
 				//calculate the route distance:
-				Double routeDistance = new Double(calculateRouteDistance(theRoute));
+				Double routeDistance = new Double(calculateRouteLength(theRoute));
 				
 				//put in the mapping of routes and distances:
 				routesAndDistances.put(routeDistance, theRoute);
@@ -193,7 +194,7 @@ public class ActionMethods
 	/**
 	 * Calculates the actual distance of a route.
 	 */
-	double calculateRouteDistance(List<StarSystem> route)
+	double calculateRouteLength(List<StarSystem> route)
 	{
 		double distance = 0.0;
 		

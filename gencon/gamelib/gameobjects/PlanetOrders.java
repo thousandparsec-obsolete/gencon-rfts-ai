@@ -1,13 +1,14 @@
 package gencon.gamelib.gameobjects;
 
+import java.util.List;
 import java.util.Vector;
 
 public class PlanetOrders
 {
-	public final Vector<POrder> ORDERS;
+	public final List<POrder> ORDERS;
 	
 	
-	public PlanetOrders(Vector<POrder> orders)
+	public PlanetOrders(List<POrder> orders)
 	{
 		ORDERS = orders;
 	}

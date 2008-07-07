@@ -5,6 +5,8 @@ import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,14 +23,14 @@ import net.thousandparsec.util.Pair;
 public class UniverseMap 
 {
 	/**
-	 * The de-jure atomic unit of the {@link UniverseMap}.
-	 */
-	public final Vector<StarSystem> STAR_SYSTEMS;
-	
-	/**
 	 * The de-facto atomic unit of the {@link UniverseMap}.
 	 */
-	public final Vector<Body> ALL_BODIES;
+	public final List<StarSystem> STAR_SYSTEMS;
+
+	/**
+	 * The de-jure atomic unit of the {@link UniverseMap}.
+	 */
+	public final List<Body> ALL_BODIES;
 	
 	/**
 	 * The dimensions of the universe, in the following format:
@@ -36,16 +38,16 @@ public class UniverseMap
 	 */
 	public final Pair<Long, Pair<Long, Long>> UNIVERSE_DIMENSIONS;
 	
-	public UniverseMap(Vector<Body> bodies, Pair<Long, Pair<Long, Long>> dimensions)
+	public UniverseMap(List<Body> bodies, Pair<Long, Pair<Long, Long>> dimensions)
 	{
 		ALL_BODIES = bodies;
 		STAR_SYSTEMS = isolateStarSystems(ALL_BODIES);
 		UNIVERSE_DIMENSIONS = dimensions;
 	}
 	
-	private Vector<StarSystem> isolateStarSystems(Vector<Body> bodies)
+	private List<StarSystem> isolateStarSystems(Collection<Body> bodies)
 	{
-		Vector<StarSystem> stsystems = new Vector<StarSystem>();
+		List<StarSystem> stsystems = new ArrayList<StarSystem>();
 		for (Body bod : bodies)
 			if (bod != null && bod.TYPE == Body.BodyType.STAR_SYSTEM)
 				stsystems.add((StarSystem) bod);
@@ -61,7 +63,7 @@ public class UniverseMap
 	 * @param stsys The {@link StarSystem} in question.
 	 * @return A {@link Vector} that contains what's inside the star system.
 	 */
-	public Vector<Body> getContents(StarSystem stsys)
+	public List<Body> getContents(StarSystem stsys)
 	{
 		return retreiveRecurs(stsys);
 	}
@@ -69,14 +71,14 @@ public class UniverseMap
 	/*
 	 * Helper for getContents
 	 */
-	private Vector<Body> retreiveRecurs(Body body) 
+	private List<Body> retreiveRecurs(Body body) 
 	{
 		if (body.CHILDREN.isEmpty()) //BASE CASE
 			return null;
 		
 		else //RECURSIVE CASE
 		{
-			Vector<Body> contents = new Vector<Body>();
+			List<Body> contents = new ArrayList<Body>();
 			
 			for (int child_id : body.CHILDREN)
 			{
@@ -85,7 +87,7 @@ public class UniverseMap
 				contents.add(child);
 				
 				//adding all its contents
-				Vector<Body> grand_children = retreiveRecurs(child);
+				List<Body> grand_children = retreiveRecurs(child);
 				if (grand_children != null)
 					for (Body g_child : grand_children)
 						if (g_child != null)
@@ -118,7 +120,7 @@ public class UniverseMap
 	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from the whole game-world, and return a {@link Vector} of them.
 	 * The {@link Vector} will contain <= n {@link StarSystem}s.
 	 */
-	public Vector<StarSystem> getNclosestStarSystems(StarSystem ssys, int n)
+	public List<StarSystem> getNclosestStarSystems(StarSystem ssys, int n)
 	{
 		return nclosest(ssys, STAR_SYSTEMS, n);
 	}
@@ -128,13 +130,13 @@ public class UniverseMap
 	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from some collection, and return a {@link Vector} of them.
 	 * The {@link Vector} will contain <= n {@link StarSystem}s.
 	 */
-	public Vector<StarSystem> getNclosestStarSystems(StarSystem ssys, List<StarSystem> collection, int n)
+	public List<StarSystem> getNclosestStarSystems(StarSystem ssys, Collection<StarSystem> collection, int n)
 	{
 		return nclosest(ssys, collection, n);
 	}
 	
 	
-	private Vector<StarSystem> nclosest(StarSystem ssys, List<StarSystem> collection, int n)
+	private List<StarSystem> nclosest(StarSystem ssys, Collection<StarSystem> collection, int n)
 	{
 		//System.out.println("For star system: " + ssys.NAME);
 		
@@ -147,7 +149,7 @@ public class UniverseMap
 
 		
 		//finds n-closest, or as long as there are bodies
-		Vector<StarSystem> nclosest = new Vector<StarSystem>(n);
+		List<StarSystem> nclosest = new ArrayList<StarSystem>(n);
 		for (int i = 0; i < n && i < collection.size(); i++) //assumption: a star system should exist, as long as i < STAR_SYSTEMS.size().
 		{
 			long id = distance_to_body.ceilingKey((long)0); //gets the closest distance to 0.

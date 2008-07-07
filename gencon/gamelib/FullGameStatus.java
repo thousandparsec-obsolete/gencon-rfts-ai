@@ -3,7 +3,6 @@ package gencon.gamelib;
 import gencon.Master;
 import gencon.clientLib.Client;
 import gencon.gamelib.gameobjects.Body;
-import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
 import java.util.*;
@@ -24,7 +23,7 @@ public class FullGameStatus
 	private String player_name;
 	
 	private Pair<UniverseMap, Players> currentStatus;
-	private Vector<Pair<UniverseMap, Players>> gameHistory;
+	private List<Pair<UniverseMap, Players>> gameHistory;
 	
 	/**
 	 * The depth of history that this class houses.
@@ -45,7 +44,7 @@ public class FullGameStatus
 	public void init()
 	{
 		player_name = MASTER.CLIENT.getPlayerName();
-		gameHistory = new Vector<Pair<UniverseMap,Players>>(HISTORY_DEPTH);
+		gameHistory = new ArrayList<Pair<UniverseMap,Players>>(HISTORY_DEPTH);
 	}
 	
 	public String getPlayerName()
@@ -83,14 +82,14 @@ public class FullGameStatus
 	
 	private UniverseMap makeMap() throws IOException, TPException
 	{
-		Vector<Body> bodies = MASTER.CLIENT.getAllObjects();
+		List<Body> bodies = MASTER.CLIENT.getAllObjects();
 		Pair<Long, Pair<Long, Long>> dimensions = MASTER.CLIENT.getUniverseDimensions();
 		return new UniverseMap(bodies, dimensions);
 	}
 	
 	private Players setPlayers(List<Body> game_objects) throws IOException, TPException
 	{
-		Vector<Game_Player> newPlayers = MASTER.CLIENT.getAllPlayers(game_objects);
+		List<Game_Player> newPlayers = MASTER.CLIENT.getAllPlayers(game_objects);
 		return new Players(getPlayerName(), newPlayers);
 	}
 	
@@ -111,9 +110,9 @@ public class FullGameStatus
 	/**
 	 * @return A deep copy of the game history, up to (and including) the <code>HISTORY_DEPTH</code>. Does not include the current status.
 	 */
-	public Vector<Pair<UniverseMap, Players>> getHistory()
+	public List<Pair<UniverseMap, Players>> getHistory()
 	{
-		Vector<Pair<UniverseMap, Players>> history = new Vector<Pair<UniverseMap,Players>>(gameHistory.size());
+		List<Pair<UniverseMap, Players>> history = new ArrayList<Pair<UniverseMap,Players>>(gameHistory.size());
 		
 		for (Pair<UniverseMap, Players> status : gameHistory)
 			if (status != null)

@@ -7,12 +7,11 @@ import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Vector;
 
-import net.thousandparsec.netlib.Frame;
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.Fail;
@@ -65,7 +64,7 @@ public class ConnectionMethods
 		return object;
 	}
 	
-	public synchronized static Vector<Object> getAllObjects(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	public synchronized static Collection<Object> getAllObjects(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		GetObjectIDs gids = new GetObjectIDs();
 		//sets 'gids' to receive all objects:
@@ -74,27 +73,24 @@ public class ConnectionMethods
 	
 		//receiving:
 		ObjectIDs oids = conn.sendFrame(gids, ObjectIDs.class);
-		List<ModtimesType> list = oids.getModtimes();
+		Collection<ModtimesType> ids = oids.getModtimes();
 		
 		//preparing the frame to receive objects:
 		GetObjectsByID getObj = new GetObjectsByID();
-		for (ModtimesType mdt : list)
+		for (ModtimesType mdt : ids)
 			getObj.getIds().add(new IdsType(mdt.getId()));
 		
 		//receiving the sequence:
 		Sequence seq = conn.sendFrame(getObj, Sequence.class);
 		
 		//preparing to store objects:
-		Vector<Object> objects = new Vector<Object>();
+		Collection<Object> objects = new HashSet<Object>();
 		
 		//receiving objects:
 		for (int i = 0; i < seq.getNumber(); i++)
 		{
 			Object o = conn.receiveFrame(Object.class);
 			objects.add(o);
-			
-			List<OrdertypesType> otypes = o.getOrdertypes();
-		//	System.out.println("Object: " + o.getName() + " id: " + o.getId() + " Num of orders: " + o.getOrders() + " Ordertypes: " + otypes);
 		}
 		
 		return objects;
@@ -107,9 +103,9 @@ public class ConnectionMethods
 		return conn.sendFrame(get, Player.class);
 	}
 	
-	public synchronized static Vector<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn, List<Body> game_objects) throws IOException, TPException
+	public synchronized static Collection<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn, List<Body> game_objects) throws IOException, TPException
 	{
-		Vector<Integer> playerIds = new Vector<Integer>(game_objects.size());
+		Collection<Integer> playerIds = new HashSet<Integer>(game_objects.size());
 		
 		final int NEUTRAL = -1; //the standard demarcation of neutral objects.
 		
@@ -120,20 +116,20 @@ public class ConnectionMethods
 				if (obj.TYPE == Body.BodyType.FLEET)
 				{
 					int owner = ((Fleet) obj).OWNER;
-					if (!checkIfInList(playerIds, owner)) //if the id hasn't been encountered yet!
+					if (!checkIfInBag(playerIds, owner)) //if the id hasn't been encountered yet!
 						playerIds.add(new Integer(owner));
 				}
 				else if (obj.TYPE == Body.BodyType.PLANET)
 				{
 					int owner = ((Planet) obj).OWNER;
-					if (owner != NEUTRAL && !checkIfInList(playerIds, owner))
+					if (owner != NEUTRAL && !checkIfInBag(playerIds, owner))
 						playerIds.add(new Integer(owner));
 				}
 			}
 		
 		
 		//THEN, RETREIVE ALL PLAYER FRAMES, BASED ON THAT LIST:
-		Vector<Player> players = new Vector<Player>();
+		Collection<Player> players = new ArrayList<Player>();
 		for (Integer id : playerIds)
 			if (id != null)
 				players.add(getPlayerById(id, conn));
@@ -141,9 +137,9 @@ public class ConnectionMethods
 		return players;
 	}
 	
-	private synchronized static boolean checkIfInList(List<Integer> list, int owner)
+	private synchronized static boolean checkIfInBag(Collection<Integer> bag, int owner)
 	{
-		for (Integer i : list)
+		for (Integer i : bag)
 			if (i != null && i.intValue() == owner)
 				return true;
 		
@@ -153,7 +149,7 @@ public class ConnectionMethods
 	
 	
 	
-	public synchronized static Vector<Order> getOrdersForObject(SequentialConnection<TP03Visitor> conn, int objectId, int order_quantity) throws TPException, IOException
+	public synchronized static List<Order> getOrdersForObject(SequentialConnection<TP03Visitor> conn, int objectId, int order_quantity) throws TPException, IOException
 	{
 		GetOrder getOrd = new GetOrder();
 		
@@ -170,7 +166,7 @@ public class ConnectionMethods
 		Sequence seq = conn.sendFrame(getOrd, Sequence.class);
 		
 		//receiving orders:
-		Vector<Order> orders = new Vector<Order>(seq.getNumber());
+		List<Order> orders = new ArrayList<Order>(seq.getNumber());
 		for (int i = 0; i < seq.getNumber(); i++)
 			orders.add(conn.receiveFrame(Order.class));
 		

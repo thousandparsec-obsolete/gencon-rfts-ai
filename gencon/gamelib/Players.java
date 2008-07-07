@@ -1,6 +1,7 @@
 package gencon.gamelib;
 
 
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -11,10 +12,10 @@ import java.util.Vector;
  */
 public class Players
 {
-	public final Vector<Game_Player> PLAYERS;
+	public final List<Game_Player> PLAYERS;
 	public final String ME;
 	
-	public Players(String me, Vector<Game_Player> players)
+	public Players(String me, List<Game_Player> players)
 	{
 		PLAYERS = players;
 		ME = me;

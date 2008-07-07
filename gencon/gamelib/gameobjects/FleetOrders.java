@@ -12,9 +12,9 @@ public class FleetOrders
 	public final static int BOMBARD_ORDER = 7;
 	
 	
-	public final Vector<FOrder> ORDERS;
+	public final List<FOrder> ORDERS;
 	
-	public FleetOrders(Vector<FOrder> orders)
+	public FleetOrders(List<FOrder> orders)
 	{
 		ORDERS = orders;
 	}

@@ -3,7 +3,6 @@ package gencon.gamelib.gameobjects;
 import gencon.gamelib.Game_Player;
 
 import java.util.List;
-import java.util.Vector;
 
 /**
  * A class which represents a galaxy in TP-RFTS.

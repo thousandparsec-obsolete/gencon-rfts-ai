@@ -367,13 +367,13 @@ public class Client
 		return object;
 	}
 	
-	public synchronized Vector<Body> getAllObjects() throws IOException, TPException
+	public synchronized List<Body> getAllObjects() throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Vector<Object> objects = ConnectionMethods.getAllObjects(conn);
+		Collection<Object> objects = ConnectionMethods.getAllObjects(conn);
 		conn.close();
 		
-		Vector<Body> bodies = new Vector<Body>(objects.size());
+		List<Body> bodies = new ArrayList<Body>(objects.size());
 		
 		for (Object obj : objects)
 		{
@@ -398,7 +398,7 @@ public class Client
 	 * Helper method for receiveAllObjects().
 	 * Returns the immediate parent of the object
 	 */
-	private Object findParent(Vector<Object> objects, Object child)
+	private Object findParent(Collection<Object> objects, Object child)
 	{
 		for (Object obj : objects)
 			if (obj != null)
@@ -428,13 +428,13 @@ public class Client
 		return player;
 	}
 
-	public synchronized Vector<Game_Player> getAllPlayers(List<Body> game_objects) throws IOException, TPException
+	public synchronized List<Game_Player> getAllPlayers(List<Body> game_objects) throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Vector<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
+		Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
 		conn.close();
 		
-		Vector<Game_Player> players = new Vector<Game_Player>();
+		List<Game_Player> players = new ArrayList<Game_Player>();
 		
 		for (Player player : pls)
 			if (player != null)
@@ -599,7 +599,7 @@ public class Client
 	public void getOrdersForObject(int objectId, int order_num) throws TPException, IOException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Vector<Order> orders = ConnectionMethods.getOrdersForObject(conn, objectId, order_num);
+		List<Order> orders = ConnectionMethods.getOrdersForObject(conn, objectId, order_num);
 		
 		//just print them out for now, and see..
 		pl("Orders for object: " + objectId);

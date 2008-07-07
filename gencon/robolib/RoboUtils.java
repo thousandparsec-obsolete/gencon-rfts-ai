@@ -5,6 +5,7 @@ import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Planet;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,7 +19,7 @@ public class RoboUtils
 	}
 	
 
-	Set<Planet> getMyPlanets()
+	Collection<Planet> getMyPlanets()
 	{
 		UniverseMap um = AI.MASTER.GAME_STATUS.getCurrentStatus().left;
 		int myNum = AI.MASTER.GAME_STATUS.getCurrentStatus().right.getMe().NUM;
@@ -35,7 +36,7 @@ public class RoboUtils
 		return myplanets;
 	}
 	
-	Set<Fleet> getMyFleets()
+	Collection<Fleet> getMyFleets()
 	{
 		UniverseMap um = AI.MASTER.GAME_STATUS.getCurrentStatus().left;
 		int myNum = AI.MASTER.GAME_STATUS.getCurrentStatus().right.getMe().NUM;
