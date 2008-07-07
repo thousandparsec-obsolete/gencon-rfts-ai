@@ -2,6 +2,8 @@ package gencon.robolib;
 
 import gencon.gamelib.UniverseMap;
 import gencon.gamelib.gameobjects.Fleet;
+import gencon.gamelib.gameobjects.Planet;
+import gencon.gamelib.gameobjects.Ships;
 import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
@@ -13,8 +15,11 @@ public class HigherLevelActions
 {
 	final ActionMethods ACT;
 	private UniverseMap map;
+
+	private short strong_fleet;
+	private short weak_fleet;
 	
-	public HigherLevelActions(ActionMethods actMeth) 
+	HigherLevelActions(ActionMethods actMeth) 
 	{
 		ACT = actMeth;
 	}
@@ -27,6 +32,106 @@ public class HigherLevelActions
 		map = newMap;
 		ACT.updateMap(newMap);
 	}
+	
+	
+	
+	////////////////////////////////////
+	///////
+	///////	FLEET MAKING
+	/////// 
+	/////// (Still in very prototypical form... basic heuristics should be replaced)
+	////////////////////////////////////
+	
+	
+	short getStrongFleet()
+	{
+		return strong_fleet;
+	}
+	
+	void setStrongFleet(short strength)
+	{
+		strong_fleet = strength;
+	}
+	
+	short getWeakFleet()
+	{
+		return weak_fleet;
+	}
+	
+	void setWeakFleet(short strength)
+	{
+		weak_fleet = strength;
+	}
+	
+	
+	int makeStrongAttackFleet(Planet planet, byte techLevel)
+	{
+		switch (techLevel)
+		{
+			case (1): return ACT.createFleet(planet, new Ships(0, 0, strong_fleet, 0, 0, 0));
+			case (2): return ACT.createFleet(planet, new Ships(0, 0, 0, strong_fleet, 0, 0));
+			case (3): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, strong_fleet, 0));
+			case (4): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, 0, strong_fleet));
+			default: return -2; //if happens, there's a bug!
+		}
+	}
+	
+	int makeWeakAttackFleet(Planet planet, byte techLevel)
+	{
+		switch (techLevel)
+		{
+			case (1): return ACT.createFleet(planet, new Ships(0, 0, weak_fleet, 0, 0, 0));
+			case (2): return ACT.createFleet(planet, new Ships(0, 0, 0, weak_fleet, 0, 0));
+			case (3): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, weak_fleet, 0));
+			case (4): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, 0, weak_fleet));
+			default: return -2; //if happens, there's a bug!
+		}
+	}
+	
+	int makeDefendedColonizeFleet(Planet planet, short colonizers, byte techLevel)
+	{
+		switch (techLevel)
+		{
+			case (1): return ACT.createFleet(planet, new Ships(colonizers, 0, 10, 0, 0, 0));
+			case (2): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 10, 0, 0));
+			case (3): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, 10, 0));
+			case (4): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, 0, 10));
+			default: return -2; //if happens, there's a bug!
+		}
+	}
+	
+	int makeUndefendedColonizeFleet(Planet planet, short colonizers)
+	{
+		return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, 0, 0));
+	}
+	
+	int makeScoutFleet(Planet planet)
+	{
+		return ACT.createFleet(planet, new Ships(0, 1, 0, 0, 0, 0));
+	}
+	
+	
+	////////////////////////////////////
+	///////
+	///////	RESOURCE MAKING
+	///////
+	////////////////////////////////////
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	////////////////////////////////////
+	///////
+	///////	MOVEMENT AND MANEUVER
+	///////
+	////////////////////////////////////
+	
+	
 	
 	/**
 	 * Visits n-closest star-systems (target included) for a specified number of times.
@@ -52,4 +157,6 @@ public class HigherLevelActions
 		//GO TO FINISH DESTINATION:
 		ACT.moveFleet(fl, finish, false);
 	}
+	
+	
 }

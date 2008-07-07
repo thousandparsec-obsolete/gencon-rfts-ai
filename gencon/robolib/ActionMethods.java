@@ -11,6 +11,8 @@ import gencon.clientLib.Client;
 import gencon.gamelib.UniverseMap;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
+import gencon.gamelib.gameobjects.Planet;
+import gencon.gamelib.gameobjects.Ships;
 import gencon.gamelib.gameobjects.StarSystem;
 
 public class ActionMethods 
@@ -40,10 +42,27 @@ public class ActionMethods
 	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
 	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
 	 */
-	public synchronized int moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
+	int moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
 	{
 		return CLIENT.moveFleet(fleet, destination_star_system, urgent);
 	}
+	
+	
+	/**
+	 * Creates a fleet on a certain {@link Planet}, with specified {@link Ships}.
+	 * 
+	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
+	 */
+	int createFleet(Planet planet, Ships ships)
+	{
+		
+		
+		
+	}
+	
+	
+	
+	
 	
 	
 	/**

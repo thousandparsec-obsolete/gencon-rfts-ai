@@ -536,8 +536,10 @@ public class Client
 	 */
 	public void testMethods() throws IOException, TPException
 	{
-		getResourceDescs();
-		seeWhatsInside();
+		//getResourceDescs();
+		//seeWhatsInside();
+		Pair<Long, Pair<Long, Long>> dim = getUniverseDimensions();
+		pl("Size: " + dim.left + " X: " + dim.right.left + " Y:" + dim.right.right);
 	}
 	
 	

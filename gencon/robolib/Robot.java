@@ -23,6 +23,8 @@ public class Robot
 	
 	private final HigherLevelActions ACTIONS;
 	
+	private final RoboUtils UTILS;
+	
 	
 	
 	public Robot(Master master)
@@ -31,6 +33,7 @@ public class Robot
 		CHARACTER = new Character(MASTER.CLIENT.getCharacterClasspath());
 		DIFFICULTY = MASTER.CLIENT.getDifficulty();
 		ACTIONS = new HigherLevelActions(new ActionMethods(MASTER.CLIENT));
+		UTILS = new RoboUtils(this);
 	}
 	
 	public void startTurn(int time_remaining)

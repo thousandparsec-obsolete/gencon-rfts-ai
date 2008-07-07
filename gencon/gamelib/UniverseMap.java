@@ -1,10 +1,13 @@
 package gencon.gamelib;
 
 import gencon.gamelib.gameobjects.Body;
+import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 
@@ -107,6 +110,9 @@ public class UniverseMap
 		//else:
 		return null;
 	}
+	
+	
+	
 	
 	/**
 	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from the whole game-world, and return a {@link Vector} of them.
