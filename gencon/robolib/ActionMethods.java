@@ -117,7 +117,7 @@ public class ActionMethods
 			}
 		}
 		
-		//SHOULDN'T HAPEN:
+		//SHOULDN'T HAPPEN USUALLY:
 		//in case it never drops below acceptable, at least have it at 1.
 		return K;
 		
@@ -161,10 +161,10 @@ public class ActionMethods
 				routesAndDistances.put(routeDistance, theRoute);
 			}
 			
-			//get the smallest route of the lot:
+			//get the shortest route of the lot:
 			List<StarSystem> bestRoute = routesAndDistances.ceilingEntry(new Double(0)).getValue();  
 			
-			//return it!!
+			//return it!!! Bam!
 			return bestRoute;
 		}
 	

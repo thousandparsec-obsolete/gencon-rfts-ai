@@ -8,6 +8,7 @@ import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -200,17 +201,18 @@ public class ConnectionMethods
 		//destination_param.setObjectid(destination_star_system.GAME_ID);
 		destination_param.setObjectid(destination_star_system); //for testing.
 		
-		order.setOrderparams(destination_param); //registering the parameter.
 		
+		//setting the parameters:
+		List<OrderParams> op = new ArrayList<OrderParams>(1);
+		op.add(destination_param);
+		order.setOrderparams(op, getODbyId(order.getOtype(), conn)); 
+		
+		//getting the response:
 		Response response = conn.sendFrame(order, Response.class);
 		
 		//if the order is legal, probe for the amount of turns:
 		if (response.getFrameType() == Okay.FRAME_TYPE)
-		{
-			
-			//probing the order to get the amt of turns.
 			return orderProbeGetTurns(order, FleetOrders.MOVE_ORDER, conn); 
-		}
 		
 		//if order illegal.
 		else if (response.getFrameType() == Fail.FRAME_TYPE) 
@@ -237,14 +239,9 @@ public class ConnectionMethods
 		probe.setOtype(order.getOtype());
 		probe.setSlot(order.getSlot());
 		
+		//retrieving template and setting the order params:
 		OrderDesc od = getODbyId(order_id, conn);
-		
-		List<OrderParams> ops = order.getOrderparams(od);
-		for (OrderParams op : ops)
-			{
-				System.out.println(op); //for testing!!
-				probe.setOrderparams(op);
-			}
+		probe.setOrderparams(order.getOrderparams(od), od);
 		
 		//probling:
 		Response whatIf = conn.sendFrame(probe, Response.class);

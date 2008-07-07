@@ -31,6 +31,7 @@ public class HigherLevelActions
 	/**
 	 * Visits n-closest star-systems (target included) for a specified number of times.
 	 * The target star-system will always be the last one on each patrol.
+	 * After the specified number of loops, the fleet will head to finish.
 	 *
 	 * @param target The epicentre of the patrol.
 	 * @param checkpointsPerLoop The amount of closest star-systems to visit.
