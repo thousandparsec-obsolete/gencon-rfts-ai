@@ -18,43 +18,6 @@ public class RoboUtils
 		AI = ai;
 	}
 	
-
-	Collection<Planet> getMyPlanets()
-	{
-		UniverseMap um = AI.MASTER.GAME_STATUS.getCurrentStatus().left;
-		int myNum = AI.MASTER.GAME_STATUS.getCurrentStatus().right.getMe().NUM;
-		
-		Set<Planet> myplanets = new HashSet<Planet>();
-		for (Body b : um.ALL_BODIES)
-			if (b.TYPE == Body.BodyType.PLANET)
-			{
-				Planet p = (Planet)b;
-				if (p.OWNER == myNum)
-					myplanets.add(p);
-			}
-		
-		return myplanets;
-	}
-	
-	Collection<Fleet> getMyFleets()
-	{
-		UniverseMap um = AI.MASTER.GAME_STATUS.getCurrentStatus().left;
-		int myNum = AI.MASTER.GAME_STATUS.getCurrentStatus().right.getMe().NUM;
-		
-		Set<Fleet> myfleet = new HashSet<Fleet>();
-		for (Body b : um.ALL_BODIES)
-			if (b.TYPE == Body.BodyType.FLEET)
-			{
-				Fleet f = (Fleet)b;
-				if (f.OWNER == myNum)
-					myfleet.add(f);
-			}
-		
-		return myfleet;
-	}
-	
-	
-	
 	
 	
 	

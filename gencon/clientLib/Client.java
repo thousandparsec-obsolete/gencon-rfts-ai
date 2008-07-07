@@ -91,7 +91,7 @@ public class Client
 			master.pl("URI set to : " + URIstr);
 		
 		characterClasspath = parsedArgs.right.right;
-		master.pl("Character File classpath set to : " + characterClasspath);
+		master.pl("Genotype File classpath set to : " + characterClasspath);
 		
 		
 		if (URIstr.equals(""))

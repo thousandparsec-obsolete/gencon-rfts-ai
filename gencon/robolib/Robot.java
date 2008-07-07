@@ -13,9 +13,9 @@ import gencon.gamelib.FullGameStatus;
 public class Robot 
 {
 	/*
-	 * The behavioral characteristics of the robot, defined by a {@link Character}. 
+	 * The behavioral characteristics of the robot, defined by a {@link Genotype}. 
 	 */
-	private final Character CHARACTER;
+	private final Genotype GENOTYPE;
 	
 	public final Master MASTER;
 	
@@ -30,7 +30,7 @@ public class Robot
 	public Robot(Master master)
 	{
 		MASTER = master;
-		CHARACTER = new Character(MASTER.CLIENT.getCharacterClasspath());
+		GENOTYPE = new Genotype(MASTER.CLIENT.getCharacterClasspath());
 		DIFFICULTY = MASTER.CLIENT.getDifficulty();
 		ACTIONS = new HigherLevelActions(new ActionMethods(MASTER.CLIENT));
 		UTILS = new RoboUtils(this);
