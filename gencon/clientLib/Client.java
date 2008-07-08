@@ -40,7 +40,6 @@ public class Client
 	//
 	private final Master master;
 	private boolean autorun;
-	private String characterClasspath;
 	
 	//
 	//	CONNECTION-RELATED
@@ -60,6 +59,8 @@ public class Client
 	//game-related
 	private String myUsername;
 	private short difficulty;
+	private String genomeName;
+	private String genomeFileClasspath;
 	
 	
 	
@@ -81,17 +82,21 @@ public class Client
 	 */
 	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
 	{
-		Pair<Short, Pair<String, String>> parsedArgs = Utils.parseArgs(args);
+		Pair<Pair<Short, String>, Pair<String, String>> parsedArgs = Utils.parseArgs(args);
 		
-		difficulty = parsedArgs.left.shortValue();
+		difficulty = parsedArgs.left.left.shortValue();
 		master.pl("Difficulty set to : " + difficulty);
 		
-		String URIstr = parsedArgs.right.left;
+		String URIstr = parsedArgs.left.right;
 		if (!URIstr.equals(""))
 			master.pl("URI set to : " + URIstr);
 		
-		characterClasspath = parsedArgs.right.right;
-		master.pl("Genotype File classpath set to : " + characterClasspath);
+		
+		genomeName = parsedArgs.right.left;
+		master.pl("Genotype name set to : " + genomeName);
+		
+		genomeFileClasspath = parsedArgs.right.right;
+		master.pl("Genotype File classpath set to : " + genomeFileClasspath);
 		
 		
 		if (URIstr.equals(""))
@@ -124,8 +129,11 @@ public class Client
 		//set URI
 		serverURI = Utils.manualSetURI();
 		
-		//set character file classpath:
-		characterClasspath = Utils.manualSetChClasspath();
+		//set genotype name:
+		genomeName = Utils.manualSetGenomeName();
+		
+		//set genotype file classpath:
+		genomeFileClasspath = Utils.manualSetGenomeClasspath();
 		
 		// establish a connection with the server, no autologin.
 		connect();
@@ -497,9 +505,14 @@ public class Client
 	}
 	
 	
-	public String getCharacterClasspath()
+	public String getGenomeFileClasspath()
 	{
-		return characterClasspath;
+		return genomeFileClasspath;
+	}
+	
+	public String getGenomeName()
+	{
+		return genomeName;
 	}
 	
 	public synchronized short getDifficulty()

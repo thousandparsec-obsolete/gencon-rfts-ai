@@ -15,7 +15,7 @@ public class Robot
 	/*
 	 * The behavioral characteristics of the robot, defined by a {@link Genotype}. 
 	 */
-	private final Genotype GENOTYPE;
+	private final Phenotype BEHAVIOR;
 	
 	public final Master MASTER;
 	
@@ -30,7 +30,7 @@ public class Robot
 	public Robot(Master master)
 	{
 		MASTER = master;
-		GENOTYPE = new Genotype(MASTER.CLIENT.getCharacterClasspath());
+		BEHAVIOR = new Phenotype(new Genotype(MASTER.CLIENT.getGenomeName(), MASTER.CLIENT.getGenomeFileClasspath()));
 		DIFFICULTY = MASTER.CLIENT.getDifficulty();
 		ACTIONS = new HigherLevelActions(new ActionMethods(MASTER.CLIENT));
 		UTILS = new RoboUtils(this);

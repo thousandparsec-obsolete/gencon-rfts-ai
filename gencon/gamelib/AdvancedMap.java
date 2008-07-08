@@ -175,9 +175,9 @@ public class AdvancedMap
 	 * Queries in which sector the {@link StarSystem} is.
 	 * 
 	 * @param ss The {@link StarSystem} in question.
-	 * @return a char to indicate the sector it's in, or 'z' otherwise (if there was a bug somewhere along the way).
+	 * @return a char to indicate the sector it's in, or throws an {@link Exception} if it belongs to none.
 	 */
-	public char belongsToSector(StarSystem ss)
+	public char belongsToSector(StarSystem ss) throws Exception
 	{
 		if (sector_A.contains(new Integer(ss.GAME_ID)))
 			return 'a';
@@ -198,7 +198,8 @@ public class AdvancedMap
 		else if (sector_I.contains(new Integer(ss.GAME_ID)))
 			return 'i';
 		
-		else return 'z'; 
+		else 
+			throw new Exception("Error: Star System " + ss.GAME_ID + " belongs to no sector!");
 	}
 
 	

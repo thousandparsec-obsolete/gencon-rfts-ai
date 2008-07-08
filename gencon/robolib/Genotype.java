@@ -1,124 +1,144 @@
 package gencon.robolib;
 
+import gencon.evolutionlib.GenotypeUtils;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.thousandparsec.util.Pair;
 
+/**
+ * A set of characteristics the robot has. 
+ * 
+ * 
+ * @author Victor Ivri
+ *
+ */
 public class Genotype 
 {	
 	/**
 	 * The types of traits a {@link Genotype} has (Note that it has them necessarily).
 	 *
+	 * Each trait has a numeric value of 0, 1 or 2. 
+	 * Each trait gives it's own meaning to the value.
+	 * 
+	 * Here's a complete rundown on the traits and their meaning:
+	 * 
+	 * 	////////////
+		// "A_" Action behaviors:
+		////////////
+		
+		A_COLONIALIST1, // <TRAIT #0> (0) colonize own sector first ---- (1) colonize own and neighbouring non-hostile sectors first --- (2) colonize own and not-neighbouring non-hostile sectors first.
+		A_COLONIALIST2, // <TRAIT #1> (0) send colonizer without defensive fleet ---- (1) send colonizer with weak defensive fleet --- (2) send colonizer with strong defensive fleet.
+		
+		A_ATTACK1, // <TRAIT #2> (0) send army to bordering hostile sectors ---- (1) equal preference ---- (2) send army to enemy heartland.
+		A_ATTACK2, // <TRAIT #3> (0) send at least evenly matched army to hostile sectors --- (1) equal preference ---- (2) only send huge flotillas to crush enemy.
+		
+		////////////
+		// "E_" Economic behaviors:
+		////////////
+		
+		E_OVERALL, // <TRAIT #4> (0) prefer to develop economics over army ---- (1) equal preference ---- (2) prefer to emass forces instead of developing economics.
+		
+		E_COLONIALIST1, // <TRAIT #5> (0) prefer to produce colonialist fleet in Periphery sectors ---- (1) equal preference --- (2) prefer to produce colonialist fleet in Stronghold sectors
+		E_COLONIALIST2, // <TRAIT #6> (0) prefer to produce colonialist fleet in non-threatened sectors ---- (1) equal preference ---- (2) prefern to produce colonialist fleet in threatened sectors.
+		
+		//the "develop economics" behaviors:
+		E_INDUSTRY, // <TRAIT #7> (0) industry unimportant ---- (1) normal importance ---- (2) very important.
+		E_SOCENV, // <TRAIT #8> (0) social-environment unimportant ---- (1) normal importance ---- (2) very important.
+		E_PLANENV, // <TRAIT #9> (0) planetary-environment unimportant ---- (1) normal importance ---- (2) very important.
+		E_POPMAINT, // <TRAIT #10> (0) population-maintanance unimportant ---- (1) normal importance ---- (2) very important.
+		
+		E_RESEARCH, // <TRAIT #11> (0) ship-tech unimportant ---- (1) normal importance ---- (2) very important.
+	 * 
+	 * 
 	 */
-	public static enum Traits
+	public static enum Alleles
 	{
-		/*
-		 * TO BE DONE! 
-		 */
+		////////////
+		// "A_" Action behaviors:
+		////////////
+		
+		A_COLONIALIST1, // <TRAIT #0> (0) colonize own sector first ---- (1) colonize own and neighbouring non-hostile sectors --- (2) colonize own and not-neighbouring non-hostile sectors.
+		A_COLONIALIST2, // <TRAIT #1> (0) send colonizer without defensive fleet ---- (1) send colonizer with weak defensive fleet --- (2) send colonizer with strong defensive fleet.
+		
+		A_ATTACK1, // <TRAIT #2> (0) send army to bordering hostile sectors ---- (1) no preference ---- (2) send army to enemy heartland.
+		A_ATTACK2, // <TRAIT #3> (0) send at least evenly matched army to hostile sectors --- (1) no preference ---- (2) only send huge flotillas to crush enemy.
+		
+		////////////
+		// "E_" Economic behaviors:
+		////////////
+		
+		E_OVERALL, // <TRAIT #4> (0) prefer to develop economics over army ---- (1) no preference ---- (2) prefer to emass forces instead of developing economics.
+		
+		E_COLONIALIST1, // <TRAIT #5> (0) prefer to produce colonialist fleet in Periphery sectors ---- (1) no preference --- (2) prefer to produce colonialist fleet in Stronghold sectors
+		E_COLONIALIST2, // <TRAIT #6> (0) prefer to produce colonialist fleet in non-threatened sectors ---- (1) no preference ---- (2) prefern to produce colonialist fleet in threatened sectors.
+		
+		//the "develop economics" behaviors:
+		E_INDUSTRY, // <TRAIT #7> (0) industry unimportant ---- (1) normal importance ---- (2) very important.
+		E_SOCENV, // <TRAIT #8> (0) social-environment unimportant ---- (1) normal importance ---- (2) very important.
+		E_PLANENV, // <TRAIT #9> (0) planetary-environment unimportant ---- (1) normal importance ---- (2) very important.
+		E_POPMAINT, // <TRAIT #10> (0) population-maintanance unimportant ---- (1) normal importance ---- (2) very important.
+		
+		E_RESEARCH, // <TRAIT #11> (0) ship-tech unimportant ---- (1) normal importance ---- (2) very important.
+		
 	}
 	
 	
-	/*
+	/**
 	 * The map of the characteristics, in their corresponding place.
+	 * The list of values represents the time-release mechanism.
 	 */
-	private Map<Traits, Float> characteristics; 
+	final Map<Alleles, List<Byte>> GENOME; 
+	
+	
+	private static final byte NEVER = Byte.MAX_VALUE; //*********** FOR NOW ***********
+	/**
+	 * The number of turns it takes to switch to the next value of the {@link Alleles} trait, in the 'time-release' {@link List} of the GENOME.
+	 */
+	final static byte TIME_RELEASE = NEVER; 
+	
+	/**
+	 * The number of 'time-released' values each {@link Alleles} trait will have.
+	 */
+	final static byte NUM_OF_TIME_RELEASE_VALUES = 10;
+	
+	
 	
 	/**
 	 * Constructs the class, and initializes the behavioral characteristics from the specified file.
 	 * @param classPath The path of the file.
 	 */
-	public Genotype(String classPath)
+	Genotype(String uniqueName, String classPath)
 	{
-		characteristics = new HashMap<Traits, Float>();
-		init(classPath);
+		GENOME = GenotypeUtils.parseGenum(uniqueName, classPath);
 	}
 	
-	
-	private void init(String classPath)
-	{
-		/*
-		 * 1) Check the format of the file
-		 * 2) Go over the file, line by line:
-		 * 		2-b) Parse each line, and fill the corresponding place in the map.
-		 */
-	}
 	
 	/**
 	 * @return A deep copy of the full list of behavioral characteristics of this {@link Genotype}. 
 	 */
-	public Map<Traits, Float> getCharacteristics()
+	Map<Alleles, List<Byte>> getGenome()
 	{
-		HashMap<Traits, Float> map = new HashMap<Traits, Float>();
-		Set<Traits> keyset = characteristics.keySet();
+		Map<Alleles, List<Byte>> map = new HashMap<Alleles, List<Byte>>();
+		Set<Alleles> keyset = GENOME.keySet();
 		
 		//deep-copy babies..
-		for (Traits key : keyset)
-			map.put(key, new Float(characteristics.get(key).floatValue()));
+		for (Alleles key : keyset)
+			map.put(key, new ArrayList<Byte>(GENOME.get(key)));
 		
 		return map;
 	}
 	
 	/**
-	 * Get the value of the specific {@link Traits} trait.
+	 * Get the value of the specific {@link Alleles} trait.
 	 */
-	public float getTraitValue(Traits trait)
+	List<Byte> getAlleleValue(Alleles allele)
 	{
-		return characteristics.get(trait).floatValue();
+		return new ArrayList(GENOME.get(allele));
 	}
-	
-	/*
-	 * THE MAPPING B/W SHORT <--> TRAITS
-	 */
-	private Traits parseTrait(Short num)
-	{
-		switch (num)
-		{
-		/*
-		 * ALL CASES OF THE MAPPING WILL BE CONTAINED HERE!
-		 */
-		}
-	}
-	
-	/*
-	 * Parses a line from the character file.
-	 */
-	private static Pair<Traits, Float> parseLine(String line)
-	{
-		
-	}
-	
-	/*
-	 * Checks the the specified file, to see whether or not it fits the standard format.
-	 * The 'template' parameter is true if the file is only a template,
-	 * and false if it's filled with values.
-	 */
-	private static boolean checkFormatOfFile(String classPath, boolean template)
-	{
-		/*
-		 * go line-by-line to check the format.
-		 */
-	}
-	
-	/**
-	 * A static method, which will create a template for the character file. 
-	 * This method creates a new file in the specified location. 
-	 * The end of the file will have a "_ch" suffix attached to it.
-	 * 
-	 * @param name The file name. 
-	 * @param classPath The location of the file.
-	 * @return true if successful, false otherwise.
-	 */
-	public static boolean makeTemplateFile(String name, String classPath)
-	{
-		/*
-		 * 1) make the file
-		 * 2) double-check the format
-		 */
-		
-	}
-	
 	
 
 
