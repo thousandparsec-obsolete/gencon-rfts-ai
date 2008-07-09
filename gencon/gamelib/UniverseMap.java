@@ -153,8 +153,8 @@ public class UniverseMap
 	
 	
 	/**
-	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from some collection, and return a {@link Vector} of them.
-	 * The {@link Vector} will contain <= n {@link StarSystem}s.
+	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from some collection, and return a {@link Collection} of them.
+	 * The {@link Collection} will contain <= n {@link StarSystem}s.
 	 */
 	public Collection<StarSystem> getNclosestStarSystems(StarSystem ssys, Collection<StarSystem> collection, int n)
 	{

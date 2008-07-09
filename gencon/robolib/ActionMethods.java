@@ -185,7 +185,7 @@ public class ActionMethods
 				}
 			}
 			
-			//return the best one!!! Bam!
+			//return the best one. Bam!
 			return bestRoute;
 		}
 	
