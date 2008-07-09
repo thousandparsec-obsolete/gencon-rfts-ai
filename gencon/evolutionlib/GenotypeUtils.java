@@ -57,7 +57,8 @@ public class GenotypeUtils
 	public static Map<Alleles, List<Byte>> parseGenum(String uniqueName, String classPath)
 	{
 	
-		
+		//FOR NOW:
+		return null;
 	}
 
 	/*

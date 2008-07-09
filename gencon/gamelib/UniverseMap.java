@@ -45,7 +45,7 @@ public class UniverseMap
 		BOUNDARIES = establishBoundaries();
 	}
 	
-	//isolates the set of
+	//isolates the set of star-systems out of all game-objects.
 	private Collection<StarSystem> isolateStarSystems(Collection<Body> bodies)
 	{
 		Collection<StarSystem> stsystems = new HashSet<StarSystem>();
@@ -63,7 +63,10 @@ public class UniverseMap
 		Long maxX = Long.MIN_VALUE, maxY = Long.MIN_VALUE; 
 		Long minX = Long.MAX_VALUE, minY = Long.MAX_VALUE;
 		
-		//iterating and finding the boundaries:
+		/*
+		 * iterating and finding the boundaries:
+		 * Pair<Pair<minX, maxX>, Pair<minY, maxY>>
+		 */
 		for (StarSystem ss : STAR_SYSTEMS)
 		{
 			if (ss.POSITION[0] > maxX)
@@ -195,6 +198,8 @@ public class UniverseMap
 		double x_dist = shortestDistance(a, b, 'x');
 		double y_dist = shortestDistance(a, b, 'y');
 		
+		//System.out.println("::Distance:: x: " + x_dist + " y: " + y_dist);
+		
 		return new Double(Math.sqrt(x_dist * x_dist + y_dist * y_dist)).longValue(); //close enough approximation!
 	}
 	
@@ -204,40 +209,39 @@ public class UniverseMap
 	 */
 	private double shortestDistance(Body a, Body b, char axis)
 	{
-		long option1 = 0, option2 = 0, option3 = 0;
+		double option1 = 0, option2 = 0, option3 = 0;
 		
-		switch (axis)
+		if (axis == 'x')
 		{
-			case 'x':
-			{
 				option1 = Math.abs(a.POSITION[0] - b.POSITION[0]); //x-dist b/w bodies 
 				option2 = distToBoundary(a, 'l') + distToBoundary(b, 'r'); //x-dist b/w a-->lb + rb-->b 
-				option3 = distToBoundary(a, 'r') + distToBoundary(b, 'l');//x-dist b/w a-->rb + lb-->b 
-			}
-			case 'y':
-			{
+				option3 = distToBoundary(a, 'r') + distToBoundary(b, 'l');//x-dist b/w a-->rb + lb-->b
+		}
+		else if (axis == 'y')
+		{
 				option1 = Math.abs(a.POSITION[1] - b.POSITION[1]); //y-dist b/w bodies 
 				option2 = distToBoundary(a, 'u') + distToBoundary(b, 'd'); //y-dist b/w a-->ub + db-->b 
 				option3 = distToBoundary(a, 'd') + distToBoundary(b, 'u');//y-dist b/w a-->db + ub-->b 
-			}
 		}
-		
 		return Math.min(option1, Math.min(option2, option3)); 
 	}
 	
 	/*
 	 * side : 'u' up, 'd' down, 'l' left, 'r' right
 	 */
-	private long distToBoundary(Body b, char side) 
+	private double distToBoundary(Body b, char side) 
 	{
-		long dist = 0;
-		switch (side)
-		{
-			case 'u': dist = Math.abs(b.POSITION[1] - BOUNDARIES.right.right);
-			case 'd': dist = Math.abs(b.POSITION[1] - BOUNDARIES.right.left);
-			case 'l': dist = Math.abs(b.POSITION[0] - BOUNDARIES.left.left);
-			case 'r': dist = Math.abs(b.POSITION[0] - BOUNDARIES.left.right);
-		}
+		double dist = 0;
+
+		if (side == 'u')
+			dist = Math.abs(b.POSITION[1] - BOUNDARIES.right.right);
+		else if (side == 'd')
+			dist = Math.abs(b.POSITION[1] - BOUNDARIES.right.left);
+		else if (side == 'l')
+			dist = Math.abs(b.POSITION[0] - BOUNDARIES.left.left);
+		else if (side == 'r')
+			dist = Math.abs(b.POSITION[0] - BOUNDARIES.left.right);
+		
 		return dist;
 	}
 }

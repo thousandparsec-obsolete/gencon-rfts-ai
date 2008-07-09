@@ -3,6 +3,7 @@ package gencon.gamelib;
 import gencon.Master;
 import gencon.clientLib.Client;
 import gencon.gamelib.gameobjects.Body;
+import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
 import java.util.*;
@@ -76,6 +77,23 @@ public class FullGameStatus
 		
 		//SOME TESTING:
 		MASTER.CLIENT.testMethods();
+		
+		//SOME MORE TESTING:
+		System.out.println("Testing boundaries:");
+		Pair<Pair<Long, Long>, Pair<Long, Long>> bnd = getCurrentStatus().left.BOUNDARIES;
+		System.out.println("Max x: " + bnd.left.right + " Min x: " + bnd.left.left + "  Max y: " + bnd.right.right + " Min y: " + bnd.right.left);
+		
+		System.out.println("Star systems: " + getCurrentStatus().left.STAR_SYSTEMS.size());
+		
+		System.out.println("Testing for n-closest: (n = 5)");
+		for (StarSystem ss : getCurrentStatus().left.STAR_SYSTEMS)
+		{
+			int n = 5;
+			Collection<StarSystem> nclosest = getCurrentStatus().left.getNclosestStarSystems(ss, n);
+			System.out.println("For star system: " + ss.GAME_ID + " : " + ss.NAME);
+			for (StarSystem sts : nclosest)
+				System.out.println("--> " + sts.GAME_ID + " : " + sts.NAME + " Distance: " + getCurrentStatus().left.getDistance(sts, ss));
+		}
 		
 	}
 
