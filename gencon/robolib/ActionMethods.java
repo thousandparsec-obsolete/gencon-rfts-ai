@@ -146,7 +146,6 @@ public class ActionMethods
 	
 	private List<StarSystem> findRouteRecurs(StarSystem start, List<StarSystem> routeSoFar, Collection<StarSystem> remaining, StarSystem finish, byte K)
 	{
-		
 		if (remaining.isEmpty()) //BASE CASE: NO MORE CHECKPOINTS REMAINING. APPENDING THE FINAL DESTINATION TO IT:
 		{
 			routeSoFar.add(finish);
@@ -156,9 +155,10 @@ public class ActionMethods
 		else //RECURSIVE CASE: SOME STAR-SYSTEMS LEFT IN THE COLLECTION.
 		{
 			//find k-closest:
-			List<StarSystem> kClosest = map.getNclosestStarSystems(start, remaining, K);
+			Collection<StarSystem> kClosest = map.getNclosestStarSystems(start, remaining, K);
 			
-			TreeMap<Double, List<StarSystem>> routesAndDistances = new TreeMap<Double, List<StarSystem>>();
+			List<StarSystem> bestRoute = null; 
+			double shortestRouteDistance = Long.MAX_VALUE;
 			
 			for (StarSystem ss : kClosest)
 			{
@@ -177,14 +177,15 @@ public class ActionMethods
 				//calculate the route distance:
 				Double routeDistance = new Double(calculateRouteLength(theRoute));
 				
-				//put in the mapping of routes and distances:
-				routesAndDistances.put(routeDistance, theRoute);
+				//seeing if it's the best one so far!
+				if (routeDistance <= shortestRouteDistance)
+				{
+					bestRoute = theRoute;
+					shortestRouteDistance = routeDistance;
+				}
 			}
 			
-			//get the shortest route of the lot:
-			List<StarSystem> bestRoute = routesAndDistances.ceilingEntry(new Double(0)).getValue();  
-			
-			//return it!!! Bam!
+			//return the best one!!! Bam!
 			return bestRoute;
 		}
 	
