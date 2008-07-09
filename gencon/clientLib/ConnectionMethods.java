@@ -103,7 +103,7 @@ public class ConnectionMethods
 		return conn.sendFrame(get, Player.class);
 	}
 	
-	public synchronized static Collection<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn, List<Body> game_objects) throws IOException, TPException
+	public synchronized static Collection<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn, Collection<Body> game_objects) throws IOException, TPException
 	{
 		Collection<Integer> playerIds = new HashSet<Integer>(game_objects.size());
 		

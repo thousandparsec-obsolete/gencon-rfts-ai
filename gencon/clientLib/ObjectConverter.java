@@ -64,6 +64,9 @@ public class ObjectConverter
 			if (ct != null)
 				children.add(new Integer(ct.getId()));
 		
+//		getting number of orders on object:
+		int orders = object.getOrders();
+		
 		//---------------------------------
 		//Type-specific params and Body instantiation: (Depending on the type of the object)
 		
@@ -85,9 +88,6 @@ public class ObjectConverter
 				ObjectParams.Planet pl = (ObjectParams.Planet) object.getObject();
 				int owner = pl.getOwner(); 
 				
-				//getting number of orders on object:
-				int orders = object.getOrders();
-				
 				//getting resources:
 				Resources resources = convertResources(pl.getResources());
 				
@@ -103,15 +103,11 @@ public class ObjectConverter
 				int damage = fl.getDamage();
 				
 				//getting ships:
-				Ships ships = convertShip(fl);
-				
+				Ships ships = convertShips(fl);
 				
 				//getting velocity:
 				VelType vel = object.getVel();
 				long[] speed = {vel.getX(), vel.getY(), vel.getZ()};
-				
-				//getting number of orders on object:
-				int orders = object.getOrders();
 				
 				return new Fleet(game_id, modtime, name, position, owner, parent, children, damage, ships, orders, speed);
 				
@@ -120,19 +116,14 @@ public class ObjectConverter
 			default: return null; //making compiler happy...
 		}
 	}
-
-	public static synchronized GenericOrder convertOrder(net.thousandparsec.netlib.tp03.Order order)
-	{
-		
-	}
 	
-	public static synchronized Resources convertResources(List<ResourcesType> resources)
+	private static synchronized Resources convertResources(List<ResourcesType> resources)
 	{
 		//initializing variables to nill:
-		int resource_pts = 0; int industry = 0; int population = 0;
-		int social_env = 0; int planetary_env = 0; int pop_maintanance = 0; 
-		int colonist = 0; int ship_tech = 0; int pdb1 = 0; int pdb1_m = 0;
-		int pdb2 = 0; int pdb2_m = 0; int pdb3 = 0; int pdb3_m = 0;
+		int resource_pts = 0, industry = 0, population = 0;
+		int social_env = 0, planetary_env = 0, pop_maintanance = 0; 
+		int colonist = 0, ship_tech = 0, pdb1 = 0, pdb1_m = 0;
+		int pdb2 = 0, pdb2_m = 0, pdb3 = 0, pdb3_m = 0;
 		
 		// retreiving data:
 		for (ResourcesType rt : resources)  
@@ -161,13 +152,30 @@ public class ObjectConverter
 				pop_maintanance, colonist, ship_tech, pdb1, pdb1_m, pdb2, pdb2_m, pdb3, pdb3_m);
 	}
 	
-	public static synchronized Ships convertShip(ObjectParams.Fleet fleet)
+	/*
+	 * Note that FOR NOW, it does not seek out designs by name, and dynamically assigns them, 
+	 * but uses a static mapping between ships-types and designs, which works for now.
+	 */
+	private static synchronized Ships convertShips(ObjectParams.Fleet fleet)
 	{
 		List<ShipsType> shipTypes = fleet.getShips();
 		
+		int scouts = 0, Mk1 = 0, transports = 0, Mk2 = 0, Mk3 = 0, Mk4 = 0;
 		
-		//FOR NOW!!!
-		return null;
+		//extract all the ships:
+		for (ShipsType st : shipTypes)
+		{
+			switch (st.getType())
+			{
+				case (1): scouts = st.getCount();
+				case (2): Mk1 = st.getCount();
+				case (3): transports = st.getCount();
+				case (4): Mk2 = st.getCount();
+				case (5): Mk3 = st.getCount();
+				case (6): Mk4 = st.getCount();
+			}
+		}
 		
+		return new Ships(transports, scouts, Mk1, Mk2, Mk3, Mk4);
 	}
 }

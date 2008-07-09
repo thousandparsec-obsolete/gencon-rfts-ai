@@ -436,17 +436,16 @@ public class Client
 		return player;
 	}
 
-	public synchronized List<Game_Player> getAllPlayers(List<Body> game_objects) throws IOException, TPException
+	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
 		Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
 		conn.close();
 		
-		List<Game_Player> players = new ArrayList<Game_Player>();
+		Collection<Game_Player> players = new ArrayList<Game_Player>();
 		
 		for (Player player : pls)
-			if (player != null)
-				players.add(new Game_Player(player.getId(), player.getName()));
+			players.add(new Game_Player(player.getId(), player.getName()));
 		
 		return players;
 	}
@@ -551,8 +550,7 @@ public class Client
 	{
 		//getResourceDescs();
 		//seeWhatsInside();
-		Pair<Long, Pair<Long, Long>> dim = getUniverseDimensions();
-		pl("Size: " + dim.left + " X: " + dim.right.left + " Y:" + dim.right.right);
+		displayDesigns();
 	}
 	
 	

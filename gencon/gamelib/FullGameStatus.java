@@ -82,14 +82,13 @@ public class FullGameStatus
 	
 	private UniverseMap makeMap() throws IOException, TPException
 	{
-		List<Body> bodies = MASTER.CLIENT.getAllObjects();
-		Pair<Long, Pair<Long, Long>> dimensions = MASTER.CLIENT.getUniverseDimensions();
-		return new UniverseMap(bodies, dimensions);
+		Collection<Body> bodies = MASTER.CLIENT.getAllObjects();
+		return new UniverseMap(bodies);
 	}
 	
-	private Players setPlayers(List<Body> game_objects) throws IOException, TPException
+	private Players setPlayers(Collection<Body> game_objects) throws IOException, TPException
 	{
-		List<Game_Player> newPlayers = MASTER.CLIENT.getAllPlayers(game_objects);
+		Collection<Game_Player> newPlayers = MASTER.CLIENT.getAllPlayers(game_objects);
 		return new Players(getPlayerName(), newPlayers);
 	}
 	
@@ -124,7 +123,7 @@ public class FullGameStatus
 	private Pair<UniverseMap, Players> deepCopyOfStatus(Pair<UniverseMap, Players> status)
 	{
 		return new Pair<UniverseMap, Players>
-			(new UniverseMap(status.left.ALL_BODIES, status.left.UNIVERSE_DIMENSIONS), 
+			(new UniverseMap(status.left.ALL_BODIES), 
 				new Players(status.right.ME, status.right.PLAYERS));
 	}
 	

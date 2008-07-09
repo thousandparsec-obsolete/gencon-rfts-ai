@@ -38,7 +38,7 @@ public class UniverseMap
 	 */
 	public final Pair<Pair<Long, Long>, Pair<Long, Long>> BOUNDARIES;
 	
-	public UniverseMap(List<Body> bodies)
+	public UniverseMap(Collection<Body> bodies)
 	{
 		ALL_BODIES = bodies;
 		STAR_SYSTEMS = isolateStarSystems(ALL_BODIES);
