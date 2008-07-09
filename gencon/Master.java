@@ -96,6 +96,7 @@ public class Master implements Runnable
 	 */
 	public void run()
 	{
+		delayUntilReady(); //if necessary, delay operation until GenCon can fully execute!
 		gameCycle();
 	}
 	
@@ -105,7 +106,7 @@ public class Master implements Runnable
 		//UNCOMMENT! :
 		//while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
 		//{
-			delayUntilReady(); //if necessary, delay operation until GenCon can fully execute!
+			
 			startOfTurnRoutine();
 			try
 			{
@@ -154,8 +155,6 @@ public class Master implements Runnable
 				exit("Thread interrupted!", ABNORMAL_EXIT, ie);
 			}
 		}
-		
-		
 	}
 	
 	

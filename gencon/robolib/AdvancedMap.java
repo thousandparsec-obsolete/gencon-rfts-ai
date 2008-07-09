@@ -1,5 +1,7 @@
-package gencon.gamelib;
+package gencon.robolib;
 
+import gencon.gamelib.FullGameStatus;
+import gencon.gamelib.UniverseMap;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Planet;
@@ -27,20 +29,12 @@ import java.util.Set;
 public class AdvancedMap 
 {
 	private FullGameStatus fgs;
-	
-	private Collection<Integer> sector_A;
-	private Collection<Integer> sector_B;
-	private Collection<Integer> sector_C;
-	private Collection<Integer> sector_D;
-	private Collection<Integer> sector_E;
-	private Collection<Integer> sector_F;
-	private Collection<Integer> sector_G;
-	private Collection<Integer> sector_H;
-	private Collection<Integer> sector_I;
+	private Collection<Sector> sectors;
 	
 	public AdvancedMap(FullGameStatus full_game_status)
 	{
 		fgs = full_game_status;
+		createSectors();
 		assignSectors();
 	}
 	
@@ -268,4 +262,46 @@ public class AdvancedMap
 	}
 	
 	
+	
+	private static class Sector
+	{
+		public static enum State
+		{
+			STRONGHOLD, PERIPHERY, NEUTRAL, STR_HOSTILE, WEAK_HOSTILE, UNEXPLORED;
+		}
+		
+		public final char NAME;
+		private Collection<StarSystem> contents;
+		private State state;
+		private boolean under_threat;
+		private boolean under_attack;
+		
+		public Sector(char name)
+		{
+			NAME = name;
+		}
+		
+		public void setContents(Collection<StarSystem> systems)
+		{
+			contents = new HashSet<StarSystem>(systems);
+		}
+		
+		public Collection<StarSystem> getContents()
+		{
+			return new HashSet<StarSystem>(contents);
+		}
+		
+		public void setThreat(boolean value)
+		{
+			under_threat = value;
+		}
+		
+		public boolean getThreat()
+		{
+			return under_threat;4
+			
+		}
+		
+		
+	}
 }

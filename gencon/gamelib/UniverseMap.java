@@ -25,34 +25,60 @@ public class UniverseMap
 	/**
 	 * The de-facto atomic unit of the {@link UniverseMap}.
 	 */
-	public final List<StarSystem> STAR_SYSTEMS;
+	public final Collection<StarSystem> STAR_SYSTEMS;
 
 	/**
 	 * The de-jure atomic unit of the {@link UniverseMap}.
 	 */
-	public final List<Body> ALL_BODIES;
+	public final Collection<Body> ALL_BODIES;
+	
 	
 	/**
-	 * The dimensions of the universe, in the following format:
-	 * Pair<sizeUnitsSquare, Pair<centerX, centerY>>
+	 * The boundaries of the game-world: Pair<Pair<minX, maxX>, Pair<minY, maxY>>
 	 */
-	public final Pair<Long, Pair<Long, Long>> UNIVERSE_DIMENSIONS;
+	public final Pair<Pair<Long, Long>, Pair<Long, Long>> BOUNDARIES;
 	
-	public UniverseMap(List<Body> bodies, Pair<Long, Pair<Long, Long>> dimensions)
+	public UniverseMap(List<Body> bodies)
 	{
 		ALL_BODIES = bodies;
 		STAR_SYSTEMS = isolateStarSystems(ALL_BODIES);
-		UNIVERSE_DIMENSIONS = dimensions;
+		BOUNDARIES = establishBoundaries();
 	}
 	
-	private List<StarSystem> isolateStarSystems(Collection<Body> bodies)
+	//isolates the set of
+	private Collection<StarSystem> isolateStarSystems(Collection<Body> bodies)
 	{
-		List<StarSystem> stsystems = new ArrayList<StarSystem>();
+		Collection<StarSystem> stsystems = new HashSet<StarSystem>();
 		for (Body bod : bodies)
 			if (bod != null && bod.TYPE == Body.BodyType.STAR_SYSTEM)
 				stsystems.add((StarSystem) bod);
 		
 		return stsystems;
+	}
+	
+	//establishes the boundaries of the universe:
+	private Pair<Pair<Long, Long>, Pair<Long, Long>> establishBoundaries()
+	{
+		//initializing values:
+		Long maxX = Long.MIN_VALUE, maxY = Long.MIN_VALUE; 
+		Long minX = Long.MAX_VALUE, minY = Long.MAX_VALUE;
+		
+		//iterating and finding the boundaries:
+		for (StarSystem ss : STAR_SYSTEMS)
+		{
+			if (ss.POSITION[0] > maxX)
+				maxX = ss.POSITION[0];
+			if (ss.POSITION[0] < minX)
+				minX = ss.POSITION[0];
+			if (ss.POSITION[1] > maxY)
+				maxY = ss.POSITION[1];
+			if (ss.POSITION[1] < minY)
+				minY = ss.POSITION[1];
+		}
+		
+		Pair<Long, Long> xpair = new Pair<Long, Long>(minX, maxX);
+		Pair<Long, Long> ypair = new Pair<Long, Long>(minY, maxY);
+		return new Pair<Pair<Long, Long>, Pair<Long, Long>>(xpair, ypair);
 	}
 	
 //	BODY-RETREIVAL METHODS: (E.G. GET N-CLOSEST BODIES, ETC)
@@ -63,7 +89,7 @@ public class UniverseMap
 	 * @param stsys The {@link StarSystem} in question.
 	 * @return A {@link Vector} that contains what's inside the star system.
 	 */
-	public List<Body> getContents(StarSystem stsys)
+	public Collection<Body> getContents(StarSystem stsys)
 	{
 		return retreiveRecurs(stsys);
 	}
@@ -71,14 +97,14 @@ public class UniverseMap
 	/*
 	 * Helper for getContents
 	 */
-	private List<Body> retreiveRecurs(Body body) 
+	private Collection<Body> retreiveRecurs(Body body) 
 	{
 		if (body.CHILDREN.isEmpty()) //BASE CASE
 			return null;
 		
 		else //RECURSIVE CASE
 		{
-			List<Body> contents = new ArrayList<Body>();
+			Collection<Body> contents = new ArrayList<Body>();
 			
 			for (int child_id : body.CHILDREN)
 			{
@@ -87,7 +113,7 @@ public class UniverseMap
 				contents.add(child);
 				
 				//adding all its contents
-				List<Body> grand_children = retreiveRecurs(child);
+				Collection<Body> grand_children = retreiveRecurs(child);
 				if (grand_children != null)
 					for (Body g_child : grand_children)
 						if (g_child != null)
@@ -105,22 +131,19 @@ public class UniverseMap
 	 */
 	public Body getById(int id)
 	{
-		for (int i = 0; i < ALL_BODIES.size(); i++)
-			if (ALL_BODIES.get(i).GAME_ID == id)
-				return ALL_BODIES.get(i);
+		for (Body body : ALL_BODIES)
+			if (body.GAME_ID == id)
+				return body;
 		
 		//else:
 		return null;
 	}
 	
-	
-	
-	
 	/**
 	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from the whole game-world, and return a {@link Vector} of them.
 	 * The {@link Vector} will contain <= n {@link StarSystem}s.
 	 */
-	public List<StarSystem> getNclosestStarSystems(StarSystem ssys, int n)
+	public Collection<StarSystem> getNclosestStarSystems(StarSystem ssys, int n)
 	{
 		return nclosest(ssys, STAR_SYSTEMS, n);
 	}
@@ -130,16 +153,14 @@ public class UniverseMap
 	 * Find n closest {@link StarSystem}s to the specified {@link StarSystem} from some collection, and return a {@link Vector} of them.
 	 * The {@link Vector} will contain <= n {@link StarSystem}s.
 	 */
-	public List<StarSystem> getNclosestStarSystems(StarSystem ssys, Collection<StarSystem> collection, int n)
+	public Collection<StarSystem> getNclosestStarSystems(StarSystem ssys, Collection<StarSystem> collection, int n)
 	{
 		return nclosest(ssys, collection, n);
 	}
 	
 	
-	private List<StarSystem> nclosest(StarSystem ssys, Collection<StarSystem> collection, int n)
+	private Collection<StarSystem> nclosest(StarSystem ssys, Collection<StarSystem> collection, int n)
 	{
-		//System.out.println("For star system: " + ssys.NAME);
-		
 		TreeMap<Long, StarSystem> distance_to_body = new TreeMap<Long, StarSystem>();
 		
 		//puts all bodies in the map, except for the star system in question
@@ -149,7 +170,7 @@ public class UniverseMap
 
 		
 		//finds n-closest, or as long as there are bodies
-		List<StarSystem> nclosest = new ArrayList<StarSystem>(n);
+		Collection<StarSystem> nclosest = new HashSet<StarSystem>(n);
 		for (int i = 0; i < n && i < collection.size(); i++) //assumption: a star system should exist, as long as i < STAR_SYSTEMS.size().
 		{
 			long id = distance_to_body.ceilingKey((long)0); //gets the closest distance to 0.
@@ -165,6 +186,8 @@ public class UniverseMap
 	/**
 	 * Calculates the distance between two {@link Body}s, a and b.
 	 * Neither a or b can be null.
+	 * 
+	 * NOTE: Incorporates the up-down, left-right wrap-around by using the smallest x- and y- distances between bodies in the calculation.
 	 */
 	public long getDistance (Body a, Body b)
 	{
@@ -175,61 +198,46 @@ public class UniverseMap
 		return new Double(Math.sqrt(x_dist * x_dist + y_dist * y_dist)).longValue(); //close enough approximation!
 	}
 	
+	/*
+	 * Returns the shortest distance between two bodies on an axis (x or y), 
+	 * based on assumption of an all-around wrap-around that uses normalized space.
+	 */
 	private double shortestDistance(Body a, Body b, char axis)
 	{
+		long option1 = 0, option2 = 0, option3 = 0;
+		
 		switch (axis)
 		{
 			case 'x':
 			{
-				
+				option1 = Math.abs(a.POSITION[0] - b.POSITION[0]); //x-dist b/w bodies 
+				option2 = distToBoundary(a, 'l') + distToBoundary(b, 'r'); //x-dist b/w a-->lb + rb-->b 
+				option3 = distToBoundary(a, 'r') + distToBoundary(b, 'l');//x-dist b/w a-->rb + lb-->b 
 			}
 			case 'y':
 			{
-				
+				option1 = Math.abs(a.POSITION[1] - b.POSITION[1]); //y-dist b/w bodies 
+				option2 = distToBoundary(a, 'u') + distToBoundary(b, 'd'); //y-dist b/w a-->ub + db-->b 
+				option3 = distToBoundary(a, 'd') + distToBoundary(b, 'u');//y-dist b/w a-->db + ub-->b 
 			}
 		}
+		
+		return Math.min(option1, Math.min(option2, option3)); 
 	}
 	
 	/*
-	 * side : 'a' up, 'b' down, 'c' left, 'd' right
+	 * side : 'u' up, 'd' down, 'l' left, 'r' right
 	 */
-	private double distToBoundary(Body b, char side)
+	private long distToBoundary(Body b, char side) 
 	{
+		long dist = 0;
 		switch (side)
 		{
-			case 'a': return b.POSITION[1];
-			
-			case 'b':
-				
-			case 'c':
-			
-			case 'd':
+			case 'u': dist = Math.abs(b.POSITION[1] - BOUNDARIES.right.right);
+			case 'd': dist = Math.abs(b.POSITION[1] - BOUNDARIES.right.left);
+			case 'l': dist = Math.abs(b.POSITION[0] - BOUNDARIES.left.left);
+			case 'r': dist = Math.abs(b.POSITION[0] - BOUNDARIES.left.right);
 		}
+		return dist;
 	}
-	
-	/*
-	 * side : 'a' up, 'b' down, 'c' left, 'd' right
-	 */
-	private double universeBoundaryLocation(char side)
-	{
-		switch (side)
-		{
-			case 'a': return UNIVERSE_DIMENSIONS.
-			
-			case 'b':
-				
-			case 'c':
-			
-			case 'd':
-		}
-	}
-	
-	/*
-	 * returns the length of one 
-	 */
-	private double universeDimension()
-	{
-		return Math.sqrt(UNIVERSE_DIMENSIONS.left);
-	}
-
 }

@@ -39,5 +39,8 @@ public class Robot
 	public void startTurn(int time_remaining)
 	{
 		ACTIONS.updateMap(MASTER.GAME_STATUS.getCurrentStatus().left);
+		
+		
+		
 	}
 }

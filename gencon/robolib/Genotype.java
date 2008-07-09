@@ -109,7 +109,8 @@ public class Genotype
 	
 	
 	/**
-	 * Constructs the class, and initializes the behavioral characteristics from the specified file.
+	 * Constructs the class, and initializes the genotype from the specified file, and unique name.
+	 * @param uniqueName The unique name of the genome to be used in the robot.
 	 * @param classPath The path of the file.
 	 */
 	Genotype(String uniqueName, String classPath)
