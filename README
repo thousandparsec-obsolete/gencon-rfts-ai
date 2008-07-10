@@ -9,7 +9,7 @@ This is an AI client that builds on libtpproto-java. Implementation and usage de
 
 
 Arguments: (Optional) 
-	 * Optional arguments: '-a serverURI $ genomeFileClasspath genomeUniqueName' (All or none must be provided!)
+	 * Optional arguments: '-a serverURI $ genomeFileClasspath' (All or none must be provided!)
 	 * Supplying arguments will put GenCon in autorun mode, with no further input required. Verbose debug mode will be on.
 	 * Otherwise, the client will run in 'normal' mode, i.e. start up from user input.
 	 *
@@ -20,9 +20,8 @@ Arguments: (Optional)
 	 *		The serverURI must include user info for autologin, e.g.: "tp://guest:guest@thousandparsec.net/tp".
 	 * 3) The third argument is the difficulty. The '$' symbol stands for any number between 1-9, inclusive.
 	 * 4) The fourth argument specifies the classpath of the 'robo-genome' file.
-	 * 5) The fifth argument specifies the unique name by which the 'genome' of the robot can be found in the file.
 	 *
-	 * If the argument syntax is incorrect, or else some argument is faulty, the client will terminate upon catching that.
+	 * If the argument syntax is incorrect, or else some argument is faulty for any reason, the client will terminate upon catching that.
 
 
 
