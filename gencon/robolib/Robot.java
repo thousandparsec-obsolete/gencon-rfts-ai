@@ -27,10 +27,10 @@ public class Robot
 	
 	
 	
-	public Robot(Master master)
+	public Robot(Master master) throws Exception
 	{
 		MASTER = master;
-		BEHAVIOR = new Phenotype(new Genotype(MASTER.CLIENT.getGenomeName(), MASTER.CLIENT.getGenomeFileClasspath()));
+		BEHAVIOR = new Phenotype(new Genotype(MASTER.CLIENT.getGenomeFileClasspath()));
 		DIFFICULTY = MASTER.CLIENT.getDifficulty();
 		ACTIONS = new HigherLevelActions(new ActionMethods(MASTER.CLIENT));
 		UTILS = new RoboUtils(this);

@@ -14,7 +14,11 @@ import java.util.List;
 
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
+import net.thousandparsec.netlib.tp03.Design;
+import net.thousandparsec.netlib.tp03.DesignIDs;
 import net.thousandparsec.netlib.tp03.Fail;
+import net.thousandparsec.netlib.tp03.GetDesign;
+import net.thousandparsec.netlib.tp03.GetDesignIDs;
 import net.thousandparsec.netlib.tp03.GetObjectIDs;
 import net.thousandparsec.netlib.tp03.GetObjectsByID;
 import net.thousandparsec.netlib.tp03.GetOrder;
@@ -259,5 +263,27 @@ public class ConnectionMethods
 		list.add(new IdsType(id));
 		
 		return conn.sendFrame(god, OrderDesc.class); 
+	}
+	
+	
+	public static synchronized Collection<Design> getDesigns(SequentialConnection<TP03Visitor> conn) throws TPException, IOException
+	{
+		GetDesignIDs gdids = new GetDesignIDs();
+		gdids.setAmount(-1);
+		gdids.setKey(-1);
+		DesignIDs dids = conn.sendFrame(gdids, DesignIDs.class);
+		
+		GetDesign gd = new GetDesign();
+		for (ModtimesType mdt : dids.getModtimes())
+			gd.getIds().add(new IdsType(mdt.getId()));
+
+		
+		Sequence seq = conn.sendFrame(gd, Sequence.class);
+		
+		Collection<Design> designs = new HashSet<Design>();
+		for (int i = 0; i < seq.getNumber(); i++)
+			designs.add(conn.receiveFrame(Design.class));
+		
+		return designs;
 	}
 }

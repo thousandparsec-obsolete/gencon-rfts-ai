@@ -67,17 +67,17 @@ public class FullGameStatus
 
 		//generate new map:
 		UniverseMap map = makeMap();
-		MASTER.pl("Map generated.");
 		//retreive new list of players:
 		Players pl = setPlayers(map.ALL_BODIES);
-		MASTER.pl("Players retreived.");
 		
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMap, Players>(map, pl); 
 		
+		MASTER.pl("Done retrieving info from server.");
+		
 		//SOME TESTING:
 		MASTER.CLIENT.testMethods();
-		
+		/*
 		//SOME MORE TESTING:
 		System.out.println("Testing boundaries:");
 		Pair<Pair<Long, Long>, Pair<Long, Long>> bnd = getCurrentStatus().left.BOUNDARIES;
@@ -94,7 +94,7 @@ public class FullGameStatus
 			for (StarSystem sts : nclosest)
 				System.out.println("--> " + sts.GAME_ID + " : " + sts.NAME + " Distance: " + getCurrentStatus().left.getDistance(sts, ss));
 		}
-		
+		*/
 	}
 
 	

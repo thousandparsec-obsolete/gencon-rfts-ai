@@ -86,7 +86,14 @@ public class Master implements Runnable
 		GAME_STATUS.init();
 		
 		//initializing robot:
-		robot = new Robot(this); 
+		try
+		{
+			robot = new Robot(this); 
+		}
+		catch (Exception e)
+		{
+			exit("Failed initializing ai-bot.", ABNORMAL_EXIT, e);
+		}
 		
 		pl("Done initializing GenCon.");
 	}

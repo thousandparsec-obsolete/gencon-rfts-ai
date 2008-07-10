@@ -1,7 +1,6 @@
 package gencon.test;
 
-import java.util.*;
-
+import gencon.evolutionlib.GenotypeUtils;
 
 /*
  * THIS CLASS IS FOR EXPERIMENTATION, 
@@ -17,9 +16,14 @@ public class test {
 	 */
 	public static void main(String[] args) 
 	{
-	
-
-
+			try
+			{
+				GenotypeUtils.makeRandomGenome("/home/vitya/Thousand_Parsec_Devel_Folder/gencon-rfts-ai/TestGenome");
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 	}
 
 }

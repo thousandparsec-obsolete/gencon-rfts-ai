@@ -27,15 +27,14 @@ public class Utils
 	 * 
 	 * @param args The arguments given by the {@link Client}.
 	 * 
-	 * @return Pair<Pair<Short, String>, Pair<String, String>>, where the first pair is <difficulty, uri_string>,  
+	 * @return Pair<Short, Pair<String, String>>, where the first pair is difficulty,  
 	 * and the next pair is <genome_name, genome_classpath>.
 	 */
-	public synchronized static Pair<Pair<Short, String>, Pair<String, String>> parseArgs(String[] args) 
+	public synchronized static Pair<Short, Pair<String, String>> parseArgs(String[] args) 
 	{
 		//the variables to be returned.
 		short difficulty = 5; //the default difficulty
 		String URIstr = "";
-		String genomeName = "";
 		String genomeClassPath = "";
 		///////////
 		
@@ -45,17 +44,16 @@ public class Utils
 			
 			//configuring options for autorun:
 			//must have 4 arguments, and first one must be '-a'.
-			else if (args.length == 5 && args[0].equals("-a")) 
+			else if (args.length == 4 && args[0].equals("-a")) 
 			{
-				URIstr = args[1];
-				difficulty = new Short(args[2]).shortValue(); //must be a short; otherwise, will throw exception.
-				
+				difficulty = new Short(args[1]).shortValue(); //must be a short; otherwise, will throw exception.				
 				//make sure difficulty in range:
 				if (difficulty <= 0 || difficulty >= 10)
 					throw new Exception();
 				
-				genomeName = args[3];
-				genomeClassPath = args[4];
+				URIstr = args[2];
+				
+				genomeClassPath = args[3];
 			}
 			//for any other input:
 			else
@@ -68,9 +66,8 @@ public class Utils
 		}
 		
 		//composing the return:
-		Pair<Short, String> leftPair = new Pair<Short, String>(difficulty, URIstr);
-		Pair<String, String> rightPair = new Pair<String, String>(genomeName, genomeClassPath);
-		Pair<Pair<Short, String>, Pair<String, String>> pair = new Pair<Pair<Short, String>, Pair<String, String>>(leftPair, rightPair);
+		Pair<String, String> rightPair = new Pair<String, String>(URIstr, genomeClassPath);
+		Pair<Short, Pair<String, String>> pair = new Pair<Short, Pair<String,String>>(difficulty, rightPair);
 		return pair; 
 	}
 	
@@ -180,29 +177,6 @@ public class Utils
 		return cp;
 	}
 	
-	
-	public synchronized static String manualSetGenomeName()
-	{
-		String name = "";
-		boolean ok = false;
-		
-		do
-		{
-			stout.print("Enter the unique name for the genome you wish to use: ");
-			name = Master.in.next();
-			
-			if (!name.equals(""))
-				ok = true;
-			else
-			{
-				ok = false;
-				System.out.println("Invalid input: Cannot be empty. Try again.");
-			}
-			
-		} while (!ok);
-		
-		return name;
-	}
 	
 	/**
 	 * Making the server URI from a string.

@@ -59,7 +59,6 @@ public class Client
 	//game-related
 	private String myUsername;
 	private short difficulty;
-	private String genomeName;
 	private String genomeFileClasspath;
 	
 	
@@ -82,22 +81,18 @@ public class Client
 	 */
 	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
 	{
-		Pair<Pair<Short, String>, Pair<String, String>> parsedArgs = Utils.parseArgs(args);
+		Pair<Short, Pair<String, String>> parsedArgs = Utils.parseArgs(args);
 		
-		difficulty = parsedArgs.left.left.shortValue();
+		difficulty = parsedArgs.left.shortValue();
 		master.pl("Difficulty set to : " + difficulty);
 		
-		String URIstr = parsedArgs.left.right;
+		String URIstr = parsedArgs.right.left;
 		if (!URIstr.equals(""))
 			master.pl("URI set to : " + URIstr);
 		
 		
-		genomeName = parsedArgs.right.left;
-		master.pl("Genotype name set to : " + genomeName);
-		
 		genomeFileClasspath = parsedArgs.right.right;
 		master.pl("Genotype File classpath set to : " + genomeFileClasspath);
-		
 		
 		if (URIstr.equals(""))
 			initNoAutorun();
@@ -128,9 +123,6 @@ public class Client
 		
 		//set URI
 		serverURI = Utils.manualSetURI();
-		
-		//set genotype name:
-		genomeName = Utils.manualSetGenomeName();
 		
 		//set genotype file classpath:
 		genomeFileClasspath = Utils.manualSetGenomeClasspath();
@@ -509,11 +501,6 @@ public class Client
 		return genomeFileClasspath;
 	}
 	
-	public String getGenomeName()
-	{
-		return genomeName;
-	}
-	
 	public synchronized short getDifficulty()
 	{
 		return difficulty;
@@ -550,7 +537,7 @@ public class Client
 	{
 		//getResourceDescs();
 		//seeWhatsInside();
-		displayDesigns();
+		getDesigns();
 	}
 	
 	
@@ -672,7 +659,7 @@ public class Client
 		
 		
 	}
-
+	/*
 	public void testMove()
 	{
 		int myId = 140;
@@ -692,33 +679,14 @@ public class Client
 			pl(e.getMessage());
 		}
 	}
+	*/
 	
-	
-	public void displayDesigns() throws TPException, IOException
+	public Collection<Design> getDesigns() throws TPException, IOException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-
-
-		GetDesignIDs gdids = new GetDesignIDs();
-		gdids.setAmount(-1);
-		gdids.setKey(-1);
-		DesignIDs dids = conn.sendFrame(gdids, DesignIDs.class);
-		
-		GetDesign gd = new GetDesign();
-		for (ModtimesType mdt : dids.getModtimes())
-		{
-			gd.getIds().add(new IdsType(mdt.getId()));
-		}
-		
-		Sequence seq = conn.sendFrame(gd, Sequence.class);
-		
-		for (int i = 0; i < seq.getNumber(); i++)
-		{
-			Design des = conn.receiveFrame(Design.class);
-			pl(des.toString());
-		}
-		
+		Collection<Design> designs = ConnectionMethods.getDesigns(conn);
 		conn.close();
+		return designs;
 	}
 	
 	
