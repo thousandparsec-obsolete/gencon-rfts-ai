@@ -47,14 +47,7 @@ public class Client
 	private URI serverURI;
 	private ConnectionManager<TP03Visitor> connMgr;
 	public final LoggerConnectionListener<TP03Visitor> EVENT_LOGGER;
-	private final TP03Visitor visitor;
-
-	/* ~~~TO BE IMPLEMENTED INTO ALL CONNECTION-METHODS: RETRY FOR N-TIMES, IF FAILS, THEN THROW EXCEPTION.~~~~~~~~
-	/**
-	 * The number of times the connection will try to retrieve info before throwing an exception.
-	 *
-	public final static byte RETRIES = 5; 
-	*/
+	private final TP03Visitor VISITOR;
 
 	//game-related
 	private String myUsername;
@@ -71,7 +64,7 @@ public class Client
 	{
 		this.master = master;
 		EVENT_LOGGER = new LoggerConnectionListener<TP03Visitor>();
-		visitor = new GCTP03Visitor();
+		VISITOR = new GCTP03Visitor();
 	}
 	
 	/**
@@ -198,7 +191,7 @@ public class Client
 		TP03Decoder decoder = new TP03Decoder();
 		master.pr("Establishing connection to server... ");
 			
-			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autorun, visitor);
+			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autorun, VISITOR);
 			basicCon.addConnectionListener(EVENT_LOGGER);
 			
 			connMgr = new ConnectionManager<TP03Visitor>(basicCon);
@@ -424,8 +417,7 @@ public class Client
 		Player pl = ConnectionMethods.getPlayerById(id, conn);
 		conn.close();
 		
-		Game_Player player = new Game_Player(pl.getId(), pl.getName());
-		return player;
+		return ObjectConverter.convertPlayer(pl);
 	}
 
 	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException

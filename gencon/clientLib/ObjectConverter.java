@@ -22,6 +22,7 @@ import java.util.List;
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.ObjectParams;
+import net.thousandparsec.netlib.tp03.Player;
 import net.thousandparsec.netlib.tp03.ResourceIDs;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
 import net.thousandparsec.netlib.tp03.Object.OrdertypesType;
@@ -177,5 +178,11 @@ public class ObjectConverter
 		}
 		
 		return new Ships(transports, scouts, Mk1, Mk2, Mk3, Mk4);
+	}
+	
+	
+	public synchronized static Game_Player convertPlayer(Player player)
+	{
+		return new Game_Player(player.getId(), player.getName());
 	}
 }

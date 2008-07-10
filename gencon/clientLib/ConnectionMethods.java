@@ -12,8 +12,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import net.thousandparsec.netlib.Frame;
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
+import net.thousandparsec.netlib.Visitor;
 import net.thousandparsec.netlib.tp03.Design;
 import net.thousandparsec.netlib.tp03.DesignIDs;
 import net.thousandparsec.netlib.tp03.Fail;
@@ -46,14 +48,20 @@ import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
 import net.thousandparsec.netlib.tp03.Object.OrdertypesType;
 import net.thousandparsec.netlib.tp03.OrderParams.OrderParamObject;
 
-public class ConnectionMethods 
+public class ConnectionMethods
 {
+	/**
+	 * The number of times a {@link Frame} is retried to be sent in case of an {@link Exception}, using the
+	 * {@link SequentialConnection}.<F extends Frame<V>> F sendFrame(Frame<V> frame, Class<F> responseClass) method.
+	 */
+	public final static byte RETRIES = 7;
+	
 	private ConnectionMethods(){}	//dummy constructor: static class.
 	//private final static PrintStream stout = System.out;
 	
 	public synchronized static int getTimeRemaining(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
-     	TimeRemaining tr = conn.sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class);
+     	TimeRemaining tr = sendFrame(new GetTimeRemaining(), net.thousandparsec.netlib.tp03.TimeRemaining.class, conn);
 		return tr.getTime();
 	}
 
@@ -76,7 +84,7 @@ public class ConnectionMethods
 		gids.setAmount(-1);
 	
 		//receiving:
-		ObjectIDs oids = conn.sendFrame(gids, ObjectIDs.class);
+		ObjectIDs oids = sendFrame(gids, ObjectIDs.class, conn);
 		Collection<ModtimesType> ids = oids.getModtimes();
 		
 		//preparing the frame to receive objects:
@@ -85,7 +93,7 @@ public class ConnectionMethods
 			getObj.getIds().add(new IdsType(mdt.getId()));
 		
 		//receiving the sequence:
-		Sequence seq = conn.sendFrame(getObj, Sequence.class);
+		Sequence seq = sendFrame(getObj, Sequence.class, conn);
 		
 		//preparing to store objects:
 		Collection<Object> objects = new HashSet<Object>();
@@ -104,7 +112,7 @@ public class ConnectionMethods
 	{
 		GetPlayer get = new GetPlayer();
 		get.getIds().add(new IdsType(id));
-		return conn.sendFrame(get, Player.class);
+		return sendFrame(get, Player.class, conn);
 	}
 	
 	public synchronized static Collection<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn, Collection<Body> game_objects) throws IOException, TPException
@@ -167,7 +175,7 @@ public class ConnectionMethods
 			slots.add(new SlotsType(i));
 		
 		//getting a sequence:
-		Sequence seq = conn.sendFrame(getOrd, Sequence.class);
+		Sequence seq = sendFrame(getOrd, Sequence.class, conn);
 		
 		//receiving orders:
 		List<Order> orders = new ArrayList<Order>(seq.getNumber());
@@ -208,7 +216,7 @@ public class ConnectionMethods
 		order.setOrderparams(op, getODbyId(order.getOtype(), conn)); 
 		
 		//getting the response:
-		Response response = conn.sendFrame(order, Response.class);
+		Response response = sendFrame(order, Response.class, conn);
 		
 		//if the order is legal, probe for the amount of turns:
 		if (response.getFrameType() == Okay.FRAME_TYPE)
@@ -244,7 +252,7 @@ public class ConnectionMethods
 		probe.setOrderparams(order.getOrderparams(od), od);
 		
 		//probling:
-		Response whatIf = conn.sendFrame(probe, Response.class);
+		Response whatIf = sendFrame(probe, Response.class, conn);
 		
 		if (whatIf.getFrameType() == Order.FRAME_TYPE)
 			return ((Order) whatIf).getTurns();
@@ -262,7 +270,7 @@ public class ConnectionMethods
 		List<IdsType> list = god.getIds();
 		list.add(new IdsType(id));
 		
-		return conn.sendFrame(god, OrderDesc.class); 
+		return sendFrame(god, OrderDesc.class, conn); 
 	}
 	
 	
@@ -271,19 +279,48 @@ public class ConnectionMethods
 		GetDesignIDs gdids = new GetDesignIDs();
 		gdids.setAmount(-1);
 		gdids.setKey(-1);
-		DesignIDs dids = conn.sendFrame(gdids, DesignIDs.class);
+		DesignIDs dids = sendFrame(gdids, DesignIDs.class, conn);
 		
 		GetDesign gd = new GetDesign();
 		for (ModtimesType mdt : dids.getModtimes())
 			gd.getIds().add(new IdsType(mdt.getId()));
 
 		
-		Sequence seq = conn.sendFrame(gd, Sequence.class);
+		Sequence seq = sendFrame(gd, Sequence.class, conn);
 		
 		Collection<Design> designs = new HashSet<Design>();
 		for (int i = 0; i < seq.getNumber(); i++)
 			designs.add(conn.receiveFrame(Design.class));
 		
 		return designs;
+	}
+	
+	
+	/*
+	 * Re-tries a fixed amount of times in case of failure.
+	 */
+	private synchronized static <F extends Frame<TP03Visitor>> F sendFrame(Frame<TP03Visitor> frame, Class<F> responseClass, SequentialConnection<TP03Visitor> conn) throws TPException, IOException
+	{
+		byte tries = 0;
+		
+		while (true)
+		{
+			try
+			{
+				return conn.sendFrame(frame, responseClass);
+			}
+			catch (IOException ioe)
+			{
+				tries ++;
+				if (tries > RETRIES)
+					throw ioe;
+			}
+			catch (TPException tpe)
+			{
+				tries ++;
+				if (tries > RETRIES)
+					throw tpe;
+			}
+		}
 	}
 }
