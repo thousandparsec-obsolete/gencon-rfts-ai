@@ -16,6 +16,39 @@ import java.util.StringTokenizer;
 
 import net.thousandparsec.util.Pair;
 
+
+/**
+ * Methods to write/read/parse 'robot-genome' files.
+ * Here are the specs for such a file:
+ * 1) It must possess a "_gnm" suffix, e.g. "DarkSide_gnm".
+ * 2) Nowhere is any writing (space included) permitted, but at the very bottom, below the actual 'genome'.
+ * 3) Each line in the file represents the values of a trait. Lines start with ascending numbers from 0 (first line 0, then 1, ...), which represent trait types.
+ * 4) After the trait-type number there is a "~"delimiter.
+ * 5) Afterwards, there comes a series of numbers from 0 to 2 (inclusive), of length == {@link Genotype}.NUM_OF_TIME_RELEASE_VALUES.  
+ * 
+ * Here is a demo file for illustration
+ * 
+ * Name: TestGenome_gnm
+ * -------------------------------- 
+ * 0~002100110110021201201212210201
+ * 1~220110102020221200122111002001
+ * 2~110022220210212210220220200011
+ * 3~000120010201010011121122000200
+ * 4~122012011221202220211212200112
+ * 5~212222202112120011200020120012
+ * 6~202001221102211010212002210010
+ * 7~001211011012021211212001012020
+ * 8~110111011121102122201012002200
+ * 9~021202202100022210100020210020
+ * 10~010011020221211112021200021111
+ * 11~222201121000100120222220121210
+ * 12~211010202020210102120120112112
+ * 
+ *  ### can write anything at the bottom ###
+ * -------------------------------- 
+ * 
+ * @author Victor Ivri
+ */
 public class GenotypeUtils 
 {
 	
@@ -160,11 +193,48 @@ public class GenotypeUtils
 	/*
 	 * Checks the specified file, to see whether or not it fits the standard format.
 	 */
-	private static boolean checkFormat(String classPath)
+	private static boolean checkFormat(String classPath) throws FileNotFoundException, Exception
 	{
-		//TO DO!!
+		//checks whether the filename is correct (has the "_gnm" suffix):
+		if (!classPath.substring(classPath.length() - 4, classPath.length()).equals("_gnm"))
+			return false;
+
+		//proceeds to read contents:
+		Scanner fileIn = new Scanner(new File(classPath));
 		
-		//for now:
+		byte alleleQuantity = (byte)Alleles.values().length;
+
+		for (byte i = 0; i < alleleQuantity; i++)
+		{
+			String line = fileIn.nextLine();
+			
+			//CHECKING DELIMITER:
+			byte delim_pos = (byte)line.indexOf("~");
+			//make sure it's legal: (2nd or 3rd)
+			if (!(delim_pos == 1 || delim_pos == 2))
+				return false;
+			
+			//CHECKING NUMBER OF TRAIT: (must equal number of line)
+			byte trait_num = new Byte(line.substring(0, delim_pos)).byteValue();
+			if (trait_num != i)
+				return false;
+			
+			//CHECK LENGTH OF VALUES:
+			String values = line.substring(delim_pos + 1).trim();
+			
+			
+			if (values.length() != Genotype.NUM_OF_TIME_RELEASE_VALUES)
+				return false;
+			
+			//CHECK THAT ALL VALUES ARE BETWEEN 0 AND 2: 
+			for (int j = 0; j < values.length(); j++)
+			{
+				byte value = new Byte(values.substring(j, j + 1)).byteValue();
+				if(!(value == 0 || value == 1 || value == 2))
+					return false;
+			}
+		}
+		
 		return true;
 	}
 
