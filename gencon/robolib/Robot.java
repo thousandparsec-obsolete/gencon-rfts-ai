@@ -26,7 +26,7 @@ public class Robot
 	/*
 	 * The behavioral characteristics of the robot, defined by a {@link Genotype}. 
 	 */
-	private final Phenotype BEHAVIOR;
+	private final Phenotype CHARACTER;
 	
 	public final Master MASTER;
 	
@@ -37,24 +37,29 @@ public class Robot
 	public static final byte WORK_TIME = 10; //The time, in seconds, required to complete a turn. 
 	//if remaining time in some turn is less than that, robot will not execute until next turn.
 	//ONLY AN ESTIMATE NOW!!! NEED TO CALCULATE ACTUAL TIMES! (MAY DEPEND ON PING).
+	
+	private short turn_num = 0; //the current turn number; starts at 0.
 
 	
 	public Robot(Master master) throws Exception
 	{
 		MASTER = master;
-		BEHAVIOR = new Phenotype(new Genotype(MASTER.CLIENT.getGenomeFileClasspath()));
+		CHARACTER = new Phenotype(new Genotype(MASTER.CLIENT.getGenomeFileClasspath()));
 		DIFFICULTY = MASTER.CLIENT.getDifficulty();
 		ACTIONS = new HigherLevelActions(new ActionMethods(MASTER.CLIENT, MASTER.GAME_STATUS));
 	}
 	
 	public void startTurn(int time_remaining)
 	{
+		turn_num ++;
+		CHARACTER.updatePhenotype(turn_num);
+		
 		/*
 		 * 1) evaluate situation.
-		 * 2) randomly go sector-by-(friendly)-sector, and choose the best course of action for it.
+		 * 2) act on it!
 		 */
 		
-		test();
+		//test();
 	}
 	
 	

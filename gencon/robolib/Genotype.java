@@ -117,20 +117,28 @@ public class Genotype
 	Genotype(String classPath) throws Exception
 	{
 		GENOME = GenotypeUtils.parseGenome(classPath);
-		//test();
+		test();
 	}
 	
 	/**
-	 * @return A deep copy of the full list of behavioral characteristics of this {@link Genotype}. 
+	 * Provides a mapping of each {@link Alleles} trait, and its {@link Byte} value,
+	 * with respect to the current turn number. 
+	 * 
+	 * Recall that the actual 'genome' code for each {@link Alleles} is a list of time-released values, 
+	 * and this method returns the relevant value relative to the 'age' of the robot. 
+	 * 
+	 * @param turn_num The current turn number.
 	 */
-	Map<Alleles, List<Byte>> getGenome()
+	Map<Alleles, Byte> getGenome(short turn_num)
 	{
-		Map<Alleles, List<Byte>> map = new HashMap<Alleles, List<Byte>>();
+		//determine the spot in the time-release list of values:
+		byte spot = (byte)((turn_num - 1) / TIME_RELEASE);
+		
+		Map<Alleles, Byte> map = new HashMap<Alleles, Byte>();
 		Set<Alleles> keyset = GENOME.keySet();
 		
-		//deep-copy babies..
 		for (Alleles key : keyset)
-			map.put(key, new ArrayList<Byte>(GENOME.get(key)));
+			map.put(key, GENOME.get(key).get(spot));
 		
 		return map;
 	}
@@ -160,6 +168,11 @@ public class Genotype
 		
 		return mapping;
 	}
+	
+	public synchronized static byte getNumOfAlleles()
+	{
+		return (byte)Alleles.values().length;
+	}
 
 	private void test()
 	{
@@ -174,5 +187,26 @@ public class Genotype
 			
 			System.out.print("\n");
 		}
+		
+		
+		for (short i = 1; i <= 160; i += 10)
+		{
+			System.out.print("\nTurn " + i + " :  ");
+			Map<Alleles, Byte> gnm = getGenome(i);
+			
+			Set<Alleles> ks2 = gnm.keySet();
+			
+			for (Alleles a : ks2)
+				System.out.print(" (" + a + " : " + gnm.get(a) +") ");
+		}
+		
+		short i = 160;
+		System.out.print("\nTurn " + i + " :  ");
+		Map<Alleles, Byte> gnm = getGenome(i);
+		
+		Set<Alleles> ks2 = gnm.keySet();
+		
+		for (Alleles a : ks2)
+			System.out.print(" (" + a + " : " + gnm.get(a) +") ");
 	}
 }

@@ -52,8 +52,6 @@ public class AdvancedMap
 		return new Sectors(sectors);
 	}
 	
-	
-	
 	/*
 	 * Assigns the star systems to one of 9 sectors:
 	 */
@@ -75,10 +73,6 @@ public class AdvancedMap
 		
 		double w1 = (width / 3) + left;
 		double w2 = (width / 3) * 2 + left;
-		
-		
-		System.out.println("Cutting the map: top " + (long)top + " bottom " + (long)bottom + " left " + (long)left + " right " + (long)right);
-		System.out.println("h1 " + (long)h1 + " h2 " + (long)h2 + " w1 " + (long)w1 + " w2 " + (long)w2);
 		
 		//assign to sectors:
 		Collection<StarSystem> starSystems = getBasicMap().STAR_SYSTEMS;

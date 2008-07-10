@@ -67,7 +67,7 @@ public class GenotypeUtils
 	public static void makeRandomGenome(String classPath) throws Exception
 	{
 		PrintStream fileOut = makeFile(classPath);
-		int numOfAlleles = Alleles.values().length;
+		byte numOfAlleles = Genotype.getNumOfAlleles();
 		
 		//prints lines, starting with the number of allele, then delimiter, then the number of time-released values.
 		Random rand = new Random(System.currentTimeMillis());
@@ -142,7 +142,7 @@ public class GenotypeUtils
 		Scanner fileIn = new Scanner(new File(classPath));
 
 		//how many alleles (lines):
-		int sizeOfGenum = Alleles.values().length;
+		int sizeOfGenum = Genotype.getNumOfAlleles();
 		
 		//read and translate:
 		Map<Alleles, List<Byte>> traitsMap = new HashMap<Alleles, List<Byte>>();
@@ -202,7 +202,7 @@ public class GenotypeUtils
 		//proceeds to read contents:
 		Scanner fileIn = new Scanner(new File(classPath));
 		
-		byte alleleQuantity = (byte)Alleles.values().length;
+		byte alleleQuantity = Genotype.getNumOfAlleles();
 
 		for (byte i = 0; i < alleleQuantity; i++)
 		{

@@ -1,5 +1,9 @@
 package gencon.robolib;
 
+import gencon.robolib.Genotype.Alleles;
+
+import java.util.Map;
+
 /**
  * The -actual- behavioral characteristics of the robot, dependant on its {@link Genotype}.
  * 
@@ -9,11 +13,19 @@ package gencon.robolib;
 public class Phenotype 
 {
 	private final Genotype GENOME;
+	private Map<Alleles, Byte> currentTraits;
 	
-	public Phenotype(Genotype genome) 
+	Phenotype(Genotype genome)
 	{
 		GENOME = genome;
 	}
+	
+	void updatePhenotype(short turn_num)
+	{
+		currentTraits = GENOME.getGenome(turn_num);
+	}
+	
+	
 	
 	
 }

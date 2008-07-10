@@ -72,7 +72,7 @@ public class ActionMethods
 	/**
 	 * Sends a {@link Fleet} to tour a collection of {@link StarSystem}s.
 	 * The fleet visits each one -once-, then goes to the finish.
-	 * NOTE: THE ROUTE ISN'T FULLY OPTIMIZED, TO SAVE ON RUNTIME, BUT IT GIVES A DECENT ESTIMATE
+	 * NOTE: THE ROUTE ISN'T FULLY OPTIMIZED, TO SAVE ON RUNTIME, BUT IT GIVES A DECENT ESTIMATE.
 	 * 
 	 */
 	void smartTour(Fleet fleet, Collection<StarSystem> checkpoints, StarSystem finish) throws IOException, TPException
@@ -121,7 +121,7 @@ public class ActionMethods
 	 * O(K ^ (n-K) * (K - 1)!), which is acceptable for relatively small K and small n.
 	 * 
 	 * The coefficient K is chosen automatically, s.t. it's the biggest s.t. : K ^ (n-K) * (K - 1)! <= 5e4 , which is admittedly an arbitrary number :)
-	 * 
+	 * UPDATE: K is now fixed at '2', since the constant-overhead is just too great for this algorithm.
 	 * 
 	 * @param start The starting point.
 	 * @param checkpoints The collection of {@link StarSystem}s, the fleet must traverse.
@@ -131,7 +131,7 @@ public class ActionMethods
 	List<StarSystem> findRoute(StarSystem start, Collection<StarSystem> checkpoints, StarSystem finish)
 	{
 		//int K = findDecentK(checkpoints.size());
-		//NOTE: THE CONSTANT OVERHEAD SEEMS TO BE VERY HIGH, SO A FIXED 'K' = 2 IS USED INSTEAD. 
+		//NOTE: THE CONSTANT OVERHEAD IS VERY HIGH, SO A FIXED 'K' = 2 IS USED INSTEAD. 
 		return findRouteRecurs(start, new ArrayList<StarSystem>(), checkpoints, finish, (byte)2);
 		//note: put a new anonymous List in the 'routeSoFar' place, since there is no route so far yet!
 	}
