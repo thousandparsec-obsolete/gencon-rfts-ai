@@ -32,10 +32,7 @@ public class Master implements Runnable
 	private boolean verboseDebugMode = true; //true by default
 	public final static int NORMAL_EXIT = 0;
 	public final static int ABNORMAL_EXIT = -1;
-	private final byte WORK_TIME = 10; //The time, in seconds, required to complete a turn. 
-	//if remaining time in some turn is less than that, robot will not execute until next turn.
-	//ONLY AN ESTIMATE NOW!!! NEED TO CALCULATE ACTUAL TIMES! (MAY DEPEND ON PING).
-
+	
 	
 	//connection related
 	public final Client CLIENT;
@@ -83,7 +80,14 @@ public class Master implements Runnable
 		}
 		
 		//initializing game status
-		GAME_STATUS.init();
+		try
+		{
+			GAME_STATUS.init();
+		}
+		catch (Exception e)
+		{
+			exit("Failed initializing game status.", ABNORMAL_EXIT, e);
+		}
 		
 		//initializing robot:
 		try
@@ -148,7 +152,7 @@ public class Master implements Runnable
 		}
 		
 		
-		long timeDiff = (timeRemaining - WORK_TIME) * 1000; //the difference between time remaining, and time necessary to operate, in milliseconds.
+		long timeDiff = (timeRemaining - Robot.WORK_TIME) * 1000; //the difference between time remaining, and time necessary to operate, in milliseconds.
 		
 		if (timeDiff <= 0) //if I indeed need to wait!!!
 		{
@@ -186,7 +190,7 @@ public class Master implements Runnable
 	
 	private void startRobot(int seconds_remaining)
 	{
-		
+		robot.startTurn(seconds_remaining);
 	}
 	
 	

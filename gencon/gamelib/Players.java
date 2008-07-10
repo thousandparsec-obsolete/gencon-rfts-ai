@@ -43,7 +43,7 @@ public class Players
 	public Game_Player getMe()
 	{
 		for (Game_Player gp : PLAYERS)
-			if (gp.NAME == ME)
+			if (gp.NAME.equals(ME))
 				return gp;
 		
 		return null; //if found none.

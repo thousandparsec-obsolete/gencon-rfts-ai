@@ -1,6 +1,7 @@
 package gencon.robolib;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.TreeMap;
 import net.thousandparsec.netlib.TPException;
 
 import gencon.clientLib.Client;
+import gencon.gamelib.FullGameStatus;
 import gencon.gamelib.UniverseMap;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
@@ -19,19 +21,20 @@ import gencon.gamelib.gameobjects.StarSystem;
 public class ActionMethods 
 {
 	private final Client CLIENT;
-	private UniverseMap map;
+	public final AdvancedMap MAP;
 	
-	ActionMethods(Client client)
+	ActionMethods(Client client, FullGameStatus fgs)
 	{
 		CLIENT = client;
+		MAP = new AdvancedMap(fgs);
 	}
-	
-	/**
-	 * Update the map at the start of every turn!! 
+
+	/*
+	 * A convenience method; eqiuivalent to MAP.genBasicMap().
 	 */
-	void updateMap(UniverseMap newMap)
+	UniverseMap map()
 	{
-		map = newMap;
+		return MAP.getBasicMap();
 	}
 	
 	
@@ -75,7 +78,7 @@ public class ActionMethods
 	void smartTour(Fleet fleet, Collection<StarSystem> checkpoints, StarSystem finish) throws IOException, TPException
 	{
 		//Finding the starting-point:
-		Body b = map.getById(fleet.PARENT);
+		Body b = map().getById(fleet.PARENT);
 		StarSystem start;
 		
 		if (b.TYPE == Body.BodyType.STAR_SYSTEM)
@@ -83,12 +86,27 @@ public class ActionMethods
 		else
 		{
 			assert b.TYPE == Body.BodyType.PLANET; //the only other option!
-			start = (StarSystem)map.getById(b.PARENT);
+			start = (StarSystem)map().getById(b.PARENT);
 		}
 		//-----------------------
 		
 		//get the route:
+		long time1 = System.currentTimeMillis();//DEBUG
 		List<StarSystem> route = findRoute(start, checkpoints, finish);
+		long time2 = System.currentTimeMillis();//DEBUG
+		long time = time2 - time1;//DEBUG
+
+		
+				//DEBUG
+				PrintStream out = System.out;
+				out.println("Route : (took " + time + " milliseconds"); //for debug!
+				byte cp = 1;
+				for (StarSystem ss : route)
+				{
+					out.println(cp + ")" + ss.GAME_ID + " " + ss.NAME);
+					cp++;
+				}
+				//-----------------------
 		
 		//assign orders:
 		for (StarSystem checkpoint : route)
@@ -102,7 +120,7 @@ public class ActionMethods
 	 * and where n is the size of the collection to be visited, this algorithm is in the order of:
 	 * O(K ^ (n-K) * (K - 1)!), which is acceptable for relatively small K and small n.
 	 * 
-	 * The coefficient K is chosen automatically, s.t. it's the biggest s.t. : K ^ (n-K) <= 2 * 10e4 , which is admittedly an arbitrary number :)
+	 * The coefficient K is chosen automatically, s.t. it's the biggest s.t. : K ^ (n-K) * (K - 1)! <= 5e4 , which is admittedly an arbitrary number :)
 	 * 
 	 * 
 	 * @param start The starting point.
@@ -112,9 +130,10 @@ public class ActionMethods
 	 */
 	List<StarSystem> findRoute(StarSystem start, Collection<StarSystem> checkpoints, StarSystem finish)
 	{
-		byte K = findDecentK(checkpoints.size());
-		return findRouteRecurs(start, new ArrayList<StarSystem>(), checkpoints, finish, K);
-//		note: put a new anonymous List in the 'routeSoFar' place, since there is no route so far yet!
+		//int K = findDecentK(checkpoints.size());
+		//NOTE: THE CONSTANT OVERHEAD SEEMS TO BE VERY HIGH, SO A FIXED 'K' = 2 IS USED INSTEAD. 
+		return findRouteRecurs(start, new ArrayList<StarSystem>(), checkpoints, finish, (byte)2);
+		//note: put a new anonymous List in the 'routeSoFar' place, since there is no route so far yet!
 	}
 	
 	/*
@@ -125,11 +144,11 @@ public class ActionMethods
 		byte K = 0;
 		
 		byte MAX_K = 7; //An arbitrary large coefficient to start with
-		int ACCEPTABLE = (int)(2 * 10e4); //An arbitrary acceptable number of computations
+		int ACCEPTABLE = (int)5e4; //An arbitrary acceptable number of computations
 		
 		for (byte i = MAX_K; i >= 1; i--)
 		{
-			long result = i ^ (n - i);
+			double result = Math.pow(i, n - i) * factoreal((byte)(i - 1));
 			if (result <= ACCEPTABLE)
 			{
 				K = i;
@@ -141,6 +160,21 @@ public class ActionMethods
 		//in case it never drops below acceptable, at least have it at 1.
 		return K;
 		
+	}
+	
+	private long factoreal(byte n)
+	{
+		return factoreal_recurs(n);
+	}
+	
+	private long factoreal_recurs(byte n)
+	{
+		//base case:
+		if (n == 1)
+			return 1;
+		//recursive case:
+		else
+			return n * factoreal_recurs((byte)(n - 1));
 	}
 	
 	
@@ -155,7 +189,7 @@ public class ActionMethods
 		else //RECURSIVE CASE: SOME STAR-SYSTEMS LEFT IN THE COLLECTION.
 		{
 			//find k-closest:
-			Collection<StarSystem> kClosest = map.getNclosestStarSystems(start, remaining, K);
+			Collection<StarSystem> kClosest = map().getNclosestStarSystems(start, remaining, K);
 			
 			List<StarSystem> bestRoute = null; 
 			double shortestRouteDistance = Long.MAX_VALUE;
@@ -200,7 +234,7 @@ public class ActionMethods
 		double distance = 0.0;
 		
 		for (int i = 0; i < route.size() - 1; i++)
-			distance += map.getDistance(route.get(i), route.get(i + 1));
+			distance += map().getDistance(route.get(i), route.get(i + 1));
 		
 		return distance;
 	}

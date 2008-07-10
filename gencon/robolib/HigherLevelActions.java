@@ -17,7 +17,6 @@ import net.thousandparsec.netlib.TPException;
 public class HigherLevelActions 
 {
 	final ActionMethods ACT;
-	private UniverseMap map;
 
 	private short strong_fleet;
 	private short weak_fleet;
@@ -26,16 +25,6 @@ public class HigherLevelActions
 	{
 		ACT = actMeth;
 	}
-	
-	/**
-	 * Update the map at the start of every turn!! 
-	 */
-	void updateMap(UniverseMap newMap)
-	{
-		map = newMap;
-		ACT.updateMap(newMap);
-	}
-	
 	
 	
 	////////////////////////////////////
@@ -149,7 +138,7 @@ public class HigherLevelActions
 	void patrolAroundSystem(Fleet fl, StarSystem target, short checkpointsPerLoop, short loops, StarSystem finish) throws IOException, TPException
 	{
 		//the checkpoints for patrol:
-		Collection<StarSystem> checkpoints = map.getNclosestStarSystems(target, checkpointsPerLoop);
+		Collection<StarSystem> checkpoints = ACT.map().getNclosestStarSystems(target, checkpointsPerLoop);
 		//---------
 		
 		//DO THE TOUR N-TIMES:

@@ -11,12 +11,7 @@ import java.util.Set;
 
 public class RoboUtils 
 {
-	private final Robot AI;
-	
-	RoboUtils(Robot ai)
-	{
-		AI = ai;
-	}
+	private RoboUtils(){} //dummy constructor.
 	
 	
 	

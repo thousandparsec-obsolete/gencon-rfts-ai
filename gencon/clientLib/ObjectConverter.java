@@ -46,7 +46,7 @@ public class ObjectConverter
 	private ObjectConverter(){} //dummy constructor.
 	
 	
-	public static synchronized Body ConvertToBody(Object object, int parent, Client client) throws IOException, TPException
+	public static synchronized Body convertToBody(Object object, int parent, Client client) throws IOException, TPException
 	{
 		//Generic parameters:
 		//-----------------------

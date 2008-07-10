@@ -380,7 +380,7 @@ public class Client
 					parent = findParent(objects, obj).getId(); 
 				//if it's not a universe, it must have a parent! If rule broken, null pointer will be thrown.
 			
-					bodies.add(ObjectConverter.ConvertToBody(obj, parent, this));
+					bodies.add(ObjectConverter.convertToBody(obj, parent, this));
 			}
 		}
 		
@@ -426,10 +426,10 @@ public class Client
 		Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
 		conn.close();
 		
-		Collection<Game_Player> players = new ArrayList<Game_Player>();
+		Collection<Game_Player> players = new HashSet<Game_Player>();
 		
 		for (Player player : pls)
-			players.add(new Game_Player(player.getId(), player.getName()));
+			players.add(ObjectConverter.convertPlayer(player));
 		
 		return players;
 	}

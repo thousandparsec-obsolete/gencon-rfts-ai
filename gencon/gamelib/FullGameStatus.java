@@ -42,10 +42,11 @@ public class FullGameStatus
 		MASTER = master;
 	}
 	
-	public void init()
+	public void init() throws IOException, TPException
 	{
 		player_name = MASTER.CLIENT.getPlayerName();
 		gameHistory = new ArrayList<Pair<UniverseMap,Players>>(HISTORY_DEPTH);
+		incrementTurn();
 	}
 	
 	public String getPlayerName()
@@ -77,6 +78,7 @@ public class FullGameStatus
 		
 		//SOME TESTING:
 		MASTER.CLIENT.testMethods();
+		
 		/*
 		//SOME MORE TESTING:
 		System.out.println("Testing boundaries:");

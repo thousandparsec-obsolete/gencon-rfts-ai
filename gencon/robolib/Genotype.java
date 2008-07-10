@@ -97,16 +97,15 @@ public class Genotype
 	final Map<Alleles, List<Byte>> GENOME; 
 	
 	
-	private static final byte NEVER = Byte.MAX_VALUE; //*********** FOR NOW ***********
 	/**
 	 * The number of turns it takes to switch to the next value of the {@link Alleles} trait, in the 'time-release' {@link List} of the GENOME.
 	 */
-	public static byte TIME_RELEASE = NEVER; 
+	public static byte TIME_RELEASE = 10; 
 	
 	/**
 	 * The number of 'time-released' values each {@link Alleles} trait will have.
 	 */
-	public final static byte NUM_OF_TIME_RELEASE_VALUES = 30;
+	public final static byte NUM_OF_TIME_RELEASE_VALUES = 16;
 	
 	
 	

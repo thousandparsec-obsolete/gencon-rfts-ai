@@ -60,22 +60,25 @@ public class AdvancedMap
 	private void fillSectors()
 	{
 		//set boundaries
-		long top = getBasicMap().BOUNDARIES.right.right;
-		long bottom = getBasicMap().BOUNDARIES.right.left;
-		long left = getBasicMap().BOUNDARIES.left.left;
-		long right = getBasicMap().BOUNDARIES.left.right;
+		double top = getBasicMap().BOUNDARIES.right.right;
+		double bottom = getBasicMap().BOUNDARIES.right.left;
+		double left = getBasicMap().BOUNDARIES.left.left;
+		double right = getBasicMap().BOUNDARIES.left.right;
 		
 		
 		//cut the map:
-		long height = top - bottom;
-		long width = right - left;
+		double height = top - bottom;
+		double width = right - left;
 		
-		long h1 = (height / 3) + bottom;
-		long h2 = (2 * h1) + bottom;
+		double h1 = (height / 3) + bottom;
+		double h2 = (height / 3) * 2 + bottom;
 		
-		long w1 = (width / 3) + left;
-		long w2 = (2 * w1) + left;
+		double w1 = (width / 3) + left;
+		double w2 = (width / 3) * 2 + left;
 		
+		
+		System.out.println("Cutting the map: top " + (long)top + " bottom " + (long)bottom + " left " + (long)left + " right " + (long)right);
+		System.out.println("h1 " + (long)h1 + " h2 " + (long)h2 + " w1 " + (long)w1 + " w2 " + (long)w2);
 		
 		//assign to sectors:
 		Collection<StarSystem> starSystems = getBasicMap().STAR_SYSTEMS;
@@ -136,13 +139,14 @@ public class AdvancedMap
 		for (Integer i : ssystems)
 		{
 			Collection<Body> orbiting = getBasicMap().getContents((StarSystem)getBasicMap().getById(i.intValue()));
-			for (Body b : orbiting)
-				if (b.TYPE == Body.BodyType.PLANET)
-				{
-					Planet p = (Planet)b;
-					if (p.OWNER == myNum)
-						myplanets.add(p);
-				}
+			if (orbiting != null)
+				for (Body b : orbiting)
+					if (b.TYPE == Body.BodyType.PLANET)
+					{
+						Planet p = (Planet)b;
+						if (p.OWNER == myNum)
+							myplanets.add(p);
+					}
 		}
 		
 		return myplanets;
@@ -161,13 +165,14 @@ public class AdvancedMap
 		for (Integer i : ssystems)
 		{
 			Collection<Body> orbiting = getBasicMap().getContents((StarSystem)getBasicMap().getById(i.intValue()));
-			for (Body b : orbiting)
-				if (b.TYPE == Body.BodyType.FLEET)
-				{
-					Fleet f = (Fleet)b;
-					if (f.OWNER == myNum)
-						myfleet.add(f);
-				}
+			if (orbiting != null)
+				for (Body b : orbiting)
+					if (b.TYPE == Body.BodyType.FLEET)
+					{
+						Fleet f = (Fleet)b;
+						if (f.OWNER == myNum)
+							myfleet.add(f);
+					}
 		}
 		
 		return myfleet;

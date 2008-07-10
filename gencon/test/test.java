@@ -18,7 +18,7 @@ public class test {
 	{
 			try
 			{
-				GenotypeUtils.makeRandomGenome("/home/vitya/Thousand_Parsec_Devel_Folder/gencon-rfts-ai/TestGenome");
+				GenotypeUtils.makeRandomGenome("/home/vitya/Thousand_Parsec_Devel_Folder/gencon-rfts-ai/TestGenome2");
 			}
 			catch (Exception e)
 			{
