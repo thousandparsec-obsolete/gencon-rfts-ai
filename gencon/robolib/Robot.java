@@ -60,6 +60,7 @@ public class Robot
 		 */
 		
 		//test();
+		proofOfConcept();
 	}
 	
 	
@@ -110,5 +111,43 @@ public class Robot
 			MASTER.pl("Test failed!");
 		}
 		
+	}
+	
+	private void proofOfConcept()
+	{
+		Sectors sectors = ACTIONS.ACT.MAP.SECTORS;
+		
+		//get the default scout fleet:
+		Collection<Fleet> myFleet = new HashSet<Fleet>();
+		
+		for (Sector sector : sectors.SECTORS)
+			myFleet.addAll(ACTIONS.ACT.MAP.getAllMyFleet(sector));
+		
+		//there is only one at the start of the game:
+		Fleet defaultScoutFleet = (Fleet)myFleet.toArray()[0];
+		
+		
+		char[] idsInPrettyOrder = {'a', 'b', 'c', 'f', 'e', 'd', 'g', 'h', 'i'};
+		
+		//scout the whole universe:
+		MASTER.pl("A committee of scientists and used car salesmen have decided to map out the whole known universe...");
+		MASTER.pl("A highly advanced space-craft was put into orbit. It was governed by some very sophisticated software...");
+		MASTER.pl("The software system was called.... 'Genetic Conquest'. Nobody knows why till this day.");
+		MASTER.pl("And so, it set out on its impossible mission....... never to be seen again.");
+		try
+		{
+			for (int i = 0; i < idsInPrettyOrder.length; i++)
+			{
+				char currentSector = idsInPrettyOrder[i];
+				MASTER.pl("Planning route for sector: " + currentSector);
+				ACTIONS.scoutSectorAndStayThere(defaultScoutFleet, sectors.getById(currentSector));
+			}
+		}
+		catch (Exception e)
+		{
+			MASTER.exit("Unexpected failure. AI-Bot actions failed.", Master.ABNORMAL_EXIT, e);
+		}
+			
+		MASTER.exit("The brave scout ship has set out to map the entire universe, and was never seen again...", Master.NORMAL_EXIT, null);
 	}
 }

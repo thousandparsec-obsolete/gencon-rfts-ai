@@ -61,6 +61,8 @@ public class ActionMethods
 	{
 		/// TO DO!!!
 
+		//for now!
+		return -1;
 	
 	}
 	
@@ -99,7 +101,7 @@ public class ActionMethods
 		
 				//DEBUG
 				PrintStream out = System.out;
-				out.println("Route : (took " + time + " milliseconds"); //for debug!
+				out.println("Route : (took " + time + " milliseconds)"); //for debug!
 				byte cp = 1;
 				for (StarSystem ss : route)
 				{
@@ -118,10 +120,9 @@ public class ActionMethods
 	 * 
 	 * My analysis shows that for some K to restrict the search down the solution tree, where K < n, 
 	 * and where n is the size of the collection to be visited, this algorithm is in the order of:
-	 * O(K ^ (n-K) * (K - 1)!), which is acceptable for relatively small K and small n.
+	 * O(K ^ (n-K) * (K - 1)!), which is acceptable for a small K and relatively small n.
 	 * 
 	 * The coefficient K is chosen automatically, s.t. it's the biggest s.t. : K ^ (n-K) * (K - 1)! <= 5e4 , which is admittedly an arbitrary number :)
-	 * UPDATE: K is now fixed at '2', since the constant-overhead is just too great for this algorithm.
 	 * 
 	 * @param start The starting point.
 	 * @param checkpoints The collection of {@link StarSystem}s, the fleet must traverse.
@@ -130,9 +131,8 @@ public class ActionMethods
 	 */
 	List<StarSystem> findRoute(StarSystem start, Collection<StarSystem> checkpoints, StarSystem finish)
 	{
-		//int K = findDecentK(checkpoints.size());
-		//NOTE: THE CONSTANT OVERHEAD IS VERY HIGH, SO A FIXED 'K' = 2 IS USED INSTEAD. 
-		return findRouteRecurs(start, new ArrayList<StarSystem>(), checkpoints, finish, (byte)2);
+		byte K = findDecentK(checkpoints.size());
+		return findRouteRecurs(start, new ArrayList<StarSystem>(), checkpoints, finish, K);
 		//note: put a new anonymous List in the 'routeSoFar' place, since there is no route so far yet!
 	}
 	
@@ -143,8 +143,8 @@ public class ActionMethods
 	{
 		byte K = 0;
 		
-		byte MAX_K = 7; //An arbitrary large coefficient to start with
-		int ACCEPTABLE = (int)5e4; //An arbitrary acceptable number of computations
+		byte MAX_K = 4; //An arbitrary large coefficient to start with.
+		int ACCEPTABLE = (int)5e4; //An arbitrary acceptable number of computations.
 		
 		for (byte i = MAX_K; i >= 1; i--)
 		{
@@ -156,9 +156,10 @@ public class ActionMethods
 			}
 		}
 		
-		//SHOULDN'T HAPPEN USUALLY:
+		//SHOULDN'T HAPPEN USUALLY: (ONLY IN CASE OF VERY BIG N)
 		//in case it never drops below acceptable, at least have it at 1.
-		return K;
+		//then, it's a simple greedy algorithm (albeit not tweaked for optimum speed).
+		return 1;
 		
 	}
 	

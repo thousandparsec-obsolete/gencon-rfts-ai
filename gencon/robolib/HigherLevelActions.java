@@ -5,9 +5,12 @@ import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.Ships;
 import gencon.gamelib.gameobjects.StarSystem;
+import gencon.robolib.AdvancedMap.Sectors.Sector;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
@@ -18,9 +21,6 @@ public class HigherLevelActions
 {
 	final ActionMethods ACT;
 
-	private short strong_fleet;
-	private short weak_fleet;
-	
 	HigherLevelActions(ActionMethods actMeth) 
 	{
 		ACT = actMeth;
@@ -31,63 +31,30 @@ public class HigherLevelActions
 	///////
 	///////	FLEET MAKING
 	/////// 
-	/////// (Still in very prototypical form... basic heuristics should be replaced)
 	////////////////////////////////////
 	
+
 	
-	short getStrongFleet()
-	{
-		return strong_fleet;
-	}
-	
-	void setStrongFleet(short strength)
-	{
-		strong_fleet = strength;
-	}
-	
-	short getWeakFleet()
-	{
-		return weak_fleet;
-	}
-	
-	void setWeakFleet(short strength)
-	{
-		weak_fleet = strength;
-	}
-	
-	
-	int makeStrongAttackFleet(Planet planet, byte techLevel)
+	int makeAttackFleet(Planet planet, short ships, byte techLevel)
 	{
 		switch (techLevel)
 		{
-			case (1): return ACT.createFleet(planet, new Ships(0, 0, strong_fleet, 0, 0, 0));
-			case (2): return ACT.createFleet(planet, new Ships(0, 0, 0, strong_fleet, 0, 0));
-			case (3): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, strong_fleet, 0));
-			case (4): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, 0, strong_fleet));
+			case (1): return ACT.createFleet(planet, new Ships(0, 0, ships, 0, 0, 0));
+			case (2): return ACT.createFleet(planet, new Ships(0, 0, 0, ships, 0, 0));
+			case (3): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, ships, 0));
+			case (4): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, 0, ships));
 			default: return -2; //if happens, there's a bug!
 		}
 	}
 	
-	int makeWeakAttackFleet(Planet planet, byte techLevel)
+	int makeDefendedColonizeFleet(Planet planet, short colonizers, short escort, byte techLevel)
 	{
 		switch (techLevel)
 		{
-			case (1): return ACT.createFleet(planet, new Ships(0, 0, weak_fleet, 0, 0, 0));
-			case (2): return ACT.createFleet(planet, new Ships(0, 0, 0, weak_fleet, 0, 0));
-			case (3): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, weak_fleet, 0));
-			case (4): return ACT.createFleet(planet, new Ships(0, 0, 0, 0, 0, weak_fleet));
-			default: return -2; //if happens, there's a bug!
-		}
-	}
-	
-	int makeDefendedColonizeFleet(Planet planet, short colonizers, byte techLevel)
-	{
-		switch (techLevel)
-		{
-			case (1): return ACT.createFleet(planet, new Ships(colonizers, 0, weak_fleet, 0, 0, 0));
-			case (2): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, weak_fleet, 0, 0));
-			case (3): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, weak_fleet, 0));
-			case (4): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, 0, weak_fleet));
+			case (1): return ACT.createFleet(planet, new Ships(colonizers, 0, escort, 0, 0, 0));
+			case (2): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, escort, 0, 0));
+			case (3): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, escort, 0));
+			case (4): return ACT.createFleet(planet, new Ships(colonizers, 0, 0, 0, 0, escort));
 			default: return -2; //if happens, there's a bug!
 		}
 	}
@@ -105,7 +72,7 @@ public class HigherLevelActions
 	
 	////////////////////////////////////
 	///////
-	///////	RESOURCE MAKING
+	///////	RESOURCE PRODUCTION:
 	///////
 	////////////////////////////////////
 	
@@ -151,6 +118,21 @@ public class HigherLevelActions
 	}
 	
 	
+	void scoutSectorAndStayThere(Fleet fl, Sector sec) throws IOException, TPException
+	{
+		Collection<Integer> ids = sec.getContents();
+		Collection<StarSystem> checkpoints = new HashSet<StarSystem>();
+
+		//the checkpoints:
+		for (Integer id : ids)
+			checkpoints.add((StarSystem)ACT.map().getById(id.intValue()));
+		
+		//set the first checkpoint in collection (it's random) as the destination:
+		StarSystem target = (StarSystem)checkpoints.toArray()[0];
+		
+		//do the tour:
+		ACT.smartTour(fl, checkpoints, target);
+	}
 	
 	
 }

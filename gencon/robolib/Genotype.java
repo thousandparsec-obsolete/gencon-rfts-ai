@@ -117,7 +117,7 @@ public class Genotype
 	Genotype(String classPath) throws Exception
 	{
 		GENOME = GenotypeUtils.parseGenome(classPath);
-		test();
+		//test();
 	}
 	
 	/**
@@ -188,7 +188,7 @@ public class Genotype
 			System.out.print("\n");
 		}
 		
-		
+		//160 is the maximum amount of turns in RFTS:
 		for (short i = 1; i <= 160; i += 10)
 		{
 			System.out.print("\nTurn " + i + " :  ");
@@ -200,6 +200,7 @@ public class Genotype
 				System.out.print(" (" + a + " : " + gnm.get(a) +") ");
 		}
 		
+		//corner case:
 		short i = 160;
 		System.out.print("\nTurn " + i + " :  ");
 		Map<Alleles, Byte> gnm = getGenome(i);

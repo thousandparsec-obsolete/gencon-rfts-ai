@@ -527,8 +527,8 @@ public class Client
 	{
 		//getResourceDescs();
 		//seeWhatsInside();
-		getDesigns();
-		getOrdersDesc();
+		//getDesigns();
+		//getOrdersDesc();
 	}
 	
 	
