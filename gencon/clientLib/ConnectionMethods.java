@@ -195,7 +195,7 @@ public class ConnectionMethods
 	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
 	 * @return The number of turns for the order to complete, or -1 if it's a bad order.
 	 */
-	public synchronized static int orderMove(Fleet fleet, StarSystem destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	public synchronized static boolean orderMove(Fleet fleet, StarSystem destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderInsert order = new OrderInsert();
 		order.setOtype(Orders.MOVE_ORDER); //the type of the order
@@ -221,11 +221,13 @@ public class ConnectionMethods
 		
 		//if the order is legal, probe for the amount of turns:
 		if (response.getFrameType() == Okay.FRAME_TYPE)
-			return orderProbeGetTurns(order, Orders.MOVE_ORDER, conn); 
+			return true;
+			//return orderProbeGetTurns(order, Orders.MOVE_ORDER, conn); 
 		
 		//if order illegal.
 		else if (response.getFrameType() == Fail.FRAME_TYPE) 
-			return -1;
+			return false;
+			//return -1;
 		
 		else //unexpected frame.
 			throw new TPException("Unexpected frame while trying to insert move order.");

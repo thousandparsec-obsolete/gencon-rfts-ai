@@ -461,10 +461,10 @@ public class Client
 	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
 	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
 	 */
-	public synchronized int moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
+	public synchronized boolean moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		int result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);
+		boolean result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);
 		conn.close();
 		return result;
 	}

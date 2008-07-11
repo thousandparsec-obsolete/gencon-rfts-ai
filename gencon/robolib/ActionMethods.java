@@ -44,9 +44,9 @@ public class ActionMethods
 	 * @param fleet_id The fleet in question.
 	 * @param destination_star_system The ultimate destination.
 	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
-	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
+	 * @return Whether or not the order was successful.
 	 */
-	int moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
+	boolean moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
 	{
 		return CLIENT.moveFleet(fleet, destination_star_system, urgent);
 	}

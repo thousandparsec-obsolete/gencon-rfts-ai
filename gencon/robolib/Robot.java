@@ -144,6 +144,8 @@ public class Robot
 		StarSystem home = (StarSystem)ACTIONS.ACT.MAP.getBasicMap().getById(defaultScoutFleet.PARENT);
 		System.out.println("The fleet set out from: " + home.NAME);
 		
+		long t1 = System.currentTimeMillis(); //the starting time
+		
 		//scout the whole universe:
 		char[] idsInPrettyOrder = {'a', 'b', 'c', 'f', 'e', 'd', 'g', 'h', 'i'};
 		try
@@ -160,6 +162,10 @@ public class Robot
 			MASTER.exit("Unexpected failure. AI-Bot actions failed.", Master.ABNORMAL_EXIT, e);
 		}
 			
+		long tookTime = System.currentTimeMillis() - t1;
+		
+		MASTER.pl("The overall run took " + tookTime + " milliseconds");
+		
 		MASTER.exit("SUCCESSFUL RUN: The brave scout ship has set out to map the entire universe, and was never seen again...", Master.NORMAL_EXIT, null);
 	}
 }
