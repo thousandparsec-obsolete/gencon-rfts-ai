@@ -12,6 +12,12 @@ In this document, you will find:
 > A detailed print-out of a successful proof-of-concept run.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+~~~~~~~~~~~~~~~~~~~~~~~~
+UPDATE: 
+YOU CAN VIEW A SCREENSHOT OF A SUCCESSFUL RUN, AS SEEN FROM 'TPCLIENT-PYWX', IN THE 'Screenshot.png' FILE IN THIS REPOSITORY.
+MAKE NOTE OF HOW THE ROUTE VISITS THE NINE 'SECTORS' OF THE UNIVERSE. THIS APPROACH WAS OPTIMIZED FOR DEALING WITH ONE SECTOR AT A TIME, AND NOT THE WHOLE UNIVERSE.
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 ----
 A description of what was done so far.
 ----
