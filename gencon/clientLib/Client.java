@@ -9,7 +9,6 @@ import gencon.Master;
 import gencon.gamelib.Game_Player;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
-import gencon.gamelib.gameobjects.FleetOrders;
 import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
 import gencon.utils.*;
@@ -20,7 +19,6 @@ import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
 import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
 import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
 import net.thousandparsec.netlib.tp03.Object.ContainsType;
-import net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType;
 import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
 import net.thousandparsec.util.Pair;
 
@@ -466,7 +464,7 @@ public class Client
 	public synchronized int moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
 	{
 		SequentialConnection<TP03Visitor> conn = getPipeline();
-		int result = ConnectionMethods.orderMove(fleet.GAME_ID, destination_star_system.GAME_ID, urgent, conn);
+		int result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);
 		conn.close();
 		return result;
 	}
@@ -530,6 +528,7 @@ public class Client
 		//getResourceDescs();
 		//seeWhatsInside();
 		getDesigns();
+		getOrdersDesc();
 	}
 	
 	

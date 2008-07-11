@@ -2,13 +2,10 @@ package gencon.clientLib;
 
 
 import gencon.clientLib.Client;
-import gencon.clientLib.ConnectionMethods;
 import gencon.gamelib.Game_Player;
-import gencon.gamelib.Players;
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Galaxy;
-import gencon.gamelib.gameobjects.GenericOrder;
 import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.Ships;
 import gencon.gamelib.gameobjects.StarSystem;
@@ -19,13 +16,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.ObjectParams;
 import net.thousandparsec.netlib.tp03.Player;
-import net.thousandparsec.netlib.tp03.ResourceIDs;
-import net.thousandparsec.netlib.tp03.TP03Visitor;
-import net.thousandparsec.netlib.tp03.Object.OrdertypesType;
 import net.thousandparsec.netlib.tp03.Object.PosType;
 import net.thousandparsec.netlib.tp03.Object.ContainsType;
 import net.thousandparsec.netlib.tp03.Object.VelType;
@@ -33,7 +26,6 @@ import net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType;
 import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
 import net.thousandparsec.netlib.tp03.Object;
 
-import gencon.utils.*;
 
 /**
  * A static class which converts classes from protocol library, to classes from gencon.gamelib library.

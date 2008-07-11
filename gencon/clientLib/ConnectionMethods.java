@@ -2,8 +2,9 @@ package gencon.clientLib;
 
 import gencon.gamelib.gameobjects.Body;
 import gencon.gamelib.gameobjects.Fleet;
-import gencon.gamelib.gameobjects.FleetOrders;
+import gencon.gamelib.gameobjects.Orders;
 import gencon.gamelib.gameobjects.Planet;
+import gencon.gamelib.gameobjects.Ships;
 import gencon.gamelib.gameobjects.StarSystem;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
 import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
 import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
 import net.thousandparsec.netlib.tp03.Object.OrdertypesType;
+import net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType;
 import net.thousandparsec.netlib.tp03.OrderParams.OrderParamObject;
 
 public class ConnectionMethods
@@ -193,11 +195,11 @@ public class ConnectionMethods
 	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
 	 * @return The number of turns for the order to complete, or -1 if it's a bad order.
 	 */
-	public synchronized static int orderMove(int fleet_id, int destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	public synchronized static int orderMove(Fleet fleet, StarSystem destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderInsert order = new OrderInsert();
-		order.setOtype(FleetOrders.MOVE_ORDER); //the type of the order
-		order.setId(fleet_id); //the object at hand.
+		order.setOtype(Orders.MOVE_ORDER); //the type of the order
+		order.setId(fleet.GAME_ID); //the object at hand.
 		
 		if (!urgent)
 			order.setSlot(-1); //sets the location of the order at the end of the queue.
@@ -206,8 +208,7 @@ public class ConnectionMethods
 		
 		//setting destination:
 		OrderParams.OrderParamObject destination_param = new OrderParams.OrderParamObject();
-		//destination_param.setObjectid(destination_star_system.GAME_ID);
-		destination_param.setObjectid(destination_star_system); //for testing.
+		destination_param.setObjectid(destination_star_system.GAME_ID);
 		
 		
 		//setting the parameters:
@@ -220,7 +221,7 @@ public class ConnectionMethods
 		
 		//if the order is legal, probe for the amount of turns:
 		if (response.getFrameType() == Okay.FRAME_TYPE)
-			return orderProbeGetTurns(order, FleetOrders.MOVE_ORDER, conn); 
+			return orderProbeGetTurns(order, Orders.MOVE_ORDER, conn); 
 		
 		//if order illegal.
 		else if (response.getFrameType() == Fail.FRAME_TYPE) 
@@ -230,6 +231,48 @@ public class ConnectionMethods
 			throw new TPException("Unexpected frame while trying to insert move order.");
 		
 	}
+	
+	
+	public synchronized static int orderBuildFleet(Planet planet, Fleet newfleet, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	{
+		OrderInsert order = new OrderInsert();
+		order.setOtype(Orders.BUILD_FLEET); //the type of the order
+		order.setId(planet.GAME_ID); //the object at hand.
+		
+		if (!urgent)
+			order.setSlot(-1); //sets the location of the order at the end of the queue.
+		else
+			order.setSlot(0); //sets the location of the order at the beginning of the queue.
+		
+		
+		//GET THE NAME OUT OF THE FLEET
+		
+		//GET THE SHIPS OUT OF THE FLEET
+		
+		
+		//setting the parameters:
+		List<OrderParams> op = new ArrayList<OrderParams>();
+		/// REGISTER THE SHIPS TYPE
+		/// REGISTER THE NAME OF THE FLEET
+		
+		order.setOrderparams(op, getODbyId(order.getOtype(), conn)); 
+		
+		//getting the response:
+		Response response = sendFrame(order, Response.class, conn);
+		
+		//if the order is legal, probe for the amount of turns:
+		if (response.getFrameType() == Okay.FRAME_TYPE)
+			return orderProbeGetTurns(order, Orders.BUILD_FLEET, conn); 
+		
+		//if order illegal.
+		else if (response.getFrameType() == Fail.FRAME_TYPE) 
+			return -1;
+		
+		else //unexpected frame.
+			throw new TPException("Unexpected frame while trying to insert move order.");
+		
+	}
+
 	
 	
 	/*
@@ -297,7 +340,7 @@ public class ConnectionMethods
 	
 	
 	/*
-	 * Re-tries a fixed amount of times in case of failure.
+	 * Re-tries a fixed amount of times in case of failure. If still fails after n-times, fails to retry and throws that exception.
 	 */
 	private synchronized static <F extends Frame<TP03Visitor>> F sendFrame(Frame<TP03Visitor> frame, Class<F> responseClass, SequentialConnection<TP03Visitor> conn) throws TPException, IOException
 	{
