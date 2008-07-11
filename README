@@ -1,7 +1,7 @@
 Genetic Conquest : An AI Client for Thousand Parsec (RFTS ruleset)
 
-Authors:
-Victor Ivri, ... (perchance you?)
+Developers:
+Victor Ivri.
 
 Copyright: This software is developed and distributed under GNU GENERAL PUBLIC LICENSE. See COPYRIGHT for details.
 
@@ -9,21 +9,18 @@ This is an AI client that builds on libtpproto-java. Implementation and usage de
 
 
 Arguments: (Optional) 
-	 * Optional arguments: '-a serverURI $ genomeFileClasspath' (All or none must be provided!)
+	 * Optional arguments: '-a $ serverURI genomeFileClasspath' (All or none must be provided!)
 	 * Supplying arguments will put GenCon in autorun mode, with no further input required. Verbose debug mode will be on.
 	 * Otherwise, the client will run in 'normal' mode, i.e. start up from user input.
 	 *
 	 * The argument syntax is as follows:
 	 * ----------------------------------
 	 * 1) The first argument must be '-a', which stands for autorun.
-	 * 2) The second argument specifies the server URI. 
+	 * 2) The second argument is the difficulty. The '$' symbol stands for any number between 1-9, inclusive.
+	 * 3) The third argument specifies the server URI:
 	 *		The serverURI must include user info for autologin, e.g.: "tp://guest:guest@thousandparsec.net/tp".
-	 * 3) The third argument is the difficulty. The '$' symbol stands for any number between 1-9, inclusive.
 	 * 4) The fourth argument specifies the classpath of the 'robo-genome' file.
 	 *
 	 * If the argument syntax is incorrect, or else some argument is faulty for any reason, the client will terminate upon catching that.
 
 
-
-----------------------------
-MAY THE BORSCHT BE WITH YOU.

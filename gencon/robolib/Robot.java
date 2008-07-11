@@ -115,6 +115,12 @@ public class Robot
 	
 	private void proofOfConcept()
 	{
+		
+		MASTER.pl("This is a proof-of-concept run. " +
+				"\nIts aim is to scout the entire game-world, sector by sector (9 sectors overall)," +
+				"\ngoverened by a somewhat optimezed algorithm \n(a search tree for each universe-sector for a dynamically-set 'K' greedy solutions).\n");
+		
+		
 		Sectors sectors = ACTIONS.ACT.MAP.SECTORS;
 		
 		//get the default scout fleet:
@@ -123,6 +129,14 @@ public class Robot
 		for (Sector sector : sectors.SECTORS)
 			myFleet.addAll(ACTIONS.ACT.MAP.getAllMyFleet(sector));
 		
+		
+		MASTER.pl("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		MASTER.pl("A BOGUS STORYLINE:");
+		MASTER.pl("A committee of scientists and used car salesmen have decided to map out the whole known universe...");
+		MASTER.pl("A highly advanced space-craft was put into orbit. It was governed by some very sophisticated software...");
+		MASTER.pl("And so, it set out on its impossible mission, never to be seen again.");
+		MASTER.pl("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		
 		//there is only one at the start of the game:
 		Fleet defaultScoutFleet = (Fleet)myFleet.toArray()[0];
 		
@@ -130,14 +144,8 @@ public class Robot
 		StarSystem home = (StarSystem)ACTIONS.ACT.MAP.getBasicMap().getById(defaultScoutFleet.PARENT);
 		System.out.println("The fleet set out from: " + home.NAME);
 		
-		
-		char[] idsInPrettyOrder = {'a', 'b', 'c', 'f', 'e', 'd', 'g', 'h', 'i'};
-		
 		//scout the whole universe:
-		MASTER.pl("A committee of scientists and used car salesmen have decided to map out the whole known universe...");
-		MASTER.pl("A highly advanced space-craft was put into orbit. It was governed by some very sophisticated software...");
-		MASTER.pl("The software system was called.... 'Genetic Conquest'. Nobody knows why till this day.");
-		MASTER.pl("And so, it set out on its impossible mission....... never to be seen again.");
+		char[] idsInPrettyOrder = {'a', 'b', 'c', 'f', 'e', 'd', 'g', 'h', 'i'};
 		try
 		{
 			for (int i = 0; i < idsInPrettyOrder.length; i++)
@@ -152,6 +160,6 @@ public class Robot
 			MASTER.exit("Unexpected failure. AI-Bot actions failed.", Master.ABNORMAL_EXIT, e);
 		}
 			
-		MASTER.exit("The brave scout ship has set out to map the entire universe, and was never seen again...", Master.NORMAL_EXIT, null);
+		MASTER.exit("SUCCESSFUL RUN: The brave scout ship has set out to map the entire universe, and was never seen again...", Master.NORMAL_EXIT, null);
 	}
 }

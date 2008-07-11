@@ -1,0 +1,189 @@
+July 11, 2008.
+Genetic Conquest : midterm report.
+Victor Ivri
+(REACH ME AT: victor <dot> ivri <at> gmail <dot> com )
+
+In this document, you will find:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> A description of what was done so far.
+> A description of what is yet to be done.
+> Overall thoughts on process and results.
+> How YOU can test out the (semi-finished) product.
+> A detailed print-out of a successful proof-of-concept run.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+A description of what was done so far.
+----
+
+The current volume of work can be divided into these sections:
+
+a) The client library: A working library, which utilizes the low-level libtpproto-java network library, to establish a connection, and communicate with a server using a set protocol. At this stage, the library is very near completion, and can successfully do all tasks implemented so far.
+
+b) The 'game-library': A library, which represents the game-world of RFTS. At this stage, the library can represent all necessary data, and is considered stable.
+
+c) The master-controller: At this stage, there is a fully-implemented master-controller class, which defines the normal operation of Genetic Conquest. It is considered near-stable, since there is one small aspect that requires re-writing (namely, the "wait till the end of turn upon connecting to server" section).
+
+d) The game-harness: At this stage, there is a simple game harness, which allows a single client to connect to a server.
+
+e) The robot-library: At this stage, the robot-library possesses several algorithms to decide on action, and a somewhat-complete structure to decide on behavior, based on its "genetic makeup".
+
+f) The evolutionary-library: The evolutionary library can successfully write new 'genome-files',  and parse existing ones.
+
+TRIVIA: Genetic Conquest currently has 7 sub-packages, 11 classes, and over 110 KB of source-code.
+
+
+----
+A description of what is yet to be done.
+----
+
+There are several domains, where working-tested code is still lacking:
+
+a) The client-library needs to be completed by incorporating support for all order-types (currently only move-fleet is supported).
+
+b) Re-write a small section in the master-controller class.
+
+c) Construct a game harness, which will allow up-to four robots to play the game.
+
+d) Create a high-level logic for the robot-library, which will utilize both the 'genetic-makeup' of the robot, and the existing algorithms, to plan a course of action, and execute it.
+
+e) Create an evolutionary-simulator, which will put different 'robot-genomes' in competition against each other, and collect successful designs.
+
+f) Finally, create a large harness, which will allow both choosing amongst existent 'genome' designs when playing a game, or creating new ones using the evolutionary 'robo-factory'.
+
+
+
+----
+Overall thoughts on process and results.
+----
+
+At the beginning, the learning curve was very steep and rather painful. First of all, I wasn't that adept in the Linux environment, then it was also setting up and using the devlopment tools (git especially!) not very straightforwars, and at times plain frustrating. Also, getting familiar with TP protocol, and the libtpproto-java code-base wasn't easy, for the simple reason that I haven't done any serious client/server programming before. 
+
+But I persisted, and slowly got a semi-working client out of it. Then added some stuff to it... then some more stuff. Then I saw that it wasn't the way to go, so I changed everything around, came up with a new approach. Then after a while a new one yet. By that point, I got some momentum, and started having things quicker, and the code was better quality and more stable. Now I feel a new confidence in the code that comes out each day, the process is much smoother, and I actually feel as if this project can amount to something successful pretty soon, and that I'm actually enjoying the process getting stuff done, as opposed to being in constant terror over deadlines and things I cannot comprehend.
+
+Overall, I feel that this project has skyrocketed my modest skills as a programmer, and gave me a great deal of confidence. I really hope that this project will have a positive impact on the Thousand Parsec community, and that it will elicit the interest of other developers besides myself.
+
+
+
+----
+How YOU can test out the (semi-finished) product.
+----
+
+You need: 
+> Compile the code in this repository.
+	> Dependency: code in the libtpproto-java repository.
+
+> Use the file TestGenome2_gnm, found in this repository, as the 'genome' file.
+	> To create your own valid 'genome' file, use any home-brewed harness to run the static method 'makeRandomGenome(String classPath)' found in gencon/evolutionlib/GenotypeUtils.
+
+> Run gencon/GenConRunner.class
+	> See argument syntax in README.
+
+
+----
+A detailed print-out of a successful oroof-of-concept run.
+----
+
+Welcome to GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.
+To quit at any time, enter 'q', then press RETURN.
+Difficulty set to : 7
+URI set to : tp://me:me@localhost
+Genotype File classpath set to : /home/vitya/Thousand_Parsec_Devel_Folder/gencon-rfts-ai/TestGenome2_gnm
+Autorun mode. Initializing...
+Establishing connection to server... connection established to : tp://me:me@localhost
+Logged in successfully as : me
+Done retrieving info from server.
+Done initializing GenCon.
+Start of turn routine commencing... 87 seconds to end of turn.
+Done retrieving info from server.
+This is a proof-of-concept run. 
+Its aim is to scout the entire game-world, sector by sector (9 sectors overall),
+goverened by a somewhat optimezed algorithm 
+(a search tree for each universe-sector for a dynamically-set 'K' greedy solutions).
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A BOGUS STORYLINE:
+A committee of scientists and used car salesmen have decided to map out the whole known universe...
+A highly advanced space-craft was put into orbit. It was governed by some very sophisticated software...
+And so, it set out on its impossible mission, never to be seen again.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The fleet set out from: Zosma
+Planning route for sector: a
+Route : (took 21 milliseconds)
+1)41 Castor
+2)48 Diphda
+3)120 Saiph
+4)139 Vega
+5)4 Algol
+Planning route for sector: b
+Route : (took 170 milliseconds)
+1)117 Sabik
+2)92 Phaeda
+3)147 Wolf
+4)27 Ascella
+5)131 Spica
+6)143 Wesen
+7)76 Mirzam
+Planning route for sector: c
+Route : (took 146 milliseconds)
+1)1 Acrux
+2)112 Rigel
+3)57 Gienah
+4)69 Megrez
+5)52 Enif
+6)100 Pollux
+7)19 Aludra
+Planning route for sector: f
+Route : (took 154 milliseconds)
+1)113 Ross
+2)44 Deneb
+3)134 Tarazed
+4)135 Thuban
+5)81 Nath
+6)61 Hamal
+7)108 Regulus
+Planning route for sector: e
+Route : (took 497 milliseconds)
+1)78 Mizar
+2)128 Shedir
+3)23 Arneb
+4)11 Alioth
+5)49 Dubhe
+6)54 Gemma
+7)15 Altair
+8)31 Canopus
+Planning route for sector: d
+Route : (took 39 milliseconds)
+1)21 Antares
+2)104 Procyon
+3)85 Nihal
+4)123 Schedar
+5)106 Rastaban
+6)65 Kochab
+Planning route for sector: g
+Route : (took 0 milliseconds)
+1)64 Izar
+2)2 Adara
+3)3 Agena
+Planning route for sector: h
+Route : (took 1 milliseconds)
+1)73 Mintaka
+2)127 Sirius
+3)89 Nunki
+Planning route for sector: i
+Route : (took 37 milliseconds)
+1)53 Furud
+2)96 Polaris
+3)35 Capella
+4)14 Almak
+5)8 Alhema
+6)39 Caph
+
+______________________________________
+Exiting GenCon.
+Reason: SUCCESSFUL RUN: The brave scout ship has set out to map the entire universe, and was never seen again...
+Closing input listener... done.
+Closing connection... done.
+Clean exit.
+
+
