@@ -126,6 +126,10 @@ public class Robot
 		//there is only one at the start of the game:
 		Fleet defaultScoutFleet = (Fleet)myFleet.toArray()[0];
 		
+		//print the location of that fleet:
+		StarSystem home = (StarSystem)ACTIONS.ACT.MAP.getBasicMap().getById(defaultScoutFleet.PARENT);
+		System.out.println("The fleet set out from: " + home.NAME);
+		
 		
 		char[] idsInPrettyOrder = {'a', 'b', 'c', 'f', 'e', 'd', 'g', 'h', 'i'};
 		

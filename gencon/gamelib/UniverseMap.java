@@ -166,17 +166,21 @@ public class UniverseMap
 	{
 		TreeMap<Long, StarSystem> distance_to_body = new TreeMap<Long, StarSystem>();
 		
-		//puts all bodies in the map, except for the star system in question
+		//make sure collection does not contain ssys:
+		if (collection.contains(ssys))
+			collection.remove(ssys);
+		
+		//puts all bodies in the map
 		for (StarSystem s1 : collection)
-			if (s1.GAME_ID != ssys.GAME_ID)
-				distance_to_body.put(getDistance(s1, ssys), s1);
-
+			distance_to_body.put(getDistance(s1, ssys), s1);
 		
 		//finds n-closest, or as long as there are bodies
 		Collection<StarSystem> nclosest = new HashSet<StarSystem>(n);
-		for (int i = 0; i < n && i < collection.size(); i++) //assumption: a star system should exist, as long as i < STAR_SYSTEMS.size().
+		
+		for (int i = 0; i < n && i < collection.size(); i++) //assumption: a star system should exist, as long as i < collection.size().
 		{
-			long id = distance_to_body.ceilingKey((long)0); //gets the closest distance to 0.
+			//System.out.print(distance_to_body.ceilingKey((long)0));
+			long id = new Long(distance_to_body.ceilingKey((long)0)).longValue(); //gets the closest distance to 0.
 			StarSystem s2 = distance_to_body.get(id);
 			nclosest.add(s2);
 			distance_to_body.remove(id); //removes the selected body from the object-distance mapping, so it won't be counted twice

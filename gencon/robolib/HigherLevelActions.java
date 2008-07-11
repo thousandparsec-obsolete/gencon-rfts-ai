@@ -127,11 +127,16 @@ public class HigherLevelActions
 		for (Integer id : ids)
 			checkpoints.add((StarSystem)ACT.map().getById(id.intValue()));
 		
-		//set the first checkpoint in collection (it's random) as the destination:
-		StarSystem target = (StarSystem)checkpoints.toArray()[0];
+		//extracts the target system from the array, and makes a new collection from the remainder:
+		Object[] array = checkpoints.toArray();
+		StarSystem target = (StarSystem) array[0];
+		
+		Collection<StarSystem> newCheckpoints = new HashSet<StarSystem>();
+		for (int i = 1; i < array.length; i++)
+			newCheckpoints.add((StarSystem) array[i]);
 		
 		//do the tour:
-		ACT.smartTour(fl, checkpoints, target);
+		ACT.smartTour(fl, newCheckpoints, target);
 	}
 	
 	
