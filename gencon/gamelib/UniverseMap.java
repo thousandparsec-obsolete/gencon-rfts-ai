@@ -164,7 +164,7 @@ public class UniverseMap
 	
 	private Collection<StarSystem> nclosest(StarSystem ssys, Collection<StarSystem> collection, int n)
 	{
-		TreeMap<Long, StarSystem> distance_to_body = new TreeMap<Long, StarSystem>();
+		TreeMap<Double, StarSystem> distance_to_body = new TreeMap<Double, StarSystem>();
 		
 		//make sure collection does not contain ssys:
 		if (collection.contains(ssys))
@@ -177,10 +177,10 @@ public class UniverseMap
 		//finds n-closest, or as long as there are bodies
 		Collection<StarSystem> nclosest = new HashSet<StarSystem>(n);
 		
-		for (int i = 0; i < n && i < collection.size(); i++) //assumption: a star system should exist, as long as i < collection.size().
+		for (byte i = 0; i < n && i < collection.size(); i++) //assumption: a star system should exist, as long as i < collection.size().
 		{
 			//System.out.print(distance_to_body.ceilingKey((long)0));
-			long id = new Long(distance_to_body.ceilingKey((long)0)).longValue(); //gets the closest distance to 0.
+			double id = new Double(distance_to_body.ceilingKey(0.0)).doubleValue(); //gets the closest distance to 0.
 			StarSystem s2 = distance_to_body.get(id);
 			nclosest.add(s2);
 			distance_to_body.remove(id); //removes the selected body from the object-distance mapping, so it won't be counted twice
@@ -196,7 +196,7 @@ public class UniverseMap
 	 * 
 	 * NOTE: Incorporates the up-down, left-right wrap-around by using the smallest x- and y- distances between bodies in the calculation.
 	 */
-	public long getDistance (Body a, Body b)
+	public double getDistance (Body a, Body b)
 	{
 		//CALCULATIONS TOO LARGE FOR LONG, CASTING TO DOUBLE:
 		double x_dist = shortestDistance(a, b, 'x');
@@ -204,7 +204,7 @@ public class UniverseMap
 		
 		//System.out.println("::Distance:: x: " + x_dist + " y: " + y_dist);
 		
-		return new Double(Math.sqrt(x_dist * x_dist + y_dist * y_dist)).longValue(); //close enough approximation!
+		return Math.sqrt(x_dist * x_dist + y_dist * y_dist); //close enough approximation!
 	}
 	
 	/*

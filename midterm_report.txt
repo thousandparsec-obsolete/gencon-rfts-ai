@@ -30,13 +30,16 @@ b) The 'game-library': A library, which represents the game-world of RFTS. At th
 
 c) The master-controller: At this stage, there is a fully-implemented master-controller class, which defines the normal operation of Genetic Conquest. It is considered near-stable, since there is one small aspect that requires re-writing (namely, the "wait till the end of turn upon connecting to server" section).
 
-d) The game-harness: At this stage, there is a simple game harness, which allows a single client to connect to a server.
+d) The game-harness: At this stage, there is a very simple game harness, which allows a single client to play the game.
 
 e) The robot-library: At this stage, the robot-library possesses several algorithms to decide on action, and a somewhat-complete structure to decide on behavior, based on its "genetic makeup".
 
 f) The evolutionary-library: The evolutionary library can successfully write new 'genome-files',  and parse existing ones.
 
+g) A new connection-listener, which has the capacity to log the client-server communication to any PrintStream. 
+
 TRIVIA: Genetic Conquest currently has 7 sub-packages, 11 classes, and over 110 KB of source-code.
+
 
 
 ----
@@ -49,13 +52,13 @@ a) The client-library needs to be completed by incorporating support for all ord
 
 b) Re-write a small section in the master-controller class.
 
-c) Construct a game harness, which will allow up-to four robots to play the game.
+c) Construct a more sophisticated game harness, which will allow up-to four robots to play the game on a single server.
 
 d) Create a high-level logic for the robot-library, which will utilize both the 'genetic-makeup' of the robot, and the existing algorithms, to plan a course of action, and execute it.
 
 e) Create an evolutionary-simulator, which will put different 'robot-genomes' in competition against each other, and collect successful designs.
 
-f) Finally, create a large harness, which will allow both choosing amongst existent 'genome' designs when playing a game, or creating new ones using the evolutionary 'robo-factory'.
+f) Finally, create a text-based user interface and a game-harness that goes with it. Users will be able to login one to four AI-clients to a single server. In addition, users will be able to pick amongst existing 'genome' designs, or create new ones using the evolutionary 'robo-factory', and store the successful ones.
 
 
 
@@ -63,12 +66,11 @@ f) Finally, create a large harness, which will allow both choosing amongst exist
 Overall thoughts on process and results.
 ----
 
-At the beginning, the learning curve was very steep and rather painful. First of all, I wasn't that adept in the Linux environment, then it was also setting up and using the devlopment tools (git especially!) not very straightforwars, and at times plain frustrating. Also, getting familiar with TP protocol, and the libtpproto-java code-base wasn't easy, for the simple reason that I haven't done any serious client/server programming before. 
+In the beginning, the learning curve was very steep and rather painful. First of all, I wasn't very adept in the Linux environment; then it was also setting up and using the devlopment tools (git especially!), which wasn't very straightforward, and at times plain frustrating. Also, getting familiar with TP protocol, and the libtpproto-java code-base wasn't a walk in the park, for the reason that I haven't done any serious client/server programming prior to that. 
 
-But I persisted, and slowly got a semi-working client out of it. Then added some stuff to it... then some more stuff. Then I saw that it wasn't the way to go, so I changed everything around, came up with a new approach. Then after a while a new one yet. By that point, I got some momentum, and started having things quicker, and the code was better quality and more stable. Now I feel a new confidence in the code that comes out each day, the process is much smoother, and I actually feel as if this project can amount to something successful pretty soon, and that I'm actually enjoying the process getting stuff done, as opposed to being in constant terror over deadlines and things I cannot comprehend.
+But I persisted, and slowly got a semi-working client running. Then added some stuff to it... then some more stuff. Then I saw that it wasn't the way to go, so I moved everything around. After a while, the design got stable, I got some momentum, and started having things done quicker; as a result, the code became more readable and of better quality. Now I feel a new confidence in the code that comes out each day, the process is much smoother, and I actually feel as if this project can amount to something successful pretty soon. Another point is that I'm actually enjoying the process of getting things done, as opposed to being in constant terror over code/concepts I cannot comprehend and approaching deadlines.
 
 Overall, I feel that this project has skyrocketed my modest skills as a programmer, and gave me a great deal of confidence. I really hope that this project will have a positive impact on the Thousand Parsec community, and that it will elicit the interest of other developers besides myself.
-
 
 
 ----
@@ -85,9 +87,12 @@ You need:
 > Run gencon/GenConRunner.class
 	> See argument syntax in README.
 
+-- Uncomment call to 'test()' in Robot.startTurn(...) to see the contents of each sector, and the 'smart' route planning of it.
+-- Uncomment call to 'test()' in Genotype constructor to see how the 'genome-file' is read, then how the 'genome' of the robot changes with simulated ageing. (Showcasing the 'time-released' genetic code).
+
 
 ----
-A detailed print-out of a successful oroof-of-concept run.
+A detailed print-out of a successful proof-of-concept run. NOTE: This print-out mostly showcases print statements, and the actual print-outs (even in debug mode) will not be so verbose.
 ----
 
 Welcome to GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.
@@ -102,88 +107,99 @@ Done retrieving info from server.
 Done initializing GenCon.
 Start of turn routine commencing... 87 seconds to end of turn.
 Done retrieving info from server.
+
 This is a proof-of-concept run. 
 Its aim is to scout the entire game-world, sector by sector (9 sectors overall),
 goverened by a somewhat optimezed algorithm 
 (a search tree for each universe-sector for a dynamically-set 'K' greedy solutions).
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A BOGUS STORYLINE:
+BOGUS STORYLINE:
 A committee of scientists and used car salesmen have decided to map out the whole known universe...
-A highly advanced space-craft was put into orbit. It was governed by some very sophisticated software...
+It took a while, but a highly advanced space-craft was put into orbit by the end of the year. It was governed by some very sophisticated software...
 And so, it set out on its impossible mission, never to be seen again.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The fleet set out from: Zosma
+The fleet set out from: Sabik
+Doing a sector-by-sector planning of the route:
 Planning route for sector: a
-Route : (took 21 milliseconds)
-1)41 Castor
-2)48 Diphda
-3)120 Saiph
-4)139 Vega
-5)4 Algol
+K: 4 n: 4 Big-O result: 6.0 branch-outs.
+Route : (took 13 milliseconds to plan; length: 1.9410907920002217E9)
+1)37 Castor
+2)42 Diphda
+3)125 Vega
+4)8 Algol
+5)109 Saiph
 Planning route for sector: b
-Route : (took 170 milliseconds)
-1)117 Sabik
-2)92 Phaeda
-3)147 Wolf
-4)27 Ascella
-5)131 Spica
-6)143 Wesen
-7)76 Mirzam
+K: 6 n: 6 Big-O result: 120.0 branch-outs.
+Route : (took 258 milliseconds to plan; length: 2.4891719447268763E9)
+1)129 Wesen
+2)69 Mirzam
+3)26 Ascella
+4)119 Spica
+5)132 Wolf
+6)85 Phaeda
+7)105 Sabik
 Planning route for sector: c
-Route : (took 146 milliseconds)
+K: 6 n: 6 Big-O result: 120.0 branch-outs.
+Route : (took 224 milliseconds to plan; length: 2.0224915486746252E9)
 1)1 Acrux
-2)112 Rigel
-3)57 Gienah
-4)69 Megrez
-5)52 Enif
-6)100 Pollux
-7)19 Aludra
+2)101 Rigel
+3)55 Gienah
+4)63 Megrez
+5)47 Enif
+6)90 Pollux
+7)20 Aludra
 Planning route for sector: f
-Route : (took 154 milliseconds)
-1)113 Ross
-2)44 Deneb
-3)134 Tarazed
-4)135 Thuban
-5)81 Nath
-6)61 Hamal
-7)108 Regulus
+K: 6 n: 6 Big-O result: 120.0 branch-outs.
+Route : (took 204 milliseconds to plan; length: 2.351739342561918E9)
+1)100 Regulus
+2)56 Hamal
+3)103 Ross
+4)41 Deneb
+5)121 Tarazed
+6)122 Thuban
+7)75 Nath
 Planning route for sector: e
-Route : (took 497 milliseconds)
-1)78 Mizar
-2)128 Shedir
-3)23 Arneb
-4)11 Alioth
-5)49 Dubhe
-6)54 Gemma
-7)15 Altair
-8)31 Canopus
+K: 7 n: 7 Big-O result: 720.0 branch-outs.
+Route : (took 1650 milliseconds to plan; length: 2.787423294415205E9)
+1)14 Alioth
+2)45 Dubhe
+3)25 Arneb
+4)73 Mizar
+5)118 Shedir
+6)17 Altair
+7)53 Gemma
+8)29 Canopus
 Planning route for sector: d
-Route : (took 39 milliseconds)
-1)21 Antares
-2)104 Procyon
-3)85 Nihal
-4)123 Schedar
-5)106 Rastaban
-6)65 Kochab
+K: 5 n: 5 Big-O result: 24.0 branch-outs.
+Route : (took 28 milliseconds to plan; length: 2.43344320856917E9)
+1)96 Rastaban
+2)60 Kochab
+3)22 Antares
+4)92 Procyon
+5)112 Schedar
+6)78 Nihal
 Planning route for sector: g
-Route : (took 0 milliseconds)
-1)64 Izar
+Route : (took 1 milliseconds to plan; length: 9.91315743030598E8)
+1)58 Izar
 2)2 Adara
-3)3 Agena
+3)4 Agena
 Planning route for sector: h
-Route : (took 1 milliseconds)
-1)73 Mintaka
-2)127 Sirius
-3)89 Nunki
+Route : (took 0 milliseconds to plan; length: 1.012581577535319E9)
+1)66 Mintaka
+2)82 Nunki
+3)114 Sirius
 Planning route for sector: i
-Route : (took 37 milliseconds)
-1)53 Furud
-2)96 Polaris
-3)35 Capella
-4)14 Almak
-5)8 Alhema
-6)39 Caph
+K: 6 n: 6 Big-O result: 120.0 branch-outs.
+Route : (took 221 milliseconds to plan; length: 2.3583250122654343E9)
+1)86 Polaris
+2)51 Furud
+3)30 Capella
+4)135 Zosma
+5)16 Almak
+6)12 Alhema
+7)34 Caph
+The overall run took 6838 milliseconds
 
 ______________________________________
 Exiting GenCon.

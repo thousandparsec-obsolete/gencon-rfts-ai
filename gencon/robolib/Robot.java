@@ -116,7 +116,7 @@ public class Robot
 	private void proofOfConcept()
 	{
 		
-		MASTER.pl("This is a proof-of-concept run. " +
+		MASTER.pl("\nThis is a proof-of-concept run. " +
 				"\nIts aim is to scout the entire game-world, sector by sector (9 sectors overall)," +
 				"\ngoverened by a somewhat optimezed algorithm \n(a search tree for each universe-sector for a dynamically-set 'K' greedy solutions).\n");
 		
@@ -131,9 +131,10 @@ public class Robot
 		
 		
 		MASTER.pl("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		MASTER.pl("A BOGUS STORYLINE:");
+		MASTER.pl("BOGUS STORYLINE:");
 		MASTER.pl("A committee of scientists and used car salesmen have decided to map out the whole known universe...");
-		MASTER.pl("A highly advanced space-craft was put into orbit. It was governed by some very sophisticated software...");
+		MASTER.pl("It took a while, but a highly advanced space-craft was put into orbit by the end of the year. " +
+				"It was governed by some very sophisticated software...");
 		MASTER.pl("And so, it set out on its impossible mission, never to be seen again.");
 		MASTER.pl("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		
@@ -142,7 +143,10 @@ public class Robot
 		
 		//print the location of that fleet:
 		StarSystem home = (StarSystem)ACTIONS.ACT.MAP.getBasicMap().getById(defaultScoutFleet.PARENT);
-		System.out.println("The fleet set out from: " + home.NAME);
+		MASTER.pl("The fleet set out from: " + home.NAME);
+		
+		
+		MASTER.pl("Doing a sector-by-sector planning of the route:");
 		
 		long t1 = System.currentTimeMillis(); //the starting time
 		
@@ -162,9 +166,24 @@ public class Robot
 			MASTER.exit("Unexpected failure. AI-Bot actions failed.", Master.ABNORMAL_EXIT, e);
 		}
 			
-		long tookTime = System.currentTimeMillis() - t1;
+		long tookTime1 = System.currentTimeMillis() - t1;
+		MASTER.pl("The overall run took " + tookTime1 + " milliseconds");
 		
-		MASTER.pl("The overall run took " + tookTime + " milliseconds");
+		
+		/*
+		long t2 = System.currentTimeMillis();
+		MASTER.pl("Planning for the whole universe at once:");
+		try
+		{
+			ACTIONS.ACT.smartTour(defaultScoutFleet, ACTIONS.ACT.MAP.getBasicMap().STAR_SYSTEMS, home); 
+		}
+		catch (Exception e)
+		{
+			MASTER.exit("Unexpected failure. AI-Bot actions failed (full universe planning).", Master.ABNORMAL_EXIT, e);
+		}
+		long tookTime2 = System.currentTimeMillis() - t2;
+		MASTER.pl("The overall run took " + tookTime2 + " milliseconds");
+		*/
 		
 		MASTER.exit("SUCCESSFUL RUN: The brave scout ship has set out to map the entire universe, and was never seen again...", Master.NORMAL_EXIT, null);
 	}

@@ -67,10 +67,6 @@ public class ActionMethods
 	}
 	
 	
-	
-	
-	
-	
 	/**
 	 * Sends a {@link Fleet} to tour a collection of {@link StarSystem}s.
 	 * The fleet visits each one -once-, then goes to the finish.
@@ -100,12 +96,11 @@ public class ActionMethods
 
 		
 				//DEBUG
-				PrintStream out = System.out;
-				out.println("Route : (took " + time + " milliseconds)"); //for debug!
+				System.out.println("Route : (took " + time + " milliseconds to plan; length: " + calculateRouteLength(route)+ ")"); //for debug!
 				byte cp = 1;
 				for (StarSystem ss : route)
 				{
-					out.println(cp + ")" + ss.GAME_ID + " " + ss.NAME);
+					System.out.println(cp + ")" + ss.GAME_ID + " " + ss.NAME);
 					cp++;
 				}
 				//-----------------------
@@ -141,17 +136,26 @@ public class ActionMethods
 	 */
 	private byte findDecentK(int n)
 	{
-		byte K = 0;
+		//return 1 if n is too small:
+		if (n < 3)
+			return 1;
 		
-		byte MAX_K = 4; //An arbitrary large coefficient to start with.
+		//finding the max-K to start with:
+		byte MAX_K = 10; //An arbitrary large number for starters.
+		while (MAX_K > n && MAX_K > 3) //minimum MAX_K = 3;
+			MAX_K--;
+		
 		int ACCEPTABLE = (int)5e4; //An arbitrary acceptable number of computations.
 		
-		for (byte i = MAX_K; i >= 1; i--)
+		//chooses the largest Big-O result <= ACCEPTABLE
+		for (byte K = MAX_K; K > 1; K--) //in this computation, codition: K > 1
 		{
-			double result = Math.pow(i, n - i) * factoreal((byte)(i - 1));
+			double result = Math.pow(K, n - K) * factoreal((byte)(K - 1));
 			if (result <= ACCEPTABLE)
 			{
-				K = i;
+				//debug:
+				System.out.println("K: " + K + " n: " + n + " Big-O result: " + result + " branch-outs.");
+				//-----
 				return K;
 			}
 		}
@@ -160,22 +164,21 @@ public class ActionMethods
 		//in case it never drops below acceptable, at least have it at 1.
 		//then, it's a simple greedy algorithm (albeit not tweaked for optimum speed).
 		return 1;
-		
 	}
 	
-	private long factoreal(byte n)
+	private double factoreal(byte n)
 	{
 		return factoreal_recurs(n);
 	}
 	
-	private long factoreal_recurs(byte n)
+	private double factoreal_recurs(byte n)
 	{
 		//base case:
 		if (n == 1)
-			return 1;
+			return 1.0;
 		//recursive case:
 		else
-			return n * factoreal_recurs((byte)(n - 1));
+			return ((double)n) * factoreal_recurs((byte)(n - 1));
 	}
 	
 	
@@ -191,6 +194,15 @@ public class ActionMethods
 		{
 			//find k-closest:
 			Collection<StarSystem> kClosest = map().getNclosestStarSystems(start, remaining, K);
+			
+			/*
+			///////debug:
+			System.out.println("---\n");
+			for (StarSystem ss : kClosest)
+				System.out.print(ss.NAME + " ");
+			System.out.println("---\n");
+			//////
+			 */
 			
 			List<StarSystem> bestRoute = null; 
 			double shortestRouteDistance = Long.MAX_VALUE;
