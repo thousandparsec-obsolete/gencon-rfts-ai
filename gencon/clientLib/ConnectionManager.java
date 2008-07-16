@@ -1,13 +1,11 @@
 package gencon.clientLib;
 
 import net.thousandparsec.netlib.*;
-import net.thousandparsec.netlib.tp03.TP03Visitor;
+import net.thousandparsec.netlib.tp04.TP04Visitor;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-
-import gencon.Master;
 
 /**
  * Very simple connection manager, which implements an underlying {@link PipelinedConnection}.
@@ -17,7 +15,7 @@ import gencon.Master;
  * @author Victor Ivri
  *
  */
-public class ConnectionManager<V extends TP03Visitor>
+public class ConnectionManager<V extends TP04Visitor>
 {
 	private final PipelinedConnection<V> pConn;
 	private List<SequentialConnection<V>> pipelines;

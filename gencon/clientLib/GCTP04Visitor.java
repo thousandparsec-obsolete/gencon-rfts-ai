@@ -1,9 +1,10 @@
 package gencon.clientLib;
 
-import net.thousandparsec.netlib.*;
-import net.thousandparsec.netlib.tp03.*;
+import net.thousandparsec.netlib.Frame;
+import net.thousandparsec.netlib.TPException;
+import net.thousandparsec.netlib.tp04.*;
 
-public class GCTP03Visitor extends TP03Visitor
+public class GCTP04Visitor extends TP04Visitor
 {
 	
 	@Override
@@ -23,4 +24,5 @@ public class GCTP03Visitor extends TP03Visitor
     {
             System.err.println("Request failed. Frame Seq. num.: " + frame.getSequenceNumber() + "| Reason: " + frame.getResult());
     }
+
 }

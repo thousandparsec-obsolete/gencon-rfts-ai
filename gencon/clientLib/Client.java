@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-
 import gencon.Master;
 import gencon.gamelib.Game_Player;
 import gencon.gamelib.gameobjects.Body;
@@ -13,18 +12,40 @@ import gencon.gamelib.gameobjects.StarSystem;
 import gencon.gamelib.gameobjects.Universe;
 import gencon.utils.*;
 import net.thousandparsec.netlib.*;
-import net.thousandparsec.netlib.tp03.*;
-import net.thousandparsec.netlib.tp03.Object;
-import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
-import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
-import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
-import net.thousandparsec.netlib.tp03.Object.ContainsType;
-import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
+import net.thousandparsec.netlib.tp04.Board;
+import net.thousandparsec.netlib.tp04.BoardIDs;
+import net.thousandparsec.netlib.tp04.Connect;
+import net.thousandparsec.netlib.tp04.Design;
+import net.thousandparsec.netlib.tp04.GetBoardIDs;
+import net.thousandparsec.netlib.tp04.GetBoards;
+import net.thousandparsec.netlib.tp04.GetMessage;
+import net.thousandparsec.netlib.tp04.GetOrderDesc;
+import net.thousandparsec.netlib.tp04.GetOrderDescIDs;
+import net.thousandparsec.netlib.tp04.GetResource;
+import net.thousandparsec.netlib.tp04.GetResourceIDs;
+import net.thousandparsec.netlib.tp04.Object;
+import net.thousandparsec.netlib.tp04.CreateAccount;
+import net.thousandparsec.netlib.tp04.Login;
+import net.thousandparsec.netlib.tp04.ObjectParams;
+import net.thousandparsec.netlib.tp04.Okay;
+import net.thousandparsec.netlib.tp04.Order;
+import net.thousandparsec.netlib.tp04.OrderDesc;
+import net.thousandparsec.netlib.tp04.OrderDescIDs;
+import net.thousandparsec.netlib.tp04.OrderParams;
+import net.thousandparsec.netlib.tp04.Player;
+import net.thousandparsec.netlib.tp04.ResourceIDs;
+import net.thousandparsec.netlib.tp04.TP04Decoder;
+import net.thousandparsec.netlib.tp04.TP04Visitor;
+import net.thousandparsec.netlib.tp04.GetWithID.IdsType;
+import net.thousandparsec.netlib.tp04.GetWithIDSlot.SlotsType;
+import net.thousandparsec.netlib.tp04.IDSequence.ModtimesType;
+import net.thousandparsec.netlib.tp04.Object.ContainsType;
+import net.thousandparsec.netlib.tp04.Sequence;
 import net.thousandparsec.util.Pair;
 
 
 /**
- * This is the basic client for GenCon. As of now, it complies with TP03 Protocol.
+ * This is the basic client for GenCon. As of now, it complies with TP04 Protocol.
  * Its sole functionality is to connect, log in, then send frames specified from outside,
  * and pass the received frames outside as well.
  * 
@@ -43,9 +64,9 @@ public class Client
 	//	CONNECTION-RELATED
 	//
 	private URI serverURI;
-	private ConnectionManager<TP03Visitor> connMgr;
-	public final LoggerConnectionListener<TP03Visitor> EVENT_LOGGER;
-	private final TP03Visitor VISITOR;
+	private ConnectionManager<TP04Visitor> connMgr;
+	public final LoggerConnectionListener<TP04Visitor> EVENT_LOGGER;
+	private final TP04Visitor VISITOR;
 
 	//game-related
 	private String myUsername;
@@ -61,8 +82,8 @@ public class Client
 	public Client(Master master)
 	{
 		this.master = master;
-		EVENT_LOGGER = new LoggerConnectionListener<TP03Visitor>();
-		VISITOR = new GCTP03Visitor();
+		EVENT_LOGGER = new LoggerConnectionListener<TP04Visitor>();
+		VISITOR = new GCTP04Visitor();
 	}
 	
 	/**
@@ -181,20 +202,20 @@ public class Client
 
 	/*
 	 * Establishes a pipelined connection with the server.
-	 * Uses TP03 protocol classes.
+	 * Uses TP04 protocol classes.
 	 * Autologin on/off, depends on the user
 	 */
 	private void connect() throws IOException, TPException
 	{
-		TP03Decoder decoder = new TP03Decoder();
+		TP04Decoder decoder = new TP04Decoder();
 		master.pr("Establishing connection to server... ");
 			
-			Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, autorun, VISITOR);
+			Connection<TP04Visitor> basicCon = decoder.makeConnection(serverURI, autorun, VISITOR);
 			basicCon.addConnectionListener(EVENT_LOGGER);
 			
-			connMgr = new ConnectionManager<TP03Visitor>(basicCon);
+			connMgr = new ConnectionManager<TP04Visitor>(basicCon);
 			
-			//PipelinedConnection<TP03Visitor> pConn = new PipelinedConnection<TP03Visitor>(basicCon);
+			//PipelinedConnection<TP04Visitor> pConn = new PipelinedConnection<TP04Visitor>(basicCon);
 			//this.PipeConn = pConn;
 			
 			if (autorun)
@@ -205,7 +226,7 @@ public class Client
 			}
 			else //send connect frame...
 			{
-				SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+				SequentialConnection<TP04Visitor> conn = connMgr.createPipeline();
 				Connect connect = new Connect();
 				connect.setString("gencon-testing");
 				conn.sendFrame(connect, Okay.class);
@@ -288,7 +309,7 @@ public class Client
 		try
 		{
 			//will be supplanted by the ThreadedPipelineManager methods... sometime... in the future...
-			SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+			SequentialConnection<TP04Visitor> conn = connMgr.createPipeline();
 			master.pr("Logging in...");
 			conn.sendFrame(loginFrame, Okay.class);
 			conn.close();
@@ -317,7 +338,7 @@ public class Client
 		newAccount.setUsername(username);
 		newAccount.setPassword(password);
 		
-		SequentialConnection<TP03Visitor> conn = connMgr.createPipeline();
+		SequentialConnection<TP04Visitor> conn = connMgr.createPipeline();
 		try
 		{
 			conn.sendFrame(newAccount, Okay.class);
@@ -344,7 +365,7 @@ public class Client
 	 * 
 	 * @return A connection pipeline. Optimally, it should be closed after usage, but will otherwise close upon clean exit.
 	 */
-	public synchronized SequentialConnection<TP03Visitor> getPipeline()
+	public synchronized SequentialConnection<TP04Visitor> getPipeline()
 	{
 		return connMgr.createPipeline();
 	}
@@ -352,15 +373,15 @@ public class Client
 	
 	public synchronized Object getObjectById(int id) throws IOException, TPException
 	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Object object = ConnectionMethods.getObjectById(conn, id);
+		SequentialConnection<TP04Visitor> conn = getPipeline();
+		net.thousandparsec.netlib.tp04.Object object = ConnectionMethods.getObjectById(conn, id);
 		conn.close();
 		return object;
 	}
 	
 	public synchronized List<Body> getAllObjects() throws IOException, TPException
 	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
+		SequentialConnection<TP04Visitor> conn = getPipeline();
 		Collection<Object> objects = ConnectionMethods.getAllObjects(conn);
 		conn.close();
 		
@@ -372,7 +393,7 @@ public class Client
 			{
 				int parent = -2;
 				
-				if (obj.getObject().getParameterType() == ObjectParams.Universe.PARAM_TYPE)
+				if (obj.getObject().getParameterType() == ObjectParams..PARAM_TYPE)
 					parent = Universe.UNIVERSE_PARENT;
 				else
 					parent = findParent(objects, obj).getId(); 
@@ -393,8 +414,8 @@ public class Client
 	{
 		for (Object obj : objects)
 			if (obj != null)
-				for (ContainsType ct : obj.getContains())
-					if (ct.getId() == child.getId())
+				for (ContainsType ct : obj())
+					if (ct.getId() == child.())
 						return obj;	
 		
 		//IF NOT FOUND:
@@ -403,7 +424,7 @@ public class Client
 
 	public synchronized int getTimeRemaining() throws IOException, TPException
 	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
+		SequentialConnection<TP04Visitor> conn = getPipeline();
 		int time = ConnectionMethods.getTimeRemaining(conn);
 		conn.close();
 		return time;
@@ -411,46 +432,11 @@ public class Client
 	
 	public synchronized Game_Player getPlayerById(int id) throws IOException, TPException
 	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
+		SequentialConnection<TP04Visitor> conn = getPipeline();
 		Player pl = ConnectionMethods.getPlayerById(id, conn);
 		conn.close();
 		
 		return ObjectConverter.convertPlayer(pl);
-	}
-
-	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
-		conn.close();
-		
-		Collection<Game_Player> players = new HashSet<Game_Player>();
-		
-		for (Player player : pls)
-			players.add(ObjectConverter.convertPlayer(player));
-		
-		return players;
-	}
-
-	
-	/**
-	 * Returns the dimensions of the game-world in the following format:
-	 * 
-	 * @return Pair<sizeUnitsSquare, Pair<centerX, centerY>>
-	 */
-	public synchronized Pair<Long, Pair<Long, Long>> getUniverseDimensions() throws TPException, IOException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Object o = ConnectionMethods.getObjectById(conn, 0);
-		conn.close();
-		
-		Long x = new Long(o.getPos().getX());
-		Long y = new Long(o.getPos().getY());
-		Pair<Long, Long> universePos = new Pair<Long, Long>(x, y);
-		
-		Long size = new Long(o.getSize());
-		
-		return new Pair<Long, Pair<Long,Long>>(size, universePos);
 	}
 
 	/**
@@ -463,13 +449,35 @@ public class Client
 	 */
 	public synchronized boolean moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
 	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
+		SequentialConnection<TP04Visitor> conn = getPipeline();
 		boolean result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);
 		conn.close();
 		return result;
 	}
 
+	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
+	{
+		SequentialConnection<TP04Visitor> conn = getPipeline();
+		Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
+		conn.close();
+		
+		Collection<Game_Player> players = new HashSet<Game_Player>();
+		
+		for (Player player : pls)
+			players.add(ObjectConverter.convertPlayer(player));
+		
+		return players;
+	}
+
 	
+	public Collection<Design> getDesigns() throws TPException, IOException
+	{
+		SequentialConnection<TP04Visitor> conn = getPipeline();
+		Collection<Design> designs = ConnectionMethods.getDesigns(conn);
+		conn.close();
+		return designs;
+	}
+
 	/**
 	 * Closing connection.
 	 * 
@@ -541,7 +549,7 @@ public class Client
 	{
 		try
 		{
-			SequentialConnection<TP03Visitor> conn = getPipeline();
+			SequentialConnection<TP04Visitor> conn = getPipeline();
 			GetResourceIDs gri = new GetResourceIDs();
 			gri.setKey(-1);
 			gri.setAmount(-1);
@@ -554,7 +562,7 @@ public class Client
 			for (int i = 0; i < ris.getModtimes().size(); i++)
 				list.add(new IdsType(ris.getModtimes().get(i).getId()));
 			
-			Sequence seq = conn.sendFrame(grs, Sequence.class);
+			net.thousandparsec.netlib.tp04.Sequence seq = conn.sendFrame(grs, Sequence.class);
 			
 			for (int i = 0; i < seq.getNumber(); i++)
 			{
@@ -587,7 +595,7 @@ public class Client
 	//VOID FOR NOW... WANT TO SEE HOW IT PRINTS THEM OUT.
 	public void getOrdersForObject(int objectId, int order_num) throws TPException, IOException
 	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
+		SequentialConnection<TP04Visitor> conn = getPipeline();
 		List<Order> orders = ConnectionMethods.getOrdersForObject(conn, objectId, order_num);
 		
 		//just print them out for now, and see..
@@ -598,7 +606,7 @@ public class Client
 					pl("--> " + o.toString() + " Details:\n------>");
 					OrderDesc od = new OrderDesc();
 					od.setId(o.getOtype());
-					List<OrderParams> params = o.getOrderparams(od);
+					List<OrderParams> params = o.getParameters(od);
 					for (OrderParams op : params)
 					{
 						OrderParams.OrderParamObject opo = (OrderParams.OrderParamObject) op;
@@ -618,7 +626,7 @@ public class Client
 	{
 		try
 		{
-			SequentialConnection<TP03Visitor> conn = getPipeline();
+			SequentialConnection<TP04Visitor> conn = getPipeline();
 			GetOrderDescIDs ged = new GetOrderDescIDs();
 			ged.setKey(-1);
 			ged.setAmount(-1);
@@ -650,64 +658,11 @@ public class Client
 		
 		
 	}
-	/*
-	public void testMove()
-	{
-		int myId = 140;
-		
-		int dest1 = 115; //Procyon
-		int dest2 = 55; //
-		
-		try
-		{
-			int turns1 = moveFleet(myId, dest1, false); //non-urgent
-			int turns2 = moveFleet(myId, dest2, true); //urgent
-			
-			pl("Fleet move will take " + turns1 + " to destination1, and " + turns2 + " to destination2.");
-		}
-		catch (Exception e)
-		{
-			pl(e.getMessage());
-		}
-	}
-	*/
-	
-	public Collection<Design> getDesigns() throws TPException, IOException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		Collection<Design> designs = ConnectionMethods.getDesigns(conn);
-		conn.close();
-		return designs;
-	}
-	
-	
-	public void seeWhatsInside() throws TPException, IOException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		/*
-		Object o = getObjectById(146);
-		
-		ObjectParams.Fleet fl = (ObjectParams.Fleet)o.getObject();
-		
-		for (ShipsType st : fl.getShips())
-			pl(st.toString());
-		*/
-		
-		Object p = getObjectById(13);
-		
-		ObjectParams.Planet pl = (ObjectParams.Planet)p.getObject();
-		
-		for (ResourcesType rt : pl.getResources())
-			pl(rt.toString());
-		
-		
-		conn.close();
-	}
-	
+
 	
 	public void getMessages() throws IOException, TPException
 	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
+		SequentialConnection<TP04Visitor> conn = getPipeline();
 		
 		GetBoardIDs gbids = new GetBoardIDs();
 		gbids.setAmount(-1);

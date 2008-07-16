@@ -4,11 +4,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import net.thousandparsec.netlib.tp03.Object;
-
 import gencon.Master;
-import gencon.clientLib.Client;
-import gencon.gamelib.FullGameStatus;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.StarSystem;

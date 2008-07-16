@@ -16,15 +16,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
-import net.thousandparsec.netlib.tp03.ObjectParams;
-import net.thousandparsec.netlib.tp03.Player;
-import net.thousandparsec.netlib.tp03.Object.PosType;
-import net.thousandparsec.netlib.tp03.Object.ContainsType;
-import net.thousandparsec.netlib.tp03.Object.VelType;
-import net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType;
-import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
-import net.thousandparsec.netlib.tp03.Object;
+import net.thousandparsec.netlib.tp04.ObjectDesc;
+import net.thousandparsec.netlib.tp04.ObjectParams;
+import net.thousandparsec.netlib.tp04.Player;
+import net.thousandparsec.netlib.tp04.TP04Visitor;
+import net.thousandparsec.netlib.tp04.GetObjectIDsByPos.PosType;
+import net.thousandparsec.netlib.tp04.Object.ContainsType;
+import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamPosition3d;
+import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamPosition3d.PositionType;
+import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamResourceList.ResourcesType;
+import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamVelocity3d.VelocityType;
+import net.thousandparsec.netlib.tp04.Object;
 
 
 /**
@@ -38,14 +42,26 @@ public class ObjectConverter
 	private ObjectConverter(){} //dummy constructor.
 	
 	
-	public static synchronized Body convertToBody(Object object, int parent, Client client) throws IOException, TPException
+	public static synchronized Body convertToBody(Object object, int parent, Client client, ObjectDesc od) throws IOException, TPException
 	{
 		//Generic parameters:
 		//-----------------------
+		List<ObjectParams> params = object.getParameters(od);
+		
+		
 		int game_id = object.getId();
 		String name = object.getName();
 			//3D position:
-		PosType pt = object.getPos();
+		
+		//getting the correct param:
+		ObjectParams.ObjectParamPosition3d pos = null;
+		for (ObjectParams op : params)
+			if (op.getParameterType() == ObjectParamPosition3d.PARAM_TYPE)
+				pos = (ObjectParamPosition3d)op;
+		
+		assert pos != null; //there must be a position!
+		
+		PositionType pt = pos.getPosition();
 		long[] position = {pt.getX(), pt.getY(), pt.getZ()};
 		
 		long modtime = object.getModtime();
@@ -63,7 +79,7 @@ public class ObjectConverter
 		//---------------------------------
 		//Type-specific params and Body instantiation: (Depending on the type of the object)
 		
-		int object_type = object.getObject().getParameterType();
+		int object_type = object.getOtype();
 		
 		switch (object_type)
 		{
@@ -122,22 +138,22 @@ public class ObjectConverter
 		for (ResourcesType rt : resources)  
 			if (rt != null)
 			{
-				switch (rt.getId())  //rfts-specific mapping.
+				switch (rt.getResourceid())  //rfts-specific mapping.
 				{
-					case (1): resource_pts = rt.getUnits();
-					case (2): industry = rt.getUnits();
-					case (3): population = rt.getUnits();
-					case (4): social_env = rt.getUnits();
-					case (5): planetary_env = rt.getUnits();
-					case (6): pop_maintanance = rt.getUnits();
-					case (7): colonist = rt.getUnits();
-					case (8): ship_tech = rt.getUnits();
-					case (9): pdb1 = rt.getUnits();
-					case (10): pdb1_m = rt.getUnits();
-					case (11): pdb2 = rt.getUnits();
-					case (12): pdb2_m = rt.getUnits();
-					case (13): pdb3 = rt.getUnits();
-					case (14): pdb3_m = rt.getUnits();
+					case (1): resource_pts = rt.getStored();
+					case (2): industry = rt.getStored();
+					case (3): population = rt.getStored();
+					case (4): social_env = rt.getStored();
+					case (5): planetary_env = rt.getStored();
+					case (6): pop_maintanance = rt.getStored();
+					case (7): colonist = rt.getStored();
+					case (8): ship_tech = rt.getStored();
+					case (9): pdb1 = rt.getStored();
+					case (10): pdb1_m = rt.getStored();
+					case (11): pdb2 = rt.getStored();
+					case (12): pdb2_m = rt.getStored();
+					case (13): pdb3 = rt.getStored();
+					case (14): pdb3_m = rt.getStored();
 				}
 			}
 		
@@ -149,9 +165,9 @@ public class ObjectConverter
 	 * Note that FOR NOW, it does not seek out designs by name, and dynamically assigns them, 
 	 * but uses a static mapping between ships-types and designs, which works for now.
 	 */
-	private static synchronized Ships convertShips(ObjectParams.Fleet fleet)
+	private static synchronized Ships convertShips(ObjectParams fleet)
 	{
-		List<ShipsType> shipTypes = fleet.getShips();
+		List<ShipsTy > shipTypes = fleet.getShips();
 		
 		int scouts = 0, Mk1 = 0, transports = 0, Mk2 = 0, Mk3 = 0, Mk4 = 0;
 		
