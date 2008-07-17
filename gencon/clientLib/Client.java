@@ -16,8 +16,10 @@ import net.thousandparsec.netlib.tp04.Board;
 import net.thousandparsec.netlib.tp04.BoardIDs;
 import net.thousandparsec.netlib.tp04.Connect;
 import net.thousandparsec.netlib.tp04.Design;
+import net.thousandparsec.netlib.tp04.Game;
 import net.thousandparsec.netlib.tp04.GetBoardIDs;
 import net.thousandparsec.netlib.tp04.GetBoards;
+import net.thousandparsec.netlib.tp04.GetGames;
 import net.thousandparsec.netlib.tp04.GetMessage;
 import net.thousandparsec.netlib.tp04.GetOrderDesc;
 import net.thousandparsec.netlib.tp04.GetOrderDescIDs;
@@ -34,8 +36,11 @@ import net.thousandparsec.netlib.tp04.OrderDescIDs;
 import net.thousandparsec.netlib.tp04.OrderParams;
 import net.thousandparsec.netlib.tp04.Player;
 import net.thousandparsec.netlib.tp04.ResourceIDs;
+import net.thousandparsec.netlib.tp04.Response;
 import net.thousandparsec.netlib.tp04.TP04Decoder;
 import net.thousandparsec.netlib.tp04.TP04Visitor;
+import net.thousandparsec.netlib.tp04.Game.ParametersType;
+import net.thousandparsec.netlib.tp04.Game.ParametersType.Paramid;
 import net.thousandparsec.netlib.tp04.GetWithID.IdsType;
 import net.thousandparsec.netlib.tp04.GetWithIDSlot.SlotsType;
 import net.thousandparsec.netlib.tp04.IDSequence.ModtimesType;
@@ -45,9 +50,11 @@ import net.thousandparsec.util.Pair;
 
 
 /**
- * This is the basic client for GenCon. As of now, it complies with TP04 Protocol.
+ * This is the basic client for GenCon. It complies with TP04 Protocol.
  * Its sole functionality is to connect, log in, then send frames specified from outside,
  * and pass the received frames outside as well.
+ * 
+ * NOTE: Metaserver support lacking. The URI must be of the server on which the game will be running.
  * 
  * @author Victor Ivri
  *
@@ -57,7 +64,7 @@ public class Client
 	//
 	//	MAINTANANCE
 	//
-	private final Master master;
+	private final Master MASTER;
 	private boolean autorun;
 	
 	//
@@ -81,7 +88,7 @@ public class Client
 	 */
 	public Client(Master master)
 	{
-		this.master = master;
+		MASTER = master;
 		EVENT_LOGGER = new LoggerConnectionListener<TP04Visitor>();
 		VISITOR = new GCTP04Visitor();
 	}
@@ -96,15 +103,15 @@ public class Client
 		Pair<Short, Pair<String, String>> parsedArgs = Utils.parseArgs(args);
 		
 		difficulty = parsedArgs.left.shortValue();
-		master.pl("Difficulty set to : " + difficulty);
+		MASTER.pl("Difficulty set to : " + difficulty);
 		
 		String URIstr = parsedArgs.right.left;
 		if (!URIstr.equals(""))
-			master.pl("URI set to : " + URIstr);
+			MASTER.pl("URI set to : " + URIstr);
 		
 		
 		genomeFileClasspath = parsedArgs.right.right;
-		master.pl("Genotype File classpath set to : " + genomeFileClasspath);
+		MASTER.pl("Genotype File classpath set to : " + genomeFileClasspath);
 		
 		if (URIstr.equals(""))
 			initNoAutorun();
@@ -131,7 +138,7 @@ public class Client
 		
 		pl("Follow the instructions... (input is CAPSLOCK sensitive)");
 		//set verbose debug mode on/off
-		master.setVerboseDebugMode(Utils.setVerboseDebug());
+		MASTER.setVerboseDebugMode(Utils.setVerboseDebug());
 		
 		//set URI
 		serverURI = Utils.manualSetURI();
@@ -153,12 +160,12 @@ public class Client
 	 */
 	private void initAutorun(String URIstring) throws IllegalArgumentException, IOException, TPException, URISyntaxException
 	{
-		master.pl("Autorun mode. Initializing...");
+		MASTER.pl("Autorun mode. Initializing...");
 		
 		autorun = true;
 		
 		//verbose debug mode always true in autorun
-		master.setVerboseDebugMode(true);
+		MASTER.setVerboseDebugMode(true);
 		
 		if (setURI(URIstring)) //Set URI. If URI is valid, proceed with normal operation.
 		{
@@ -208,21 +215,18 @@ public class Client
 	private void connect() throws IOException, TPException
 	{
 		TP04Decoder decoder = new TP04Decoder();
-		master.pr("Establishing connection to server... ");
+		MASTER.pr("Establishing connection to server... ");
 			
 			Connection<TP04Visitor> basicCon = decoder.makeConnection(serverURI, autorun, VISITOR);
 			basicCon.addConnectionListener(EVENT_LOGGER);
 			
 			connMgr = new ConnectionManager<TP04Visitor>(basicCon);
 			
-			//PipelinedConnection<TP04Visitor> pConn = new PipelinedConnection<TP04Visitor>(basicCon);
-			//this.PipeConn = pConn;
-			
 			if (autorun)
 			{
-				master.pl("connection established to : " + serverURI);
+				MASTER.pl("connection established to : " + serverURI);
 				myUsername = Utils.getUsrnameFromURI(serverURI);
-				master.pl("Logged in successfully as : " + myUsername);
+				MASTER.pl("Logged in successfully as : " + myUsername);
 			}
 			else //send connect frame...
 			{
@@ -232,8 +236,28 @@ public class Client
 				conn.sendFrame(connect, Okay.class);
 				conn.close();
 				//if reach here, then ok.
-				master.pl("connection established to : " + serverURI);
+				MASTER.pl("connection established to : " + serverURI);
 			}
+			
+			//extract Game frame:
+			GetGames gg = new GetGames();
+			Game game = getPipeline().sendFrame(gg, Game.class);
+			
+			//make sure the game is RFTS:
+			if (!game.getRule().trim().equals("TP RFTS"))
+				throw new TPException("Attempted to connect to a game other than TP RFTS");
+			
+			//getting the turn number:
+			List<ParametersType> params = game.getParameters();
+			
+			int turn = -3; //setting to an invalid value, which will still calculate the correct type of RFTS turn.
+			for (ParametersType pt : params) //must be a turn num!
+				if (pt.getParamid() == Paramid.turn)
+					turn = pt.getIntvalue();
+			//setting the turn num:
+			MASTER.setTurn(turn);
+			
+			MASTER.pl("Successfully connected to a valid TP RFTS game:" + game.getName() + " ; Current turn number: " + turn);
 				
 	}
 	
@@ -310,21 +334,21 @@ public class Client
 		{
 			//will be supplanted by the ThreadedPipelineManager methods... sometime... in the future...
 			SequentialConnection<TP04Visitor> conn = connMgr.createPipeline();
-			master.pr("Logging in...");
+			MASTER.pr("Logging in...");
 			conn.sendFrame(loginFrame, Okay.class);
 			conn.close();
-			master.pl("Logged in successfully as : " + username);
+			MASTER.pl("Logged in successfully as : " + username);
 		}
 		catch (TPException tpe)
 		{
 			pl("Failed to login as user. Possible cause: username and password don't match. Try again.");
-			Utils.PrintTraceIfDebug(tpe, master.isVerboseDebugMode());
+			Utils.PrintTraceIfDebug(tpe, MASTER.isVerboseDebugMode());
 			return false;
 		}
 		catch (IOException ioe)
 		{
 			pl("Unexpected failure. Failed to login. Try again.");
-			Utils.PrintTraceIfDebug(ioe, master.isVerboseDebugMode());
+			Utils.PrintTraceIfDebug(ioe, MASTER.isVerboseDebugMode());
 			return false;
 		}
 		return true;
@@ -347,13 +371,13 @@ public class Client
 		catch (TPException tpe)
 		{
 			pl("Failed to create new account. Possible cause: user already exists. Try again.");
-			Utils.PrintTraceIfDebug(tpe, master.isVerboseDebugMode());
+			Utils.PrintTraceIfDebug(tpe, MASTER.isVerboseDebugMode());
 			return false;
 		}
 		catch (IOException ioe)
 		{
 			pl("Unexpected failure. Failed to login. Try again.");
-			Utils.PrintTraceIfDebug(ioe, master.isVerboseDebugMode());
+			Utils.PrintTraceIfDebug(ioe, MASTER.isVerboseDebugMode());
 			return false;
 		}
 		return true;
@@ -487,9 +511,9 @@ public class Client
 	{
 		if (connMgr != null)
 		{
-			master.pr("Closing connection... ");
+			MASTER.pr("Closing connection... ");
 			connMgr.close();
-			master.pl("done.");
+			MASTER.pl("done.");
 		}
 	}
 	
@@ -610,7 +634,7 @@ public class Client
 					for (OrderParams op : params)
 					{
 						OrderParams.OrderParamObject opo = (OrderParams.OrderParamObject) op;
-						master.pr("Object: " + opo.getObjectid());
+						MASTER.pr("Object: " + opo.getObjectid());
 						OrderParams.OrderParamString ops = (OrderParams.OrderParamString) op;
 						pr("  Destination : " + opo.getObjectid() + "\n");
 					}

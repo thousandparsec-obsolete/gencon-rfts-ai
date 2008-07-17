@@ -40,8 +40,9 @@ public class Master implements Runnable
 	//game-related
 	public final FullGameStatus GAME_STATUS;
 	private Robot robot;
+	private int turn;
 	
-	
+
 	/**
 	 * 
 	 * @param args Optional argument: '-a serverURI $' 
@@ -246,6 +247,18 @@ public class Master implements Runnable
 		verboseDebugMode = mode;
 	}
 	
+	/**
+	 * @return The absolute turn number, specified by the server.
+	 */
+	public short getTurn() 
+	{
+		return turn;
+	}
+
+	public void setTurn(int turn) 
+	{
+		this.turn = turn;
+	}
 	
 	/**
 	 * Use this method to substitute for {@link System}.out.println(). 
