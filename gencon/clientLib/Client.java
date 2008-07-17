@@ -16,6 +16,7 @@ import net.thousandparsec.netlib.tp04.Board;
 import net.thousandparsec.netlib.tp04.BoardIDs;
 import net.thousandparsec.netlib.tp04.Connect;
 import net.thousandparsec.netlib.tp04.Design;
+import net.thousandparsec.netlib.tp04.FinishedTurn;
 import net.thousandparsec.netlib.tp04.Game;
 import net.thousandparsec.netlib.tp04.GetBoardIDs;
 import net.thousandparsec.netlib.tp04.GetBoards;
@@ -54,7 +55,7 @@ import net.thousandparsec.util.Pair;
  * Its sole functionality is to connect, log in, then send frames specified from outside,
  * and pass the received frames outside as well.
  * 
- * NOTE: Metaserver support lacking. The URI must be of the server on which the game will be running.
+ * NOTE: Metaserver support currently lacking; the URI must be of the server on which the game will be running.
  * 
  * @author Victor Ivri
  *
@@ -230,7 +231,7 @@ public class Client
 			}
 			else //send connect frame...
 			{
-				SequentialConnection<TP04Visitor> conn = connMgr.createPipeline();
+				SequentialConnection<TP04Visitor> conn = getPipeline();
 				Connect connect = new Connect();
 				connect.setString("gencon-testing");
 				conn.sendFrame(connect, Okay.class);
@@ -241,7 +242,10 @@ public class Client
 			
 			//extract Game frame:
 			GetGames gg = new GetGames();
-			Game game = getPipeline().sendFrame(gg, Game.class);
+			SequentialConnection<TP04Visitor> conn = getPipeline();
+			Game game = conn.sendFrame(gg, Game.class);
+			//if this is a metaserver with more than one game, a TPException will be thrown at this point.
+			conn.close();
 			
 			//make sure the game is RFTS:
 			if (!game.getRule().trim().equals("TP RFTS"))
@@ -250,10 +254,10 @@ public class Client
 			//getting the turn number:
 			List<ParametersType> params = game.getParameters();
 			
-			int turn = -3; //setting to an invalid value, which will still calculate the correct type of RFTS turn.
+			byte turn = -3; //setting to an invalid value, which will still calculate the correct type of RFTS turn.
 			for (ParametersType pt : params) //must be a turn num!
 				if (pt.getParamid() == Paramid.turn)
-					turn = pt.getIntvalue();
+					turn = (byte)pt.getIntvalue();
 			//setting the turn num:
 			MASTER.setTurn(turn);
 			
@@ -502,6 +506,18 @@ public class Client
 		return designs;
 	}
 
+	/**
+	 * Tells the server that this client has finished doing all actions for this turn. 
+	 */
+	public void finishedTurn() throws TPException, IOException
+	{
+		SequentialConnection<TP04Visitor> conn = getPipeline();
+		conn.sendFrame(new FinishedTurn(), Response.class);
+		conn.close();
+	}
+	
+	
+	
 	/**
 	 * Closing connection.
 	 * 

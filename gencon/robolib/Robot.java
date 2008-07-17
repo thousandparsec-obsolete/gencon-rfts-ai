@@ -34,7 +34,7 @@ public class Robot
 	//if remaining time in some turn is less than that, robot will not execute until next turn.
 	//ONLY AN ESTIMATE NOW!!! NEED TO CALCULATE ACTUAL TIMES! (MAY DEPEND ON PING).
 	
-	private short turn_num = 0; //the current turn number; starts at 0.
+	private byte turn_num = 0; //the current turn number; starts at 0.
 
 	
 	public Robot(Master master) throws Exception
@@ -43,6 +43,7 @@ public class Robot
 		CHARACTER = new Phenotype(new Genotype(MASTER.CLIENT.getGenomeFileClasspath()));
 		DIFFICULTY = MASTER.CLIENT.getDifficulty();
 		ACTIONS = new HigherLevelActions(new ActionMethods(MASTER.CLIENT, MASTER.GAME_STATUS));
+		turn_num = MASTER.getTurn();
 	}
 	
 	public void startTurn(int time_remaining)

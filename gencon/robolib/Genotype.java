@@ -129,7 +129,7 @@ public class Genotype
 	 * 
 	 * @param turn_num The current turn number.
 	 */
-	Map<Alleles, Byte> getGenome(short turn_num)
+	Map<Alleles, Byte> getGenome(byte turn_num)
 	{
 		//determine the spot in the time-release list of values:
 		byte spot = (byte)((turn_num - 1) / TIME_RELEASE);
@@ -189,7 +189,7 @@ public class Genotype
 		}
 		
 		//160 is the maximum amount of turns in RFTS:
-		for (short i = 1; i <= 160; i += 10)
+		for (byte i = 1; i <= 160; i += 10)
 		{
 			System.out.print("\nTurn " + i + " :  ");
 			Map<Alleles, Byte> gnm = getGenome(i);
@@ -201,7 +201,7 @@ public class Genotype
 		}
 		
 		//corner case:
-		short i = 160;
+		byte i = (byte)160;
 		System.out.print("\nTurn " + i + " :  ");
 		Map<Alleles, Byte> gnm = getGenome(i);
 		

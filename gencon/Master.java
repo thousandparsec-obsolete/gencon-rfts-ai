@@ -40,7 +40,7 @@ public class Master implements Runnable
 	//game-related
 	public final FullGameStatus GAME_STATUS;
 	private Robot robot;
-	private int turn;
+	private byte turn;
 	
 
 	/**
@@ -250,14 +250,14 @@ public class Master implements Runnable
 	/**
 	 * @return The absolute turn number, specified by the server.
 	 */
-	public short getTurn() 
+	public byte getTurn() 
 	{
 		return turn;
 	}
 
-	public void setTurn(int turn) 
+	public void setTurn(byte turn) 
 	{
-		this.turn = turn;
+		this.turn = (byte)turn;
 	}
 	
 	/**
