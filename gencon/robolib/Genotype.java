@@ -129,10 +129,10 @@ public class Genotype
 	 * 
 	 * @param turn_num The current turn number.
 	 */
-	Map<Alleles, Byte> getGenome(byte turn_num)
+	Map<Alleles, Byte> getGenome(int turn_num)
 	{
 		//determine the spot in the time-release list of values:
-		byte spot = (byte)((turn_num - 1) / TIME_RELEASE);
+		int spot = (turn_num - 1) / TIME_RELEASE;
 		
 		Map<Alleles, Byte> map = new HashMap<Alleles, Byte>();
 		Set<Alleles> keyset = GENOME.keySet();

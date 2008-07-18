@@ -254,7 +254,7 @@ public class Client
 			//getting the turn number:
 			List<ParametersType> params = game.getParameters();
 			
-			byte turn = -3; //setting to an invalid value, which will still calculate the correct type of RFTS turn.
+			int turn = -3; //setting to an invalid value, which will still calculate the correct type of RFTS turn.
 			for (ParametersType pt : params) //must be a turn num!
 				if (pt.getParamid() == Paramid.turn)
 					turn = (byte)pt.getIntvalue();

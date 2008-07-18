@@ -19,11 +19,17 @@ import gencon.robolib.AdvancedMap.Sectors.Sector;
  */
 public class Robot 
 {
+	public enum TURN_TYPE
+	{
+		PRODUCTION, MOVEMENT, BUILD_FLEET;
+	}
+	
 	/*
 	 * The behavioral characteristics of the robot, defined by a {@link Genotype}. 
 	 */
 	private final Phenotype CHARACTER;
 	
+
 	public final Master MASTER;
 	
 	public final short DIFFICULTY;
@@ -34,7 +40,8 @@ public class Robot
 	//if remaining time in some turn is less than that, robot will not execute until next turn.
 	//ONLY AN ESTIMATE NOW!!! NEED TO CALCULATE ACTUAL TIMES! (MAY DEPEND ON PING).
 	
-	private byte turn_num = 0; //the current turn number; starts at 0.
+	private short turn_num = 0; //the current turn number; starts at 0.
+	private TURN_TYPE turnType;
 
 	
 	public Robot(Master master) throws Exception
@@ -43,12 +50,27 @@ public class Robot
 		CHARACTER = new Phenotype(new Genotype(MASTER.CLIENT.getGenomeFileClasspath()));
 		DIFFICULTY = MASTER.CLIENT.getDifficulty();
 		ACTIONS = new HigherLevelActions(new ActionMethods(MASTER.CLIENT, MASTER.GAME_STATUS));
-		turn_num = MASTER.getTurn();
 	}
+	
+	/*
+	 * Gets the type of RFTS turn from the turn number.
+	 */
+	private void determineTurn()
+	{
+		int turn = MASTER.getTurn();
+		byte convert = (byte)(turn % 3);
+		
+		switch (convert)
+		{
+			case (0): turnType = TURN_TYPE.PRODUCTION;
+			case (1): turnType = TURN_TYPE.MOVEMENT;
+			case (2): turnType = TURN_TYPE.BUILD_FLEET;
+		}
+	}
+	
 	
 	public void startTurn(int time_remaining)
 	{
-		turn_num ++;
 		CHARACTER.updatePhenotype(turn_num);
 		
 		/*
@@ -60,6 +82,17 @@ public class Robot
 		proofOfConcept();
 	}
 	
+	private void incrementTurn()
+	{
+		turn_num ++; //incrementing the subjective turn count.
+		
+		switch (turnType) //setting the turn type.
+		{
+			case PRODUCTION: turnType = TURN_TYPE.MOVEMENT;
+			case MOVEMENT: turnType = TURN_TYPE.BUILD_FLEET;
+			case BUILD_FLEET: turnType = TURN_TYPE.PRODUCTION;
+		}
+	}
 	
 	//A TEST METHOD:
 	private void test()

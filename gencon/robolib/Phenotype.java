@@ -20,7 +20,7 @@ public class Phenotype
 		GENOME = genome;
 	}
 	
-	void updatePhenotype(byte turn_num)
+	void updatePhenotype(int turn_num)
 	{
 		currentTraits = GENOME.getGenome(turn_num);
 	}
