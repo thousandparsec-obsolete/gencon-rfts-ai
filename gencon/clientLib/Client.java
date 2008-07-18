@@ -56,6 +56,7 @@ import net.thousandparsec.util.Pair;
  * and pass the received frames outside as well.
  * 
  * NOTE: Metaserver support currently lacking; the URI must be of the server on which the game will be running.
+ *
  * 
  * @author Victor Ivri
  *
@@ -80,7 +81,7 @@ public class Client
 	private String myUsername;
 	private short difficulty;
 	private String genomeFileClasspath;
-	private boolean turnStartFlag;
+	private boolean turnStartFlag = false; //if true: client has not yet acted upon new turn. 
 	
 	
 	

@@ -46,6 +46,6 @@ public class Players
 			if (gp.NAME.equals(ME))
 				return gp;
 		
-		return null; //if found none.
+		return null; //if I'm out of the game!
 	}
 }

@@ -5,6 +5,12 @@ import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp04.*;
 import net.thousandparsec.netlib.tp04.TimeRemaining.Reason;
 
+/**
+ * A {@link TP04Visitor} tailored for Genetic Conquest.
+ * 
+ * @author Victor Ivri
+ *
+ */
 public class GCTP04Visitor extends TP04Visitor
 {
 	private final Client CLIENT;
