@@ -30,11 +30,16 @@ public class GCTP04Visitor extends TP04Visitor
     	
     	//else, do nothing.
     }
-
+    
     @Override
     public void frame(Fail frame)
     {
     	System.err.println("Request failed. Frame Seq. num.: " + frame.getSequenceNumber() + "| Reason: " + frame.getResult());
     }
+
+	public void frame(Component frame) throws TPException
+	{
+		//do nothing. Don't care about new components.
+	}
 
 }
