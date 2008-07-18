@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import gencon.Master;
+import gencon.evolutionlib.Genotype;
 import gencon.gamelib.gameobjects.Fleet;
 import gencon.gamelib.gameobjects.Planet;
 import gencon.gamelib.gameobjects.StarSystem;

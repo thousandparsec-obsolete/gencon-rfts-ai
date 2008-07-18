@@ -1,6 +1,5 @@
-package gencon.robolib;
+package gencon.evolutionlib;
 
-import gencon.evolutionlib.GenotypeUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -114,7 +113,7 @@ public class Genotype
 	 * @param uniqueName The unique name of the genome to be used in the robot.
 	 * @param classPath The path of the file.
 	 */
-	Genotype(String classPath) throws Exception
+	public Genotype(String classPath) throws Exception
 	{
 		GENOME = GenotypeUtils.parseGenome(classPath);
 		//test();
@@ -129,7 +128,7 @@ public class Genotype
 	 * 
 	 * @param turn_num The current turn number.
 	 */
-	Map<Alleles, Byte> getGenome(int turn_num)
+	public Map<Alleles, Byte> getGenome(int turn_num)
 	{
 		//determine the spot in the time-release list of values:
 		int spot = (turn_num - 1) / TIME_RELEASE;
@@ -146,7 +145,7 @@ public class Genotype
 	/**
 	 * Get the value of the specific {@link Alleles} trait.
 	 */
-	List<Byte> getAlleleValues(Alleles allele)
+	public List<Byte> getAlleleValues(Alleles allele)
 	{
 		return new ArrayList(GENOME.get(allele));
 	}

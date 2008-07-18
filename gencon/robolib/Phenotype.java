@@ -1,6 +1,7 @@
 package gencon.robolib;
 
-import gencon.robolib.Genotype.Alleles;
+import gencon.evolutionlib.Genotype;
+import gencon.evolutionlib.Genotype.Alleles;
 
 import java.util.Map;
 

@@ -1,7 +1,6 @@
 package gencon.evolutionlib;
 
-import gencon.robolib.Genotype;
-import gencon.robolib.Genotype.Alleles;
+import gencon.evolutionlib.Genotype.Alleles;
 
 import java.io.File;
 import java.io.FileNotFoundException;
