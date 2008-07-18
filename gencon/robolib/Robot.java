@@ -80,7 +80,7 @@ public class Robot
 		 */
 		
 		//test();
-		proofOfConcept();
+		//proofOfConcept();
 	}
 	
 	private void incrementTurn()

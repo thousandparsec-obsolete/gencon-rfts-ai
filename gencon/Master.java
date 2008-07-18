@@ -108,65 +108,27 @@ public class Master implements Runnable
 	 */
 	public void run()
 	{
-		delayUntilReady(); //if necessary, delay operation until GenCon can fully execute!
+		
 		gameCycle();
 	}
 	
 	private void gameCycle()
 	{
-		
-		//UNCOMMENT! :
-		//while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
-		//{
-			
+		while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
+		{
+			delayUntilNewTurn(); //if necessary, delay operation until GenCon can fully execute!
+			CLIENT.pushTurnStartFlag(); //push the flag back to its place!
 			startOfTurnRoutine();
-			try
-			{
-				startRobot(CLIENT.getTimeRemaining() - 3); 
-				//robot has the knowledge of how long to act 
-				//(time remaining, minus 3 seconds for confidence).
-			}
-			catch (Exception e)
-			{
-				exit("Could not fetch time from server while initializing robot.", ABNORMAL_EXIT, e);
-			}
-			
-		//}
+		}
 	}
 	
 	
 	/*
 	 * DELAYS START OF NEW TURN, UNTIL GENCON HAS ENOUGH TIME TO OPERATE.
 	 */
-	private void delayUntilReady()
+	private void delayUntilNewTurn()
 	{
-		int timeRemaining = 0;
-		
-		//retreive time from client: (should be successful!)
-		try 
-		{
-			timeRemaining = CLIENT.getTimeRemaining();
-		} 
-		catch (Exception e)
-		{
-			exit("Permanently failed to fetch time", ABNORMAL_EXIT, e);
-		}
-		
-		
-		long timeDiff = (timeRemaining - Robot.WORK_TIME) * 1000; //the difference between time remaining, and time necessary to operate, in milliseconds.
-		
-		if (timeDiff <= 0) //if I indeed need to wait!!!
-		{
-			pl("Waiting until next turn to start operation... Time remaining : " + timeRemaining + " seconds.");
-			try
-			{
-				Thread.sleep((timeRemaining * 1000) + 1000); //wait until next turn + 1 second.
-			}
-			catch (InterruptedException ie)
-			{
-				exit("Thread interrupted!", ABNORMAL_EXIT, ie);
-			}
-		}
+		while (CLIENT.getTurnStartFlag() == false){}
 	}
 	
 	
@@ -179,6 +141,7 @@ public class Master implements Runnable
 			int time = CLIENT.getTimeRemaining();
 			pl("Start of turn routine commencing... " + time + " seconds to end of turn.");
 			GAME_STATUS.incrementTurn();
+			robot.startTurn(time);
 			//CLIENT.eventLogger.dumpLogStd();
 		}
 		catch (Exception e) /// IN REALITY, IT SHOULDN'T QUIT AT THIS POINT
@@ -188,11 +151,6 @@ public class Master implements Runnable
 	}
 	
 
-	
-	private void startRobot(int seconds_remaining)
-	{
-		robot.startTurn(seconds_remaining);
-	}
 	
 	
 	/**

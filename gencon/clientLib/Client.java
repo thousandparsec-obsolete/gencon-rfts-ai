@@ -80,6 +80,7 @@ public class Client
 	private String myUsername;
 	private short difficulty;
 	private String genomeFileClasspath;
+	private boolean turnStartFlag;
 	
 	
 	
@@ -91,7 +92,7 @@ public class Client
 	{
 		MASTER = master;
 		EVENT_LOGGER = new LoggerConnectionListener<TP04Visitor>();
-		VISITOR = new GCTP04Visitor();
+		VISITOR = new GCTP04Visitor(this);
 	}
 	
 	/**
@@ -517,6 +518,23 @@ public class Client
 	}
 	
 	
+	/**
+	 * The {@link GCTP04Visitor} pushes this flag every time a turn starts.
+	 * The {@link Master} pushes this flag back to original posotion, 
+	 * once it's notified about turn start.
+	 */
+	public synchronized void pushTurnStartFlag()
+	{
+		turnStartFlag = !turnStartFlag;
+	}
+	
+	/**
+	 * If it's true, means that a new turn has commenced. 
+	 */
+	public synchronized boolean getTurnStartFlag()
+	{
+		return turnStartFlag;
+	}
 	
 	/**
 	 * Closing connection.
