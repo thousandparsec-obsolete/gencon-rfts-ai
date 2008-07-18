@@ -117,7 +117,6 @@ public class Master implements Runnable
 		while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
 		{
 			delayUntilNewTurn(); //wait till start of new turn.
-			checkIfImAlive(); //check if I'm alive!
 			CLIENT.pushTurnStartFlag(); //push the flag back to its place!
 			startOfTurnRoutine();
 		}
@@ -132,23 +131,14 @@ public class Master implements Runnable
 		while (CLIENT.getTurnStartFlag() == false){}
 	}
 	
-	/*
-	 * Check if this player is still visible, meaning alive.
-	 */
-	private void checkIfImAlive()
-	{
-		if (GAME_STATUS.getCurrentStatus().right.getMe() == null)
-			exit("WIPED OUT. Sorry boss, there were just too many of them.", NORMAL_EXIT, null);
-	}
-	
 	private void startOfTurnRoutine()
 	{
-		
 		try
 		{
 			int time = CLIENT.getTimeRemaining();
 			pl("Start of turn routine commencing... " + time + " seconds to end of turn.");
 			GAME_STATUS.incrementTurn();
+			checkIfImAlive(); //check if I'm alive!
 			robot.startTurn(time);
 			//CLIENT.eventLogger.dumpLogStd();
 		}
@@ -161,6 +151,15 @@ public class Master implements Runnable
 
 	
 	
+	/*
+	 * Check if this player is still visible, meaning alive.
+	 */
+	private void checkIfImAlive()
+	{
+		if (GAME_STATUS.getCurrentStatus().right.getMe() == null)
+			exit("WIPED OUT. Sorry boss, there were just too many of them.", NORMAL_EXIT, null);
+	}
+
 	/**
 	 * Properly exits GenCon.
 	 * 
