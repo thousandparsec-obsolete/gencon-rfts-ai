@@ -113,7 +113,8 @@ public class GenotypeUtils
 	
 	
 	/*
-	 * Attempts to create the new file, and adds a "_gnm" suffix to it
+	 * Attempts to create the new file, and adds a "_gnm" suffix to it.
+	 * Returns a PrintStream to that file.
 	 */
 	private static PrintStream makeFile(String classPath) throws Exception
 	{

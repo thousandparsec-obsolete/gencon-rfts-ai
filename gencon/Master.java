@@ -1,10 +1,6 @@
 package gencon;
 
-import java.io.PrintStream;
 import java.util.Scanner;
-
-import net.thousandparsec.netlib.SequentialConnection;
-import net.thousandparsec.netlib.Visitor;
 
 import gencon.clientLib.*;
 import gencon.gamelib.FullGameStatus;
@@ -128,7 +124,17 @@ public class Master implements Runnable
 	 */
 	private void delayUntilNewTurn()
 	{
-		while (CLIENT.getTurnStartFlag() == false){}
+		synchronized (CLIENT.END_OF_TURN_MONITOR)
+		{
+			try
+			{
+				CLIENT.END_OF_TURN_MONITOR.wait();
+			}
+			catch (InterruptedException e)
+			{
+				exit("Process interrupted.", ABNORMAL_EXIT, e);
+			}
+		}
 	}
 	
 	private void startOfTurnRoutine()
@@ -148,9 +154,6 @@ public class Master implements Runnable
 		}
 	}
 	
-
-	
-	
 	/*
 	 * Check if this player is still visible, meaning alive.
 	 */
@@ -167,7 +170,7 @@ public class Master implements Runnable
 	 * @param exitType Specifies if it was a normal, or abnormal exit (0 or otherwise).
 	 * @param e The exception, which triggered the exit, if it exists.
 	 */
-	public void exit(String message, int exitType, Exception e)
+	public synchronized void exit(String message, int exitType, Exception e)
 	{
 		System.out.println("\n______________________________________");
 		System.out.println("Exiting GenCon.\nReason: " + message);

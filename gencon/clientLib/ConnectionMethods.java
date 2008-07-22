@@ -18,6 +18,7 @@ import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp04.Design;
 import net.thousandparsec.netlib.tp04.DesignIDs;
 import net.thousandparsec.netlib.tp04.Fail;
+import net.thousandparsec.netlib.tp04.FinishedTurn;
 import net.thousandparsec.netlib.tp04.GetDesign;
 import net.thousandparsec.netlib.tp04.GetDesignIDs;
 import net.thousandparsec.netlib.tp04.GetObjectIDs;
@@ -331,6 +332,12 @@ public class ConnectionMethods
 			designs.add(conn.receiveFrame(Design.class));
 		
 		return designs;
+	}
+	
+	
+	public synchronized static void finishedTurn(SequentialConnection<TP04Visitor> conn) throws TPException, IOException
+	{
+		sendFrame(new FinishedTurn(), Response.class, conn);
 	}
 	
 	

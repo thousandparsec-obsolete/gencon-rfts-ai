@@ -22,6 +22,8 @@ import net.thousandparsec.netlib.tp04.GetBoardIDs;
 import net.thousandparsec.netlib.tp04.GetBoards;
 import net.thousandparsec.netlib.tp04.GetGames;
 import net.thousandparsec.netlib.tp04.GetMessage;
+import net.thousandparsec.netlib.tp04.GetObjectDesc;
+import net.thousandparsec.netlib.tp04.GetObjectDescIDs;
 import net.thousandparsec.netlib.tp04.GetOrderDesc;
 import net.thousandparsec.netlib.tp04.GetOrderDescIDs;
 import net.thousandparsec.netlib.tp04.GetResource;
@@ -29,6 +31,8 @@ import net.thousandparsec.netlib.tp04.GetResourceIDs;
 import net.thousandparsec.netlib.tp04.Object;
 import net.thousandparsec.netlib.tp04.CreateAccount;
 import net.thousandparsec.netlib.tp04.Login;
+import net.thousandparsec.netlib.tp04.ObjectDesc;
+import net.thousandparsec.netlib.tp04.ObjectDescIDs;
 import net.thousandparsec.netlib.tp04.ObjectParams;
 import net.thousandparsec.netlib.tp04.Okay;
 import net.thousandparsec.netlib.tp04.Order;
@@ -68,6 +72,8 @@ public class Client
 	//
 	private final Master MASTER;
 	private boolean autorun;
+	
+	public final java.lang.Object END_OF_TURN_MONITOR = new java.lang.Object();
 	
 	//
 	//	CONNECTION-RELATED
@@ -264,6 +270,10 @@ public class Client
 			MASTER.setTurn(turn);
 			
 			MASTER.pl("Successfully connected to a valid TP RFTS game:" + game.getName() + " ; Current turn number: " + turn);
+			
+			//testing!!!
+			printObjectDesc();
+			//getOrdersDesc();
 				
 	}
 	
@@ -404,9 +414,15 @@ public class Client
 	public synchronized Object getObjectById(int id) throws IOException, TPException
 	{
 		SequentialConnection<TP04Visitor> conn = getPipeline();
-		net.thousandparsec.netlib.tp04.Object object = ConnectionMethods.getObjectById(conn, id);
-		conn.close();
-		return object;
+		try
+		{
+			net.thousandparsec.netlib.tp04.Object object = ConnectionMethods.getObjectById(conn, id);
+			return object;
+		}
+		finally
+		{
+			conn.close();
+		}
 	}
 	
 	public synchronized List<Body> getAllObjects() throws IOException, TPException
@@ -455,9 +471,16 @@ public class Client
 	public synchronized int getTimeRemaining() throws IOException, TPException
 	{
 		SequentialConnection<TP04Visitor> conn = getPipeline();
-		int time = ConnectionMethods.getTimeRemaining(conn);
-		conn.close();
-		return time;
+		
+		try
+		{
+			int time = ConnectionMethods.getTimeRemaining(conn);
+			return time;
+		}
+		finally
+		{
+			conn.close();
+		}
 	}
 	
 	public synchronized Game_Player getPlayerById(int id) throws IOException, TPException
@@ -480,32 +503,51 @@ public class Client
 	public synchronized boolean moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
 	{
 		SequentialConnection<TP04Visitor> conn = getPipeline();
-		boolean result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);
-		conn.close();
-		return result;
+		try
+		{
+			boolean result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);
+			return result;
+		}
+		finally
+		{
+			conn.close();
+		}
 	}
 
 	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
 	{
 		SequentialConnection<TP04Visitor> conn = getPipeline();
-		Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
-		conn.close();
 		
-		Collection<Game_Player> players = new HashSet<Game_Player>();
-		
-		for (Player player : pls)
-			players.add(ObjectConverter.convertPlayer(player));
-		
-		return players;
+		try
+		{
+			Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
+			Collection<Game_Player> players = new HashSet<Game_Player>();
+			
+			for (Player player : pls)
+				players.add(ObjectConverter.convertPlayer(player));
+			
+			return players;
+		}
+		finally
+		{
+			conn.close();
+		}
 	}
 
 	
 	public Collection<Design> getDesigns() throws TPException, IOException
 	{
 		SequentialConnection<TP04Visitor> conn = getPipeline();
-		Collection<Design> designs = ConnectionMethods.getDesigns(conn);
-		conn.close();
-		return designs;
+		
+		try
+		{
+			Collection<Design> designs = ConnectionMethods.getDesigns(conn);
+			return designs;
+		}
+		finally
+		{
+			conn.close();
+		}
 	}
 
 	/**
@@ -514,8 +556,14 @@ public class Client
 	public void finishedTurn() throws TPException, IOException
 	{
 		SequentialConnection<TP04Visitor> conn = getPipeline();
-		conn.sendFrame(new FinishedTurn(), Response.class);
-		conn.close();
+		try
+		{
+			ConnectionMethods.finishedTurn(conn);
+		}
+		finally
+		{
+			conn.close();
+		}
 	}
 	
 	
@@ -526,7 +574,7 @@ public class Client
 	 */
 	public synchronized void pushTurnStartFlag()
 	{
-		turnStartFlag = !turnStartFlag;
+		END_OF_TURN_MONITOR.notify();
 	}
 	
 	/**
@@ -596,6 +644,7 @@ public class Client
 		//seeWhatsInside();
 		//getDesigns();
 		//getOrdersDesc();
+		printObjectDesc();
 	}
 	
 	
@@ -743,6 +792,40 @@ public class Client
 		{
 			////// will complete a bit later :)
 		}
+		conn.close();
+	}
+	
+	
+	
+	private void printObjectDesc() throws TPException, IOException
+	{
+		SequentialConnection<TP04Visitor> conn = getPipeline();
+		
+		GetObjectDescIDs godi = new GetObjectDescIDs();
+		godi.setAmount(-1);
+		godi.setKey(-1);
+		
+		ObjectDescIDs odi = conn.sendFrame(godi, ObjectDescIDs.class);
+		GetObjectDesc god = new GetObjectDesc();
+		
+		String ids = "Ids : ";
+		for (ModtimesType mdt : odi.getModtimes())
+		{
+			god.getIds().add(new IdsType(mdt.getId()));
+			ids += mdt.getId();
+		}
+		
+		pl(ids);
+
+		Sequence seq = conn.sendFrame(god, Sequence.class);
+		pl("num: " + seq.getNumber());
+		for (int i = 0; i <seq.getNumber(); i++)
+		{
+			pl("?");
+			ObjectDesc od = conn.receiveFrame(ObjectDesc.class);
+			pl("Object: " + od.toString());
+		}
+		
 		conn.close();
 	}
 	
