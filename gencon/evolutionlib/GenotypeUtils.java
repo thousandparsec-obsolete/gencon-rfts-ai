@@ -69,18 +69,12 @@ public class GenotypeUtils
 		Random rand = new Random(System.currentTimeMillis());
 		for (int i = 0; i < numOfAlleles; i++)
 		{
-			//prints the number of the allele, followed by the delimiter:
-			fileOut.print(i + "~");
-			
-			String values = "";
-			
+			String line = i + "~";
 			//appends random values b/w 0---2 a specified amount of times.
 			for (int j = 0; j < Genotype.NUM_OF_TIME_RELEASE_VALUES; j++)
-				values = values + rand.nextInt(3); 
+				line = line + rand.nextInt(3); 
 			
-			fileOut.print(values);
-			//go down one line
-			fileOut.print("\n"); 
+			fileOut.println(line);
 		}
 		
 		fileOut.close();
@@ -171,6 +165,7 @@ public class GenotypeUtils
 			fileOut.println(line);
 		}
 		
+		fileOut.close();
 	}
 
 	
