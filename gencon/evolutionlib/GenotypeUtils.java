@@ -6,11 +6,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import net.thousandparsec.util.Pair;
@@ -19,11 +22,10 @@ import net.thousandparsec.util.Pair;
 /**
  * Methods to write/read/parse 'robot-genome' files.
  * Here are the specs for such a file:
- * 1) It must possess a "_gnm" suffix, e.g. "DarkSide_gnm".
- * 2) Nowhere is any writing (space included) permitted, but at the very bottom, below the actual 'genome'.
- * 3) Each line in the file represents the values of a trait. Lines start with ascending numbers from 0 (first line 0, then 1, ...), which represent trait types.
- * 4) After the trait-type number there is a "~"delimiter.
- * 5) Afterwards, there comes a series of numbers from 0 to 2 (inclusive), of length == {@link Genotype}.NUM_OF_TIME_RELEASE_VALUES.  
+ * 1) Nowhere is any writing (space included) permitted, but at the very bottom, below the actual 'genome'.
+ * 2) Each line in the file represents the values of a trait. Lines start with ascending numbers from 0 (first line 0, then 1, ...), which represent trait types.
+ * 3) After the trait-type number there is a "~"delimiter.
+ * 4) Afterwards, there comes a series of numbers from 0 to 2 (inclusive), of length == {@link Genotype}.NUM_OF_TIME_RELEASE_VALUES.  
  * 
  * Here is a demo file for illustration
  * 
@@ -54,12 +56,7 @@ public class GenotypeUtils
 	private GenotypeUtils(){}; //dummy constructor.
 
 	/**
-	 * A static method, which will create a genome file, with random values.
-	 * 
-	 * Intended for use in evolutionary framework. 
-	 * 
-	 * This method creates a new file in the specified location. 
-	 * The end of the file will have a "_gnm" suffix attached to it.
+	 * A static method, which will create a new genome file, with random values.
 	 * 
 	 * @param classPath The file, where the genome will be written. 
 	 */
@@ -91,34 +88,99 @@ public class GenotypeUtils
 	}
 
 	/**
-	 * A static method, which will create a genome file, which is similar to another genome-file,
-	 * but with a specified amount of random mutation in random slots.
-	 * 
-	 * Intended for use in evolutionary framework. 
-	 * 
-	 * This method creates a new file in the specified location. 
-	 * The end of the file will have a "_gnm" suffix attached to it.
+	 * A static method, which will create a new genome file, which is similar to another genome-file,
+	 * but with a specified amount of random mutation in random slots. 
 	 * 
 	 * @param classPath The file, where the genome will be written. 
 	 * @param parentClassPath The file where the 'parent' genome resides. NOTE that the file must exist.
 	 * @param mutations The number of random mutations to be performed on the new genome.
 	 */
-	public static void makeMutantGenome(String classPath, String parentClassPath, byte mutations) throws Exception
+	public static void makeMutantGenome(String classPath, String parentClassPath, int mutations) throws Exception
 	{
+		//sizing up the genome 2D matrix:
+		int size_y = Genotype.getNumOfAlleles(); 
+		int size_x = Genotype.NUM_OF_TIME_RELEASE_VALUES;
+		
+		
+		// GETTING THE PARENT GENOME, AND TRANSLATING IT TO A SIMPLE MATRIX:
+		
+		//initializing the matrix: (will store values of alleles by row)
+		byte[][] allele_matrix = new byte[size_x][size_y];
+		
+		//obtaining the parent genome:
+		Genotype parent_genome = new Genotype(parentClassPath);
+		
+		//getting a byte-allele mapping:
+		Map<Byte, Alleles> allele_num_mapping = Genotype.getAlleleToByteMapping();
+		
+		//iterating over the alleles:
+		for (byte y = 0; y < size_y; y ++)
+		{
+			Alleles allele = allele_num_mapping.get(new Byte(y));
+			List<Byte> values = parent_genome.getAlleleValues(allele);
+			
+			//iterating over its values, and populating the matrix:
+			for (int x = 0; x < values.size(); x++)
+				allele_matrix[x][y] = values.get(x);
+			
+		}
+		//----------------
+		
+		// RANDOMLY GENERATING THE LOCATIONS, WHERE THE SUBSTITUTION WILL TAKE PLACE:
+		//setting up a randomizer:
+		Random rand = new Random(System.currentTimeMillis());
+		
+		//preparing to store the locations of the locations where mutation will take place:
+		Collection<Pair<Integer, Integer>> mutant_locations = new HashSet<Pair<Integer,Integer>>();
+		
+		//generating and storing the random locations (set amount of them):
+		for (int i = 0; i < mutations; i++)
+			mutant_locations.add(new Pair<Integer, Integer>(rand.nextInt(size_x), rand.nextInt(size_y)));
+		
+		//----------------
+		
+		// MAKING RANDOM CHANGES IN THE RANDOMALLY SELECTED LOCATIONS:
+		
+		//randomly mutate the values in the chosen locations!
+		for (Pair<Integer, Integer> location : mutant_locations)
+		{
+			byte value = allele_matrix[location.left][location.right];
+			byte mutant_value = (byte)rand.nextInt(3);
+			
+			while (value == mutant_value) //making sure the value will be different from the original!!
+			{
+				mutant_value = (byte)rand.nextInt(3);
+			} 
+			allele_matrix[location.left][location.right] = mutant_value; // 3 because values are in range [0, 2].
+		}
+		//----------------
+		
+		
+		// WRITING IT TO A FILE:
+
+		//getting a print-stream to a new file:
 		PrintStream fileOut = makeFile(classPath);
 		
-		//TO-DO 
+		for (byte y = 0; y < size_y; y++)
+		{
+			String line = "" + y + "~";
+			for (byte x = 0; x < size_x; x++)
+			{
+				line += allele_matrix[x][y];
+			}
+			fileOut.println(line);
+		}
+		
 	}
 
 	
 	
 	/*
-	 * Attempts to create the new file, and adds a "_gnm" suffix to it.
+	 * Attempts to create the new file.
 	 * Returns a PrintStream to that file.
 	 */
 	private static PrintStream makeFile(String classPath) throws Exception
 	{
-		classPath += "_gnm";
 		File genFile = new File(classPath);
 		
 		//if it already exists, exit with exception:
