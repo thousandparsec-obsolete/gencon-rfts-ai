@@ -27,7 +27,6 @@ public class test {
 			try
 			{
 				GenotypeUtils.makeMutantGenome(classPath, parent, 1);
-				Thread.sleep(1000);
 			}
 			catch (Exception e)
 			{
