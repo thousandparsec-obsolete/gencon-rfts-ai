@@ -26,7 +26,7 @@ public class test {
 			
 			try
 			{
-				GenotypeUtils.makeMutantGenome(classPath, parent, 1);
+				GenotypeUtils.makeMutantGenome(classPath, parent, 5);
 			}
 			catch (Exception e)
 			{

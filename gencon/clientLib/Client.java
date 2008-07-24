@@ -6,17 +6,15 @@ import java.util.*;
 
 import gencon.Master;
 import gencon.gamelib.Game_Player;
-import gencon.gamelib.gameobjects.Body;
-import gencon.gamelib.gameobjects.Fleet;
-import gencon.gamelib.gameobjects.StarSystem;
-import gencon.gamelib.gameobjects.Universe;
+import gencon.gamelib.RFTS.ObjectConverter;
+import gencon.gamelib.RFTS.gameobjects.Body;
+import gencon.gamelibRFTS.*;
+import gencon.gamelibRFTS.gameobjects.*;
 import gencon.utils.*;
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp04.Board;
 import net.thousandparsec.netlib.tp04.BoardIDs;
-import net.thousandparsec.netlib.tp04.Connect;
 import net.thousandparsec.netlib.tp04.Design;
-import net.thousandparsec.netlib.tp04.FinishedTurn;
 import net.thousandparsec.netlib.tp04.Game;
 import net.thousandparsec.netlib.tp04.GetBoardIDs;
 import net.thousandparsec.netlib.tp04.GetBoards;
@@ -29,12 +27,8 @@ import net.thousandparsec.netlib.tp04.GetOrderDescIDs;
 import net.thousandparsec.netlib.tp04.GetResource;
 import net.thousandparsec.netlib.tp04.GetResourceIDs;
 import net.thousandparsec.netlib.tp04.Object;
-import net.thousandparsec.netlib.tp04.CreateAccount;
-import net.thousandparsec.netlib.tp04.Login;
 import net.thousandparsec.netlib.tp04.ObjectDesc;
 import net.thousandparsec.netlib.tp04.ObjectDescIDs;
-import net.thousandparsec.netlib.tp04.ObjectParams;
-import net.thousandparsec.netlib.tp04.Okay;
 import net.thousandparsec.netlib.tp04.Order;
 import net.thousandparsec.netlib.tp04.OrderDesc;
 import net.thousandparsec.netlib.tp04.OrderDescIDs;
@@ -49,13 +43,11 @@ import net.thousandparsec.netlib.tp04.Game.ParametersType.Paramid;
 import net.thousandparsec.netlib.tp04.GetWithID.IdsType;
 import net.thousandparsec.netlib.tp04.GetWithIDSlot.SlotsType;
 import net.thousandparsec.netlib.tp04.IDSequence.ModtimesType;
-import net.thousandparsec.netlib.tp04.Object.ContainsType;
 import net.thousandparsec.netlib.tp04.Sequence;
-import net.thousandparsec.util.Pair;
 
 
 /**
- * This is the basic client for GenCon. It complies with TP04 Protocol.
+ * This is the basic client for GenCon. It complies with TP04 Protocol, and supports both RFTS and RISK games.
  * Its sole functionality is to connect, log in, then send frames specified from outside,
  * and pass the received frames outside as well.
  * 
@@ -67,12 +59,18 @@ import net.thousandparsec.util.Pair;
  */
 public class Client
 {
+	/**
+	 * The rulesets supported by this client. 
+	 */
+	public enum RULESET
+	{
+		RFTS, RISK;
+	}
+
 	//
 	//	MAINTANANCE
 	//
 	private final Master MASTER;
-	private boolean autorun;
-	
 	public final java.lang.Object END_OF_TURN_MONITOR = new java.lang.Object();
 	
 	//
@@ -82,8 +80,12 @@ public class Client
 	private ConnectionManager<TP04Visitor> connMgr;
 	public final LoggerConnectionListener<TP04Visitor> EVENT_LOGGER;
 	private final TP04Visitor VISITOR;
+	private ClientMethods methods;
 
-	//game-related
+	//
+	//	GAME-RELATED
+	//
+	private RULESET ruleset;
 	private String myUsername;
 	private short difficulty;
 	private String genomeFileClasspath;
@@ -109,24 +111,31 @@ public class Client
 	 */
 	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
 	{
-		Pair<Short, Pair<String, String>> parsedArgs = Utils.parseArgs(args);
+		List<java.lang.Object> parsedArgs = Utils.parseArgs(args);
 		
-		difficulty = parsedArgs.left.shortValue();
-		MASTER.pl("Difficulty set to : " + difficulty);
+		MASTER.setVerboseDebugMode((Boolean) parsedArgs.get(4));
+		MASTER.pl("Verbose debug mode on.");
 		
-		String URIstr = parsedArgs.right.left;
-		if (!URIstr.equals(""))
-			MASTER.pl("URI set to : " + URIstr);
+		ruleset = (RULESET)parsedArgs.get(0);
+		MASTER.pl("Ruleset to be played is: " + ruleset);
 		
-		
-		genomeFileClasspath = parsedArgs.right.right;
-		MASTER.pl("Genotype File classpath set to : " + genomeFileClasspath);
-		
-		if (URIstr.equals(""))
-			initNoAutorun();
+		//setting the correct connection methods:
+		if (ruleset == RULESET.RISK)
+			methods = new ClientMethodsRISK(this);
 		else
-			initAutorun(URIstr);
+			methods = new ClientMethodsRFTS(this);
+		//-----------------------------------------
 		
+		serverURI = new URI((String)parsedArgs.get(1));
+		MASTER.pl("Server URI is: " + serverURI.toString());
+		
+		genomeFileClasspath = (String) parsedArgs.get(2);
+		MASTER.pl("Genome file classpath is: " + genomeFileClasspath);
+		
+		difficulty = (Short) parsedArgs.get(3);
+		MASTER.pl("Difficulty set to: " + difficulty);
+		
+		connect();
 	}
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,86 +146,6 @@ public class Client
  */
 	
 	/*
-	 * NORMAL OPERATION.
-	 * Initializes client. All relevant parameters set by user through standard input.
-	 * No autologin.
-	 */
-	private void initNoAutorun() throws IOException, TPException, EOFException
-	{
-		autorun = false;
-		
-		pl("Follow the instructions... (input is CAPSLOCK sensitive)");
-		//set verbose debug mode on/off
-		MASTER.setVerboseDebugMode(Utils.setVerboseDebug());
-		
-		//set URI
-		serverURI = Utils.manualSetURI();
-		
-		//set genotype file classpath:
-		genomeFileClasspath = Utils.manualSetGenomeClasspath();
-		
-		// establish a connection with the server, no autologin.
-		connect();
-
-		//login as existing user, or create new user and then login
-		loginOrCreateUser();
-	}
-	
-	/*
-	 * AUTORUN.
-	 * Initializes client with previously specified URI string. Autologin enabled.
-	 * @param URI {@link URI} string (with user info).
-	 */
-	private void initAutorun(String URIstring) throws IllegalArgumentException, IOException, TPException, URISyntaxException
-	{
-		MASTER.pl("Autorun mode. Initializing...");
-		
-		autorun = true;
-		
-		//verbose debug mode always true in autorun
-		MASTER.setVerboseDebugMode(true);
-		
-		if (setURI(URIstring)) //Set URI. If URI is valid, proceed with normal operation.
-		{
-			serverURI = new URI(URIstring);
-			connect();
-		}
-		 /*	
-		    Throw exception otherwise. 
-		 	The rationale is that autorun will most likely be part of a test suite, 
-		 	and there will be no room for user corrections.
-		 */
-		else 
-			throw new IllegalArgumentException("Invalid URI. Exiting autorun.");
-
-	}
-	
-	/*
-	 * Making the server URI from a string.
-	 * Retrurns true if successful, false otherwise.
-	 */
-	private boolean setURI(String URIString)
-	{
-		URI uri = Utils.setURI(URIString);
-		
-		if (uri != null)
-		{
-			serverURI = uri;
-			return true;
-		}
-		else
-			return false;
-	}
-
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 * 
-	 *	CONNECTS.
-	 * 
-	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 */
-
-
-	/*
 	 * Establishes a pipelined connection with the server.
 	 * Uses TP04 protocol classes.
 	 * Autologin on/off, depends on the user
@@ -226,54 +155,43 @@ public class Client
 		TP04Decoder decoder = new TP04Decoder();
 		MASTER.pr("Establishing connection to server... ");
 			
-			Connection<TP04Visitor> basicCon = decoder.makeConnection(serverURI, autorun, VISITOR);
-			basicCon.addConnectionListener(EVENT_LOGGER);
+		Connection<TP04Visitor> basicCon = decoder.makeConnection(serverURI, true, VISITOR);
+		basicCon.addConnectionListener(EVENT_LOGGER);
 			
-			connMgr = new ConnectionManager<TP04Visitor>(basicCon);
+		connMgr = new ConnectionManager<TP04Visitor>(basicCon);
 			
-			if (autorun)
-			{
-				MASTER.pl("connection established to : " + serverURI);
-				myUsername = Utils.getUsrnameFromURI(serverURI);
-				MASTER.pl("Logged in successfully as : " + myUsername);
-			}
-			else //send connect frame...
-			{
-				SequentialConnection<TP04Visitor> conn = getPipeline();
-				Connect connect = new Connect();
-				connect.setString("gencon-testing");
-				conn.sendFrame(connect, Okay.class);
-				conn.close();
-				//if reach here, then ok.
-				MASTER.pl("connection established to : " + serverURI);
-			}
+		MASTER.pl("connection established to : " + serverURI);
+		myUsername = Utils.getUsrnameFromURI(serverURI);
+		MASTER.pl("Logged in successfully as : " + myUsername);
 			
-			//extract Game frame:
-			GetGames gg = new GetGames();
-			SequentialConnection<TP04Visitor> conn = getPipeline();
-			Game game = conn.sendFrame(gg, Game.class);
-			//if this is a metaserver with more than one game, a TPException will be thrown at this point.
-			conn.close();
+		//extract Game frame:
+		GetGames gg = new GetGames();
+		SequentialConnection<TP04Visitor> conn = getPipeline();
+		Game game = conn.sendFrame(gg, Game.class);
+		//if this is a metaserver with more than one game, a TPException will be thrown at this point.
+		conn.close();
 			
-			//make sure the game is RFTS:
-			if (!game.getRule().trim().equals("TP RFTS"))
-				throw new TPException("Attempted to connect to a game other than TP RFTS");
+		//make sure the game is either RFTS or RISK:
+		/////// NEED TO FIND OUT THE ACTUAL NAME OF RISK!
+		if (!game.getRule().trim().equals("TP RFTS") || game.getRule().trim().equals("RISK"))
+			throw new TPException("Attempted to connect to a game other than TP RFTS or RISK");
 			
-			//getting the turn number:
-			List<ParametersType> params = game.getParameters();
+		//getting the turn number:
+		List<ParametersType> params = game.getParameters();
 			
-			int turn = -3; //setting to an invalid value, which will still calculate the correct type of RFTS turn.
-			for (ParametersType pt : params) //must be a turn num!
-				if (pt.getParamid() == Paramid.turn)
-					turn = (byte)pt.getIntvalue();
-			//setting the turn num:
-			MASTER.setTurn(turn);
+		int turn = -3; //setting to an invalid value, which will still calculate the correct type of RFTS turn.
+		for (ParametersType pt : params) //there must be a turn num!
+			if (pt.getParamid() == Paramid.turn)
+				turn = (byte)pt.getIntvalue();
+		
+		//setting the turn num:
+		MASTER.setTurn(turn);
 			
-			MASTER.pl("Successfully connected to a valid TP RFTS game:" + game.getName() + " ; Current turn number: " + turn);
+		MASTER.pl("Successfully connected to a valid TP RFTS game:" + game.getName() + " ; Current turn number: " + turn);
 			
-			//testing!!!
-			printObjectDesc();
-			//getOrdersDesc();
+		//testing!!!
+		printObjectDesc();
+		//getOrdersDesc();
 				
 	}
 	
@@ -285,122 +203,6 @@ public class Client
 	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	 */
 
-	/*
-	 * Logs in as user, or else creates new account and logs in as that user.
-	 * User info gathered from standard input.
-	 */
-	private void loginOrCreateUser() throws EOFException
-	{
-		boolean retry = false;
-		do 
-		{
-			pr("Create new account or login as existing user? (new / login) : ");
-			String choose = Master.in.next();
-		//	quitIfEncounterExitString(choose);
-			
-			if (choose.equals("login"))
-			{
-				String[] user = Utils.enterUserDetails();
-				String username = user[0];
-				String password = user[1];
-				
-				if (!login(username , password))
-					retry = true;
-				else
-					retry = false;
-			}
-			else if (choose.equals("new"))
-			{
-				String[] user = Utils.enterUserDetails();
-				String username = user[0];
-				String password = user[1];
-				if (createNewAccount(username, password))
-				{
-					if (!login(username, password))
-					{
-						pl("Unexpected failure to login after creating account. Try logging as the new user manually.");
-						retry = true;
-					}
-					else
-						retry = false;
-				}
-				else
-				{
-					pl("Failed to create account. Try again.");
-					retry = true;
-				}
-			}
-			else //other input
-			{
-				pl("Invalid input. Try again.");
-				retry = true;
-			}
-		} while (retry);
-	}
-	
-
-	
-	private boolean login(String username, String password) throws EOFException 
-	{
-		Login loginFrame = new Login();
-		loginFrame.setUsername(username);
-		loginFrame.setPassword(password);
-		
-		try
-		{
-			//will be supplanted by the ThreadedPipelineManager methods... sometime... in the future...
-			SequentialConnection<TP04Visitor> conn = connMgr.createPipeline();
-			MASTER.pr("Logging in...");
-			conn.sendFrame(loginFrame, Okay.class);
-			conn.close();
-			MASTER.pl("Logged in successfully as : " + username);
-		}
-		catch (TPException tpe)
-		{
-			pl("Failed to login as user. Possible cause: username and password don't match. Try again.");
-			Utils.PrintTraceIfDebug(tpe, MASTER.isVerboseDebugMode());
-			return false;
-		}
-		catch (IOException ioe)
-		{
-			pl("Unexpected failure. Failed to login. Try again.");
-			Utils.PrintTraceIfDebug(ioe, MASTER.isVerboseDebugMode());
-			return false;
-		}
-		return true;
-
-	}
-	
-	private boolean createNewAccount(String username, String password) throws EOFException
-	{
-		
-		CreateAccount newAccount = new CreateAccount();
-		newAccount.setUsername(username);
-		newAccount.setPassword(password);
-		
-		SequentialConnection<TP04Visitor> conn = connMgr.createPipeline();
-		try
-		{
-			conn.sendFrame(newAccount, Okay.class);
-			conn.close();
-		}
-		catch (TPException tpe)
-		{
-			pl("Failed to create new account. Possible cause: user already exists. Try again.");
-			Utils.PrintTraceIfDebug(tpe, MASTER.isVerboseDebugMode());
-			return false;
-		}
-		catch (IOException ioe)
-		{
-			pl("Unexpected failure. Failed to login. Try again.");
-			Utils.PrintTraceIfDebug(ioe, MASTER.isVerboseDebugMode());
-			return false;
-		}
-		return true;
-		
-	}
-
-	
 	/**
 	 * 
 	 * @return A connection pipeline. Optimally, it should be closed after usage, but will otherwise close upon clean exit.
@@ -425,49 +227,6 @@ public class Client
 		}
 	}
 	
-	public synchronized List<Body> getAllObjects() throws IOException, TPException
-	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
-		Collection<Object> objects = ConnectionMethods.getAllObjects(conn);
-		conn.close();
-		
-		List<Body> bodies = new ArrayList<Body>(objects.size());
-		
-		for (Object obj : objects)
-		{
-			if (obj != null)
-			{
-				int parent = -2;
-				
-				if (obj.getObject().getParameterType() == ObjectParams..PARAM_TYPE)
-					parent = Universe.UNIVERSE_PARENT;
-				else
-					parent = findParent(objects, obj).getId(); 
-				//if it's not a universe, it must have a parent! If rule broken, null pointer will be thrown.
-			
-					bodies.add(ObjectConverter.convertToBody(obj, parent, this));
-			}
-		}
-		
-		return bodies;
-	}
-
-	/*
-	 * Helper method for receiveAllObjects().
-	 * Returns the immediate parent of the object
-	 */
-	private Object findParent(Collection<Object> objects, Object child)
-	{
-		for (Object obj : objects)
-			if (obj != null)
-				for (ContainsType ct : obj())
-					if (ct.getId() == child.())
-						return obj;	
-		
-		//IF NOT FOUND:
-		return null;
-	}
-
 	public synchronized int getTimeRemaining() throws IOException, TPException
 	{
 		SequentialConnection<TP04Visitor> conn = getPipeline();
@@ -490,28 +249,6 @@ public class Client
 		conn.close();
 		
 		return ObjectConverter.convertPlayer(pl);
-	}
-
-	/**
-	 * Order a fleet to move to any star-system in the game-world.
-	 * 
-	 * @param fleet_id The fleet in question.
-	 * @param destination_star_system The ultimate destination.
-	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
-	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
-	 */
-	public synchronized boolean moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
-	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
-		try
-		{
-			boolean result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);
-			return result;
-		}
-		finally
-		{
-			conn.close();
-		}
 	}
 
 	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
@@ -585,6 +322,12 @@ public class Client
 		return turnStartFlag;
 	}
 	
+	
+	public synchronized ClientMethods getClientMethods()
+	{
+		return methods;
+	}
+	
 	/**
 	 * Closing connection.
 	 * 
@@ -644,7 +387,7 @@ public class Client
 		//seeWhatsInside();
 		//getDesigns();
 		//getOrdersDesc();
-		printObjectDesc();
+		//printObjectDesc();
 	}
 	
 	
@@ -674,7 +417,7 @@ public class Client
 			
 			for (int i = 0; i < seq.getNumber(); i++)
 			{
-				Frame f = conn.receiveFrame(Frame.class);
+				Frame f = conn.receiveFrame(Response.class);
 				pl("Resource: " + f.toString());
 			}
 		}

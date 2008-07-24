@@ -148,7 +148,7 @@ public class Master implements Runnable
 			robot.startTurn(time);
 			//CLIENT.eventLogger.dumpLogStd();
 		}
-		catch (Exception e) /// IN REALITY, IT SHOULDN'T QUIT AT THIS POINT
+		catch (Exception e) 
 		{
 			exit("Unsuccessful updating game status.", ABNORMAL_EXIT, e);
 		}

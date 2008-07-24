@@ -1,10 +1,10 @@
 package gencon.clientLib;
 
-import gencon.gamelib.gameobjects.Body;
-import gencon.gamelib.gameobjects.Fleet;
-import gencon.gamelib.gameobjects.Orders;
-import gencon.gamelib.gameobjects.Planet;
-import gencon.gamelib.gameobjects.StarSystem;
+import gencon.gamelib.RFTS.gameobjects.Body;
+import gencon.gamelib.RFTS.gameobjects.Fleet;
+import gencon.gamelib.RFTS.gameobjects.Orders;
+import gencon.gamelib.RFTS.gameobjects.Planet;
+import gencon.gamelib.RFTS.gameobjects.StarSystem;
 
 import java.io.IOException;
 import java.util.ArrayList;
