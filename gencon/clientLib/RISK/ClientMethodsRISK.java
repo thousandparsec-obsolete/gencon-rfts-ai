@@ -5,7 +5,7 @@ import gencon.clientLib.ClientMethods;
 
 public class ClientMethodsRISK extends ClientMethods
 {
-	ClientMethodsRISK(Client client)
+	public ClientMethodsRISK(Client client)
 	{
 		super(client);
 	}

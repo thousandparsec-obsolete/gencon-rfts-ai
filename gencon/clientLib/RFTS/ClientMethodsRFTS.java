@@ -26,7 +26,7 @@ import net.thousandparsec.netlib.tp04.Object.ContainsType;
 
 public class ClientMethodsRFTS extends ClientMethods
 {
-	ClientMethodsRFTS(Client client)
+	public ClientMethodsRFTS(Client client)
 	{
 		super(client);
 	}

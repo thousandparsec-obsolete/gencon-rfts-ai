@@ -7,11 +7,7 @@ import java.util.*;
 import gencon.Master;
 import gencon.Master.RULESET;
 import gencon.clientLib.RFTS.ClientMethodsRFTS;
-import gencon.clientLib.RFTS.ObjectConverter;
 import gencon.clientLib.RISK.ClientMethodsRISK;
-import gencon.gamelib.AbstractGameObject;
-import gencon.gamelib.Players.Game_Player;
-import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.utils.Utils;
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp04.Board;
@@ -35,7 +31,6 @@ import net.thousandparsec.netlib.tp04.Order;
 import net.thousandparsec.netlib.tp04.OrderDesc;
 import net.thousandparsec.netlib.tp04.OrderDescIDs;
 import net.thousandparsec.netlib.tp04.OrderParams;
-import net.thousandparsec.netlib.tp04.Player;
 import net.thousandparsec.netlib.tp04.ResourceIDs;
 import net.thousandparsec.netlib.tp04.Response;
 import net.thousandparsec.netlib.tp04.TP04Decoder;
@@ -100,7 +95,7 @@ public class Client
 	/**
 	 * Run this method to start the client.
 	 * 
-	 * @param args Optional arguments. Please see README for details.
+	 * @param args Necessary arguments. Refer to README for details.
 	 */
 	public void init(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
 	{
@@ -130,13 +125,6 @@ public class Client
 		
 		connect();
 	}
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * 
- *	INITIALIZATION: NORMAL OPERATION OR AUTORUN
- * 
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- */
 	
 	/*
 	 * Establishes a pipelined connection with the server.
@@ -166,8 +154,8 @@ public class Client
 			
 		//make sure the game is either RFTS or RISK:
 		/////// NEED TO FIND OUT THE ACTUAL NAME OF RISK!
-		if (!game.getRule().trim().equals("TP RFTS") || game.getRule().trim().equals("RISK"))
-			throw new TPException("Attempted to connect to a game other than TP RFTS or RISK");
+		if (!game.getRule().trim().equals("TP RFTS") || game.getRule().trim().equals("Risk"))
+			throw new TPException("Attempted to connect to a game other than 'TP RFTS' or 'Risk'");
 			
 		//getting the turn number:
 		List<ParametersType> params = game.getParameters();
@@ -183,18 +171,9 @@ public class Client
 		MASTER.pl("Successfully connected to a valid TP RFTS game:" + game.getName() + " ; Current turn number: " + turn);
 			
 		//testing!!!
-		printObjectDesc();
-		//getOrdersDesc();
+		//testMethods();
 				
 	}
-	
-
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 * 
-	 *	CONNECTION METHODS USED IN NORMAL OPERATION OF CLIENT.
-	 * 
-	 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	 */
 
 	/**
 	 * 

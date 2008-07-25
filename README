@@ -8,19 +8,26 @@ Copyright: This software is developed and distributed under GNU GENERAL PUBLIC L
 This is an AI client that builds on libtpproto-java. Implementation and usage details to follow soon!
 
 
-Arguments: (Optional) 
-	 * Optional arguments: '-a $ serverURI genomeFileClasspath' (All or none must be provided!)
-	 * Supplying arguments will put GenCon in autorun mode, with no further input required. Verbose debug mode will be on.
-	 * Otherwise, the client will run in 'normal' mode, i.e. start up from user input.
-	 *
-	 * The argument syntax is as follows:
-	 * ----------------------------------
-	 * 1) The first argument must be '-a', which stands for autorun.
-	 * 2) The second argument is the difficulty. The '$' symbol stands for any number between 1-9, inclusive.
-	 * 3) The third argument specifies the server URI:
-	 *		The serverURI must include user info for autologin, e.g.: "tp://guest:guest@thousandparsec.net/tp".
-	 * 4) The fourth argument specifies the classpath of the 'robo-genome' file.
-	 *
-	 * If the argument syntax is incorrect, or else some argument is faulty for any reason, the client will terminate upon catching that.
+ARGUMENTS: (Mandatory) 
+------------------------------------------------------------------------------------------------------------------
+Supplying arguments will put GenCon in autorun mode, with no further input required.
+However, typing 'q', then pressing 'ENTER' at any point in the game will terminate operation.
+(SEMI-BUG: Note that currently it only works when 'q' is the first character in the buffer of the keyboard Scanner...
+which means that whenever another character is entered before 'q', this will not work!)
+	 
+The argument syntax is as follows: (Case sensitive!)
+----------------------------------
+ 1) The game to be played: 'RFTS' or 'RISK'.
+ 2) The server URI: The serverURI must include user info for autologin, 
+		e.g. "tp://guest:guest@thousandparsec.net/tp".
+ 3) The class-path to the genome file, which will be used.
+ 4) The difficulty of the AI. Valid input is '1' to '9'.
+ 5) Verbose debug mode, or normal (quiet) mode. 'd' signifies debug, while 'n' means normal mode.
+
+ Here's an example of what a run might look like:
+ > java GenConRunner RISK tp://me:me@localhost /genomes/DarkSide_risk_genome 8 n 
+
+
+*** If the argument syntax is incorrect, or else some argument is faulty for any reason, the client will terminate upon catching that.
 
 
