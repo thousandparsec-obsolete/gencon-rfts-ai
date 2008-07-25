@@ -1,7 +1,5 @@
 package gencon.gamelib.RFTS.gameobjects;
 
-import gencon.gamelib.Game_Player;
-
 import java.util.List;
 
 /**

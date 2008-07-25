@@ -1,10 +1,6 @@
 package gencon.gamelib;
 
-
-
 import java.util.Collection;
-import java.util.List;
-import java.util.Vector;
 
 /**
  * A class which holds all players that are currently in the game.
@@ -48,5 +44,17 @@ public class Players
 				return gp;
 		
 		return null; //if I'm out of the game!
+	}
+	
+	public static class Game_Player
+	{
+		public final int NUM;
+		public final String NAME;
+		
+		public Game_Player(int number, String name)
+		{
+			NUM = number;
+			NAME = name;
+		}
 	}
 }

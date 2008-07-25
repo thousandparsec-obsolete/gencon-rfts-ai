@@ -1,6 +1,8 @@
-package gencon.clientLib;
+package gencon.utils;
 
 import gencon.Master;
+import gencon.Master.RULESET;
+import gencon.clientLib.Client;
 
 import java.io.PrintStream;
 import java.net.URI;

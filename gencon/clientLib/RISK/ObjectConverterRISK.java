@@ -1,4 +1,4 @@
-package gencon.gamelib.RISK;
+package gencon.clientLib.RISK;
 
 public class ObjectConverterRISK 
 {

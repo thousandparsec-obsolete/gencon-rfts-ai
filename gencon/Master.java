@@ -4,8 +4,11 @@ import java.util.Scanner;
 
 import gencon.clientLib.*;
 import gencon.gamelib.FullGameStatus;
-import gencon.robolib.Robot;
-import gencon.utils.*;
+import gencon.gamelib.RFTS.FullGameStatusRFTS;
+import gencon.gamelib.RISK.FullGameStatusRISK;
+import gencon.robolib.*;
+import gencon.utils.ScannerListener;
+import gencon.utils.Utils;
 
 /**
  * The controller class, that regulates the operation of the system as a whole.
@@ -16,6 +19,15 @@ import gencon.utils.*;
  */
 public class Master implements Runnable
 {
+	/**
+	 * The rulesets supported by this client. 
+	 */
+	public static enum RULESET
+	{
+		RFTS, RISK;
+	}
+	
+	
 	//in/out
 	/**
 	 * All standard input has to come from {@link Master}.in.
@@ -34,7 +46,8 @@ public class Master implements Runnable
 	public final Client CLIENT;
 	
 	//game-related
-	public final FullGameStatus GAME_STATUS;
+	private RULESET ruleset;
+	private FullGameStatus game_status;
 	private Robot robot;
 	private int turn;
 	
@@ -54,7 +67,6 @@ public class Master implements Runnable
 	public Master(String[] args)
 	{
 		CLIENT = new Client(this);
-		GAME_STATUS = new FullGameStatus(this);
 		init(args);
 	}
 	
@@ -69,7 +81,7 @@ public class Master implements Runnable
 		//initializing client
 		try
 		{
-			CLIENT.runClient(args);
+			CLIENT.init(args);
 		}
 		catch (Exception e)
 		{
@@ -77,9 +89,15 @@ public class Master implements Runnable
 		}
 		
 		//initializing game status
+		
+		if (ruleset == RULESET.RISK)
+			game_status = new FullGameStatusRISK(this);
+		else 
+			game_status = new FullGameStatusRFTS(this);
+		
 		try
 		{
-			GAME_STATUS.init();
+			game_status.init();
 		}
 		catch (Exception e)
 		{
@@ -104,7 +122,6 @@ public class Master implements Runnable
 	 */
 	public void run()
 	{
-		
 		gameCycle();
 	}
 	
@@ -143,7 +160,7 @@ public class Master implements Runnable
 		{
 			int time = CLIENT.getTimeRemaining();
 			pl("Start of turn routine commencing... " + time + " seconds to end of turn.");
-			GAME_STATUS.incrementTurn();
+			game_status.incrementTurn();
 			checkIfImAlive(); //check if I'm alive!
 			robot.startTurn(time);
 			//CLIENT.eventLogger.dumpLogStd();
@@ -159,8 +176,8 @@ public class Master implements Runnable
 	 */
 	private void checkIfImAlive()
 	{
-		if (GAME_STATUS.getCurrentStatus().right.getMe() == null)
-			exit("WIPED OUT. Sorry boss, there were just too many of them.", NORMAL_EXIT, null);
+		if (!game_status.checkIfImAlive())
+			exit("WIPED OUT. Sorry boss, there was just too many of them.", NORMAL_EXIT, null);
 	}
 
 	/**
@@ -213,6 +230,16 @@ public class Master implements Runnable
 	public void setVerboseDebugMode(boolean mode)
 	{
 		verboseDebugMode = mode;
+	}
+	
+	public RULESET getRuleset()
+	{
+		return ruleset;
+	}
+	
+	public void setRuleset(RULESET rs)
+	{
+		ruleset = rs;
 	}
 	
 	/**

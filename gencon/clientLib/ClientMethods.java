@@ -1,13 +1,19 @@
 package gencon.clientLib;
 
+import gencon.gamelib.AbstractGameObject;
+
+import java.io.IOException;
+import java.util.List;
+
+import net.thousandparsec.netlib.TPException;
+
 public abstract class ClientMethods 
 {
-	final Client CLIENT;
+	public final Client CLIENT;
 	
-	ClientMethods(Client client)
+	public ClientMethods(Client client)
 	{
 		CLIENT = client;
 	}
-
-
+	
 }

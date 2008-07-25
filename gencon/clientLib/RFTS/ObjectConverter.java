@@ -1,8 +1,8 @@
-package gencon.gamelib.RFTS;
-
+package gencon.clientLib.RFTS;
 
 import gencon.clientLib.Client;
 import gencon.gamelib.Game_Player;
+import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
 import gencon.gamelib.RFTS.gameobjects.Galaxy;
@@ -29,6 +29,13 @@ import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamPosition3d.Positio
 import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamResourceList.ResourcesType;
 import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamVelocity3d.VelocityType;
 import net.thousandparsec.netlib.tp04.Object;
+
+
+//////
+//////	THIS CLASS NEEDS TO CONFORM TO TP04!!!
+//////
+//////
+
 
 
 /**

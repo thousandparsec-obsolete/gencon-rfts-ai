@@ -1,6 +1,7 @@
-package gencon.clientLib;
+package gencon.utils;
 
 import gencon.Master;
+import gencon.clientLib.Client;
 
 import java.io.IOException;
 import java.util.InputMismatchException;

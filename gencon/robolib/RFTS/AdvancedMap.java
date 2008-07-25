@@ -1,6 +1,6 @@
 package gencon.robolib.RFTS;
 
-import gencon.gamelib.FullGameStatus;
+import gencon.gamelib.RFTS.FullGameStatusRFTS;
 import gencon.gamelib.RFTS.UniverseMapRFTS;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
@@ -30,13 +30,13 @@ import java.util.Set;
  */
 public class AdvancedMap 
 {
-	private final FullGameStatus FGS;
+	private final FullGameStatusRFTS FGS;
 	
 	public final Sectors SECTORS;
 	
 	public final static char[] SECTOR_NAMES = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'};
 	
-	public AdvancedMap(FullGameStatus full_game_status)
+	public AdvancedMap(FullGameStatusRFTS full_game_status)
 	{
 		FGS = full_game_status;
 		SECTORS = createSectors();
@@ -116,7 +116,7 @@ public class AdvancedMap
 	 */
 	public UniverseMapRFTS getBasicMap()
 	{
-		return FGS.getCurrentStatus().left;
+		return (UniverseMapRFTS)FGS.getCurrentStatus().left;
 	}
 	
 	/**

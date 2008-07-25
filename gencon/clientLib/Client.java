@@ -5,12 +5,14 @@ import java.net.*;
 import java.util.*;
 
 import gencon.Master;
-import gencon.gamelib.Game_Player;
-import gencon.gamelib.RFTS.ObjectConverter;
+import gencon.Master.RULESET;
+import gencon.clientLib.RFTS.ClientMethodsRFTS;
+import gencon.clientLib.RFTS.ObjectConverter;
+import gencon.clientLib.RISK.ClientMethodsRISK;
+import gencon.gamelib.AbstractGameObject;
+import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RFTS.gameobjects.Body;
-import gencon.gamelibRFTS.*;
-import gencon.gamelibRFTS.gameobjects.*;
-import gencon.utils.*;
+import gencon.utils.Utils;
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp04.Board;
 import net.thousandparsec.netlib.tp04.BoardIDs;
@@ -59,14 +61,6 @@ import net.thousandparsec.netlib.tp04.Sequence;
  */
 public class Client
 {
-	/**
-	 * The rulesets supported by this client. 
-	 */
-	public enum RULESET
-	{
-		RFTS, RISK;
-	}
-
 	//
 	//	MAINTANANCE
 	//
@@ -85,7 +79,6 @@ public class Client
 	//
 	//	GAME-RELATED
 	//
-	private RULESET ruleset;
 	private String myUsername;
 	private short difficulty;
 	private String genomeFileClasspath;
@@ -109,18 +102,18 @@ public class Client
 	 * 
 	 * @param args Optional arguments. Please see README for details.
 	 */
-	public void runClient(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
+	public void init(String[] args) throws IOException, TPException, IllegalArgumentException, EOFException, URISyntaxException
 	{
 		List<java.lang.Object> parsedArgs = Utils.parseArgs(args);
 		
 		MASTER.setVerboseDebugMode((Boolean) parsedArgs.get(4));
 		MASTER.pl("Verbose debug mode on.");
 		
-		ruleset = (RULESET)parsedArgs.get(0);
-		MASTER.pl("Ruleset to be played is: " + ruleset);
+		MASTER.setRuleset((RULESET)parsedArgs.get(0));
+		MASTER.pl("Ruleset to be played is: " + MASTER.getRuleset());
 		
 		//setting the correct connection methods:
-		if (ruleset == RULESET.RISK)
+		if (MASTER.getRuleset() == RULESET.RISK)
 			methods = new ClientMethodsRISK(this);
 		else
 			methods = new ClientMethodsRFTS(this);
@@ -241,36 +234,6 @@ public class Client
 			conn.close();
 		}
 	}
-	
-	public synchronized Game_Player getPlayerById(int id) throws IOException, TPException
-	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
-		Player pl = ConnectionMethods.getPlayerById(id, conn);
-		conn.close();
-		
-		return ObjectConverter.convertPlayer(pl);
-	}
-
-	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
-	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
-		
-		try
-		{
-			Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
-			Collection<Game_Player> players = new HashSet<Game_Player>();
-			
-			for (Player player : pls)
-				players.add(ObjectConverter.convertPlayer(player));
-			
-			return players;
-		}
-		finally
-		{
-			conn.close();
-		}
-	}
-
 	
 	public Collection<Design> getDesigns() throws TPException, IOException
 	{

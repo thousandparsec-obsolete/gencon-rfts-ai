@@ -1,9 +1,6 @@
 package gencon.gamelib.RFTS.gameobjects;
 
-import gencon.gamelib.Game_Player;
-
 import java.util.List;
-import java.util.Vector;
 
 /**
  * A class which represents planets in TP-RFTS.

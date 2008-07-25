@@ -10,8 +10,8 @@ import java.util.TreeMap;
 import net.thousandparsec.netlib.TPException;
 
 import gencon.clientLib.Client;
-import gencon.clientLib.ClientMethodsRFTS;
-import gencon.gamelib.FullGameStatus;
+import gencon.clientLib.RFTS.ClientMethodsRFTS;
+import gencon.gamelib.RFTS.FullGameStatusRFTS;
 import gencon.gamelib.RFTS.UniverseMapRFTS;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
@@ -24,7 +24,7 @@ public class ActionMethods
 	private final Client CLIENT;
 	public final AdvancedMap MAP;
 	
-	ActionMethods(Client client, FullGameStatus fgs)
+	ActionMethods(Client client, FullGameStatusRFTS fgs)
 	{
 		CLIENT = client;
 		MAP = new AdvancedMap(fgs);

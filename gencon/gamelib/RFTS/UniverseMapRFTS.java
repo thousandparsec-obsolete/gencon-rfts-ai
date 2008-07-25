@@ -1,15 +1,11 @@
 package gencon.gamelib.RFTS;
 
 import gencon.gamelib.RFTS.gameobjects.Body;
-import gencon.gamelib.RFTS.gameobjects.Planet;
 import gencon.gamelib.RFTS.gameobjects.StarSystem;
-import gencon.gamelib.RFTS.gameobjects.Universe;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 

@@ -1,6 +1,10 @@
-package gencon.clientLib;
+package gencon.clientLib.RFTS;
 
-import gencon.gamelib.RFTS.ObjectConverter;
+import gencon.clientLib.Client;
+import gencon.clientLib.ClientMethods;
+import gencon.clientLib.ConnectionMethods;
+import gencon.gamelib.AbstractGameObject;
+import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
 import gencon.gamelib.RFTS.gameobjects.StarSystem;
@@ -9,12 +13,14 @@ import gencon.gamelib.RFTS.gameobjects.Universe;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp04.Object;
 import net.thousandparsec.netlib.tp04.ObjectParams;
+import net.thousandparsec.netlib.tp04.Player;
 import net.thousandparsec.netlib.tp04.TP04Visitor;
 import net.thousandparsec.netlib.tp04.Object.ContainsType;
 
@@ -66,6 +72,37 @@ public class ClientMethodsRFTS extends ClientMethods
 		
 		//IF NOT FOUND:
 		return null;
+	}
+	
+	
+	public synchronized Game_Player getPlayerById(int id) throws IOException, TPException
+	{
+		SequentialConnection<TP04Visitor> conn = CLIENT.getPipeline();
+		Player pl = ConnectionMethods.getPlayerById(id, conn);
+		conn.close();
+		
+		return ObjectConverter.convertPlayer(pl);
+	}
+
+	
+	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
+	{
+		SequentialConnection<TP04Visitor> conn = CLIENT.getPipeline();
+		
+		try
+		{
+			Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
+			Collection<Game_Player> players = new HashSet<Game_Player>();
+			
+			for (Player player : pls)
+				players.add(ObjectConverter.convertPlayer(player));
+			
+			return players;
+		}
+		finally
+		{
+			conn.close();
+		}
 	}
 
 	/**
