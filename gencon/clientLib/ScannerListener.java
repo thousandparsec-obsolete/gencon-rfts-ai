@@ -1,4 +1,4 @@
-package gencon.utils;
+package gencon.clientLib;
 
 import gencon.Master;
 

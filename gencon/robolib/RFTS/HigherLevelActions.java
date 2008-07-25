@@ -5,6 +5,7 @@ import gencon.gamelib.RFTS.gameobjects.Fleet;
 import gencon.gamelib.RFTS.gameobjects.Planet;
 import gencon.gamelib.RFTS.gameobjects.Ships;
 import gencon.gamelib.RFTS.gameobjects.StarSystem;
+import gencon.robolib.RFTS.AdvancedMap.Sectors.Sector;
 
 import java.io.IOException;
 import java.util.Collection;
