@@ -242,7 +242,10 @@ public class Master implements Runnable
 		ruleset = rs;
 	}
 	
-	
+	/**
+	 * @return A copy of the {@link FullGameStatus}.
+	 * Note that copy may vary in depth; use with care!
+	 */
 	public FullGameStatus getStatus()
 	{
 		return game_status;
