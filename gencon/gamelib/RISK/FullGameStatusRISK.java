@@ -18,7 +18,7 @@ public class FullGameStatusRISK implements FullGameStatus
 		CLIENT_RISK = (ClientMethodsRISK) MASTER.CLIENT.getClientMethods();
 	}
 	
-	public void init() throws IOException, TPException {
+	public void init() {
 		// TODO Auto-generated method stub
 		
 	}
@@ -31,6 +31,11 @@ public class FullGameStatusRISK implements FullGameStatus
 	public boolean checkIfImAlive() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	public FullGameStatus copyStatus() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

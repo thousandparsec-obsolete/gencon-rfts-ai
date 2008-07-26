@@ -22,7 +22,7 @@ import net.thousandparsec.util.*;
 public class FullGameStatusRFTS implements FullGameStatus
 {
 	private final Master MASTER;
-	private final ClientMethodsRFTS CLIENT_RFTS;
+	public final ClientMethodsRFTS CLIENT_RFTS;
 	
 	private String player_name;
 	
@@ -46,11 +46,11 @@ public class FullGameStatusRFTS implements FullGameStatus
 		CLIENT_RFTS = (ClientMethodsRFTS)MASTER.CLIENT.getClientMethods();
 	}
 	
-	public void init() throws IOException, TPException
+	public void init()
 	{
 		player_name = MASTER.CLIENT.getPlayerName();
 		gameHistory = new ArrayList<Pair<UniverseMapRFTS,Players>>(HISTORY_DEPTH);
-		incrementTurn();
+		//incrementTurn();
 	}
 	
 	public String getPlayerName()
@@ -63,7 +63,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 	 */
 	public void incrementTurn() throws IOException, TPException
 	{
-		//first, archive the previous status.
+		//first, archive the previous status. (if not null!)
 		gameHistory.add(getCurrentStatus());
 		//remove oldest element from archive, if it exceeds specified size.
 		if (gameHistory.indexOf(getCurrentStatus()) >= HISTORY_DEPTH)
@@ -78,7 +78,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMapRFTS, Players>(map, pl); 
 		
-		MASTER.pl("Done retrieving info from server.");
+		//MASTER.pl("Done retrieving info from server.");
 		
 		//SOME TESTING:
 		//MASTER.CLIENT.testMethods();
@@ -121,6 +121,30 @@ public class FullGameStatusRFTS implements FullGameStatus
 	{
 		return !(getCurrentStatus().right.getMe() == null);
 	}
+	
+	
+	/**
+	 * See contract in {@link FullGameStatus} interface.
+	 * 
+	 * @return a new {@link FullGameStatusRFTS}, identical to itself. 
+	 */
+	public FullGameStatusRFTS copyStatus()
+	{
+		return new FullGameStatusRFTS(this);
+	}
+	
+	/*
+	 * For use in copyStatus()
+	 */
+	private FullGameStatusRFTS (FullGameStatusRFTS other)
+	{
+		this.MASTER = other.MASTER;
+		this.CLIENT_RFTS = other.CLIENT_RFTS;
+		this.player_name = other.player_name;
+		this.currentStatus = new Pair<UniverseMapRFTS, Players>(other.currentStatus);
+		this.gameHistory = new ArrayList<Pair<UniverseMapRFTS,Players>>(other.gameHistory);
+	}
+	
 	
 	/**  
 	 * @return A deep copy of the current status.

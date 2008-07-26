@@ -7,14 +7,12 @@ import java.io.IOException;
 import net.thousandparsec.netlib.TPException;
 
 public interface FullGameStatus 
-{
+{	
 	/**
 	 * Initializes at the start of the game.
 	 * 
-	 * @throws IOException
-	 * @throws TPException
 	 */
-	public void init() throws IOException, TPException;
+	public void init();
 	
 	/**
 	 * Updates game-world, using a {@link Client}. 
@@ -25,6 +23,14 @@ public interface FullGameStatus
 	 */
 	public void incrementTurn() throws IOException, TPException;
 	
-	
+	/**
+	 * @return True if this player is in the game.
+	 */
 	public boolean checkIfImAlive();
+	
+	/**
+	 * @return A shallow copy of this {@link FullGameStatus}.
+	 */
+	public FullGameStatus copyStatus();
+	
 }

@@ -242,6 +242,12 @@ public class Master implements Runnable
 		ruleset = rs;
 	}
 	
+	
+	public FullGameStatus getStatus()
+	{
+		return game_status;
+	}
+	
 	/**
 	 * @return The absolute turn number, specified by the server.
 	 */
