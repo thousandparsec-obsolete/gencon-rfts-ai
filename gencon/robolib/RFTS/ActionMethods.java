@@ -1,11 +1,9 @@
 package gencon.robolib.RFTS;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.TreeMap;
 
 import net.thousandparsec.netlib.TPException;
 

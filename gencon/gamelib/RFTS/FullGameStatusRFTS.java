@@ -48,7 +48,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 	
 	public void init()
 	{
-		player_name = MASTER.CLIENT.getPlayerName();
+		player_name = MASTER.getMyUsername();
 		gameHistory = new ArrayList<Pair<UniverseMapRFTS,Players>>(HISTORY_DEPTH);
 		//incrementTurn();
 	}

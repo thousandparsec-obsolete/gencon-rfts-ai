@@ -9,10 +9,7 @@ import gencon.gamelib.RFTS.gameobjects.StarSystem;
 import gencon.robolib.RFTS.AdvancedMap.Sectors.Sector;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 
 /**

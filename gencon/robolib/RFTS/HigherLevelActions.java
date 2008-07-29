@@ -1,6 +1,5 @@
 package gencon.robolib.RFTS;
 
-import gencon.gamelib.RFTS.UniverseMapRFTS;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
 import gencon.gamelib.RFTS.gameobjects.Planet;
 import gencon.gamelib.RFTS.gameobjects.Ships;
@@ -10,10 +9,6 @@ import gencon.robolib.RFTS.AdvancedMap.Sectors.Sector;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Vector;
 
 import net.thousandparsec.netlib.TPException;
 

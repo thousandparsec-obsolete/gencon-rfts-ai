@@ -74,9 +74,7 @@ public class Client
 	//
 	//	GAME-RELATED
 	//
-	private String myUsername;
-	private short difficulty;
-	private String genomeFileClasspath;
+
 	private boolean turnStartFlag = false; //if true: client has not yet acted upon new turn. 
 	
 	
@@ -117,11 +115,11 @@ public class Client
 		serverURI = new URI((String)parsedArgs.get(1));
 		MASTER.pl("Server URI is: " + serverURI.toString());
 		
-		genomeFileClasspath = (String) parsedArgs.get(2);
-		MASTER.pl("Genome file classpath is: " + genomeFileClasspath);
+		MASTER.setGenomeFileClasspath((String) parsedArgs.get(2));
+		MASTER.pl("Genome file classpath is: " + MASTER.getGenomeFileClasspath());
 		
-		difficulty = (Short) parsedArgs.get(3);
-		MASTER.pl("Difficulty set to: " + difficulty);
+		MASTER.setDifficulty((Short) parsedArgs.get(3));
+		MASTER.pl("Difficulty set to: " + MASTER.getDifficulty());
 		
 		connect();
 	}
@@ -142,8 +140,8 @@ public class Client
 		connMgr = new ConnectionManager<TP04Visitor>(basicCon);
 			
 		MASTER.pl("connection established to : " + serverURI);
-		myUsername = Utils.getUsrnameFromURI(serverURI);
-		MASTER.pl("Logged in successfully as : " + myUsername);
+		MASTER.setMyUsername(Utils.getUsrnameFromURI(serverURI));
+		MASTER.pl("Logged in successfully as : " + MASTER.getMyUsername());
 			
 		//extract Game frame:
 		GetGames gg = new GetGames();
@@ -153,7 +151,6 @@ public class Client
 		conn.close();
 			
 		//make sure the game is either RFTS or RISK:
-		/////// NEED TO FIND OUT THE ACTUAL NAME OF RISK!
 		if (!game.getRule().trim().equals("TP RFTS") || game.getRule().trim().equals("Risk"))
 			throw new TPException("Attempted to connect to a game other than 'TP RFTS' or 'Risk'");
 			
@@ -283,22 +280,6 @@ public class Client
 			connMgr.close();
 			MASTER.pl("done.");
 		}
-	}
-	
-	
-	public String getGenomeFileClasspath()
-	{
-		return genomeFileClasspath;
-	}
-	
-	public synchronized short getDifficulty()
-	{
-		return difficulty;
-	}
-
-	public synchronized String getPlayerName()
-	{
-		return myUsername;
 	}
 
 	//std in/out that's not dependent on verbose debug mode:

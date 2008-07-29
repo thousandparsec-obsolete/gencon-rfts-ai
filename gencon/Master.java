@@ -3,10 +3,13 @@ package gencon;
 import java.util.Scanner;
 
 import gencon.clientLib.*;
+import gencon.evolutionlib.Genotype;
 import gencon.gamelib.FullGameStatus;
 import gencon.gamelib.RFTS.FullGameStatusRFTS;
 import gencon.gamelib.RISK.FullGameStatusRISK;
 import gencon.robolib.*;
+import gencon.robolib.RFTS.RFTSRobot;
+import gencon.robolib.RISK.RISKRobot;
 import gencon.utils.ScannerListener;
 import gencon.utils.Utils;
 
@@ -50,6 +53,9 @@ public class Master implements Runnable
 	private FullGameStatus game_status;
 	private Robot robot;
 	private int turn;
+	private String myUsername;
+	private short difficulty;
+	private String genomeFileClasspath;
 	
 
 	/**
@@ -88,31 +94,33 @@ public class Master implements Runnable
 			exit("Failed initializing client.", ABNORMAL_EXIT, e);
 		}
 		
-		//initializing game status
-		
-		if (ruleset == RULESET.RISK)
-			game_status = new FullGameStatusRISK(this);
-		else 
-			game_status = new FullGameStatusRFTS(this);
-		
+		//extracting genotype from file:
+		Genotype genotype = null;
 		try
 		{
-			game_status.init();
+			genotype = new Genotype(genomeFileClasspath);
 		}
 		catch (Exception e)
 		{
-			exit("Failed initializing game status.", ABNORMAL_EXIT, e);
+			exit("Failed to extract genotype from file.", ABNORMAL_EXIT, e);
 		}
 		
-		//initializing robot:
-		try
+		//initializing game status and robot:
+		switch (ruleset)
 		{
-			robot = new Robot(this); 
-		}
-		catch (Exception e)
-		{
-			exit("Failed initializing ai-bot.", ABNORMAL_EXIT, e);
-		}
+			case RFTS:
+			{
+				game_status = new FullGameStatusRFTS(this);
+				game_status.init();
+				robot = new RFTSRobot(genotype, CLIENT, (FullGameStatusRFTS)game_status, difficulty, getTurn());
+			}
+			case RISK:
+			{
+				game_status = new FullGameStatusRISK(this);
+				game_status.init();
+				robot = new RISKRobot(genotype, CLIENT, (FullGameStatusRISK)game_status, difficulty);
+			}
+		}	
 		
 		pl("Done initializing GenCon.");
 	}
@@ -167,7 +175,7 @@ public class Master implements Runnable
 		}
 		catch (Exception e) 
 		{
-			exit("Unsuccessful updating game status.", ABNORMAL_EXIT, e);
+			exit("Unexpected failure to play turn.", ABNORMAL_EXIT, e);
 		}
 	}
 	
@@ -264,6 +272,30 @@ public class Master implements Runnable
 		this.turn = (byte)turn;
 	}
 	
+	public short getDifficulty() {
+		return difficulty;
+	}
+
+	public void setDifficulty(short difficulty) {
+		this.difficulty = difficulty;
+	}
+
+	public String getGenomeFileClasspath() {
+		return genomeFileClasspath;
+	}
+
+	public void setGenomeFileClasspath(String genomeFileClasspath) {
+		this.genomeFileClasspath = genomeFileClasspath;
+	}
+
+	public String getMyUsername() {
+		return myUsername;
+	}
+
+	public void setMyUsername(String myUsername) {
+		this.myUsername = myUsername;
+	}
+
 	/**
 	 * Use this method to substitute for {@link System}.out.println(). 
 	 * It prints to standard-out only if verbose-debug mode is on.
@@ -273,7 +305,7 @@ public class Master implements Runnable
 		if (isVerboseDebugMode())
 			System.out.println(st);
 	}
-	
+
 	/**
 	 * Use this method to substitute for {@link System}.out.print(). 
 	 * It prints to standard-out only if verbose-debug mode is on.
