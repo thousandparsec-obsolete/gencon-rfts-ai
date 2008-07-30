@@ -183,28 +183,6 @@ public class ConnectionMethods
 	}
 	
 	
-	
-	public synchronized static int orderBuildFleet(Planet planet, Fleet newfleet, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
-	{
-
-		//getting the response:
-		Response response = sendFrame(order, Response.class, conn);
-		
-		//if the order is legal, probe for the amount of turns:
-		if (response.getFrameType() == Okay.FRAME_TYPE)
-			return orderProbeGetTurns(order, Orders.BUILD_FLEET, conn); 
-		
-		//if order illegal.
-		else if (response.getFrameType() == Fail.FRAME_TYPE) 
-			return -1;
-		
-		else //unexpected frame.
-			throw new TPException("Unexpected frame while trying to insert move order.");
-		
-	}
-
-	
-	
 	/*
 	 * Probes the server, and returns the amount of turns to complete the order,
 	 * or -1 if it's illegal, or else a TPException for anything else (which is unexpected).
