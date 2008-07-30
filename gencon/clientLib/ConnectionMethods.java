@@ -159,34 +159,12 @@ public class ConnectionMethods
 	}
 		
 	/**
-	 * Order a fleet to move to any star-system in the game-world.
+	 * Sends an {@link Order} to server.
 	 * 
-	 * @param fleet_id The fleet in question.
-	 * @param destination_star_system The ultimate destination.
-	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
-	 * @return The number of turns for the order to complete, or -1 if it's a bad order.
+	 * @return True if the order was accepted. False if illegal.
 	 */
-	public synchronized static boolean orderMove(Fleet fleet, StarSystem destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	public synchronized static boolean sendOrder(Order order, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
-		OrderInsert order = new OrderInsert();
-		order.setOtype(Orders.MOVE_ORDER); //the type of the order
-		order.setId(fleet.GAME_ID); //the object at hand.
-		
-		if (!urgent)
-			order.setSlot(-1); //sets the location of the order at the end of the queue.
-		else
-			order.setSlot(0); //sets the location of the order at the beginning of the queue.
-		
-		//setting destination:
-		OrderParams.OrderParamObject destination_param = new OrderParams.OrderParamObject();
-		destination_param.setObjectid(destination_star_system.GAME_ID);
-		
-		
-		//setting the parameters:
-		List<OrderParams> op = new ArrayList<OrderParams>(1);
-		op.add(destination_param);
-		order.setOrderparams(op, getODbyId(order.getOtype(), conn)); 
-		
 		//getting the response:
 		Response response = sendFrame(order, Response.class, conn);
 		
@@ -198,12 +176,12 @@ public class ConnectionMethods
 		//if order illegal.
 		else if (response.getFrameType() == Fail.FRAME_TYPE) 
 			return false;
-			//return -1;
 		
 		else //unexpected frame.
 			throw new TPException("Unexpected frame while trying to insert move order.");
 		
 	}
+	
 	
 	
 	public synchronized static int orderBuildFleet(Planet planet, Fleet newfleet, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException

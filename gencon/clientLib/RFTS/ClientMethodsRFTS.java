@@ -6,6 +6,8 @@ import gencon.clientLib.ConnectionMethods;
 import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
+import gencon.gamelib.RFTS.gameobjects.Orders;
+import gencon.gamelib.RFTS.gameobjects.Planet;
 import gencon.gamelib.RFTS.gameobjects.StarSystem;
 import gencon.gamelib.RFTS.gameobjects.Universe;
 
@@ -109,14 +111,35 @@ public class ClientMethodsRFTS extends ClientMethods
 	 * @param fleet_id The fleet in question.
 	 * @param destination_star_system The ultimate destination.
 	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
-	 * @return The number of turns for the order to complete, or -1 if it's an illegal order.
+	 * @return True if the order is valid; false otherwise.
 	 */
 	public synchronized boolean moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
 	{
 		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
+		
+		OrderInsert order = new OrderInsert();
+		order.setOtype(Orders.MOVE_ORDER); //the type of the order
+		order.setId(fleet.GAME_ID); //the object at hand.
+		
+		if (!urgent)
+			order.setSlot(-1); //sets the location of the order at the end of the queue.
+		else
+			order.setSlot(0); //sets the location of the order at the beginning of the queue.
+		
+		//setting destination:
+		OrderParams.OrderParamObject destination_param = new OrderParams.OrderParamObject();
+		destination_param.setObjectid(destination_star_system.GAME_ID);
+		
+		
+		//setting the parameters:
+		List<OrderParams> op = new ArrayList<OrderParams>(1);
+		op.add(destination_param);
+		order.setOrderparams(op, ConnectionMethods.getODbyId(order.getOtype(), conn)); 
+		
+		
 		try
 		{
-			boolean result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);
+			boolean result = ConnectionMethods.sendOrder(order, conn);
 			return result;
 		}
 		finally
@@ -124,5 +147,52 @@ public class ClientMethodsRFTS extends ClientMethods
 			conn.close();
 		}
 	}
+	
+	/**
+	 * Build a fleet on some planet.
+	 * 
+	 * @param fleet_id The fleet to be built.
+	 * @param planet Where the fleet will be built.
+	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
+	 * @return True if the order is valid; false otherwise.
+	 */
+	public synchronized boolean buildFleet(Fleet fleet, Planet planet, boolean urgent) throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
+		
+		OrderInsert order = new OrderInsert();
+		order.setOtype(Orders.BUILD_FLEET); //the type of the order
+		order.setId(planet.GAME_ID); //the object at hand.
+		
+		if (!urgent)
+			order.setSlot(-1); //sets the location of the order at the end of the queue.
+		else
+			order.setSlot(0); //sets the location of the order at the beginning of the queue.
+		
+		
+		//GET THE NAME OUT OF THE FLEET
+		
+		//GET THE SHIPS OUT OF THE FLEET
+		
+		
+		//setting the parameters:
+		List<OrderParams> op = new ArrayList<OrderParams>();
+		/// REGISTER THE SHIPS TYPE
+		/// REGISTER THE NAME OF THE FLEET
+		
+		order.setOrderparams(op, ConnectionMethods.getODbyId(order.getOtype(), conn)); 
+		
+		try
+		{
+			boolean result = ConnectionMethods.sendOrder(order, conn);
+			return result;
+		}
+		finally
+		{
+			conn.close();
+		}
+	}
+	
+	
 
 }
