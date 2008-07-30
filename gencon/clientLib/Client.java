@@ -10,43 +10,33 @@ import gencon.clientLib.RFTS.ClientMethodsRFTS;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.utils.Utils;
 import net.thousandparsec.netlib.*;
-import net.thousandparsec.netlib.tp04.Board;
-import net.thousandparsec.netlib.tp04.BoardIDs;
-import net.thousandparsec.netlib.tp04.Design;
-import net.thousandparsec.netlib.tp04.Game;
-import net.thousandparsec.netlib.tp04.GetBoardIDs;
-import net.thousandparsec.netlib.tp04.GetBoards;
-import net.thousandparsec.netlib.tp04.GetGames;
-import net.thousandparsec.netlib.tp04.GetMessage;
-import net.thousandparsec.netlib.tp04.GetObjectDesc;
-import net.thousandparsec.netlib.tp04.GetObjectDescIDs;
-import net.thousandparsec.netlib.tp04.GetOrderDesc;
-import net.thousandparsec.netlib.tp04.GetOrderDescIDs;
-import net.thousandparsec.netlib.tp04.GetResource;
-import net.thousandparsec.netlib.tp04.GetResourceIDs;
-import net.thousandparsec.netlib.tp04.Object;
-import net.thousandparsec.netlib.tp04.ObjectDesc;
-import net.thousandparsec.netlib.tp04.ObjectDescIDs;
-import net.thousandparsec.netlib.tp04.Order;
-import net.thousandparsec.netlib.tp04.OrderDesc;
-import net.thousandparsec.netlib.tp04.OrderDescIDs;
-import net.thousandparsec.netlib.tp04.OrderParams;
-import net.thousandparsec.netlib.tp04.ResourceIDs;
-import net.thousandparsec.netlib.tp04.Response;
-import net.thousandparsec.netlib.tp04.TP04Decoder;
-import net.thousandparsec.netlib.tp04.TP04Visitor;
-import net.thousandparsec.netlib.tp04.Game.ParametersType;
-import net.thousandparsec.netlib.tp04.Game.ParametersType.Paramid;
-import net.thousandparsec.netlib.tp04.GetWithID.IdsType;
-import net.thousandparsec.netlib.tp04.GetWithIDSlot.SlotsType;
-import net.thousandparsec.netlib.tp04.IDSequence.ModtimesType;
-import net.thousandparsec.netlib.tp04.Sequence;
+import net.thousandparsec.netlib.tp03.Board;
+import net.thousandparsec.netlib.tp03.BoardIDs;
+import net.thousandparsec.netlib.tp03.Design;
+import net.thousandparsec.netlib.tp03.GetBoardIDs;
+import net.thousandparsec.netlib.tp03.GetBoards;
+import net.thousandparsec.netlib.tp03.GetMessage;
+import net.thousandparsec.netlib.tp03.GetOrderDesc;
+import net.thousandparsec.netlib.tp03.GetOrderDescIDs;
+import net.thousandparsec.netlib.tp03.GetResource;
+import net.thousandparsec.netlib.tp03.Order;
+import net.thousandparsec.netlib.tp03.OrderDesc;
+import net.thousandparsec.netlib.tp03.OrderDescIDs;
+import net.thousandparsec.netlib.tp03.OrderParams;
+import net.thousandparsec.netlib.tp03.ResourceIDs;
+import net.thousandparsec.netlib.tp03.Response;
+import net.thousandparsec.netlib.tp03.Sequence;
+import net.thousandparsec.netlib.tp03.TP03Decoder;
+import net.thousandparsec.netlib.tp03.TP03Visitor;
+import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
+import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
+import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
+
 
 
 /**
- * This is the basic client for GenCon. It complies with TP04 Protocol, and supports both RFTS and RISK games.
- * Its sole functionality is to connect, log in, then send frames specified from outside,
- * and pass the received frames outside as well.
+ * This is the basic client for GenCon. It complies with TP03 Protocol, 
+ * and supports both RFTS and RISK games.
  * 
  * NOTE: Metaserver support currently lacking; the URI must be of the server on which the game will be running.
  *
@@ -66,9 +56,9 @@ public class Client
 	//	CONNECTION-RELATED
 	//
 	private URI serverURI;
-	private ConnectionManager<TP04Visitor> connMgr;
-	public final LoggerConnectionListener<TP04Visitor> EVENT_LOGGER;
-	private final TP04Visitor VISITOR;
+	private ConnectionManager<TP03Visitor> connMgr;
+	public final LoggerConnectionListener<TP03Visitor> EVENT_LOGGER;
+	private final TP03Visitor VISITOR;
 	private ClientMethods methods;
 
 	//
@@ -86,8 +76,8 @@ public class Client
 	public Client(Master master)
 	{
 		MASTER = master;
-		EVENT_LOGGER = new LoggerConnectionListener<TP04Visitor>();
-		VISITOR = new GCTP04Visitor(this);
+		EVENT_LOGGER = new LoggerConnectionListener<TP03Visitor>();
+		VISITOR = new GCTP03Visitor(this);
 	}
 	
 	/**
@@ -131,41 +121,17 @@ public class Client
 	 */
 	private void connect() throws IOException, TPException
 	{
-		TP04Decoder decoder = new TP04Decoder();
+		TP03Decoder decoder = new TP03Decoder();
 		MASTER.pr("Establishing connection to server... ");
 			
-		Connection<TP04Visitor> basicCon = decoder.makeConnection(serverURI, true, VISITOR);
+		Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, true, VISITOR);
 		basicCon.addConnectionListener(EVENT_LOGGER);
 			
-		connMgr = new ConnectionManager<TP04Visitor>(basicCon);
+		connMgr = new ConnectionManager<TP03Visitor>(basicCon);
 			
 		MASTER.pl("connection established to : " + serverURI);
 		MASTER.setMyUsername(Utils.getUsrnameFromURI(serverURI));
 		MASTER.pl("Logged in successfully as : " + MASTER.getMyUsername());
-			
-		//extract Game frame:
-		GetGames gg = new GetGames();
-		SequentialConnection<TP04Visitor> conn = getPipeline();
-		Game game = conn.sendFrame(gg, Game.class);
-		//if this is a metaserver with more than one game, a TPException will be thrown at this point.
-		conn.close();
-			
-		//make sure the game is either RFTS or RISK:
-		if (!game.getRule().trim().equals("TP RFTS") || game.getRule().trim().equals("Risk"))
-			throw new TPException("Attempted to connect to a game other than 'TP RFTS' or 'Risk'");
-			
-		//getting the turn number:
-		List<ParametersType> params = game.getParameters();
-			
-		int turn = -3; //setting to an invalid value, which will still calculate the correct type of RFTS turn.
-		for (ParametersType pt : params) //there must be a turn num!
-			if (pt.getParamid() == Paramid.turn)
-				turn = (byte)pt.getIntvalue();
-		
-		//setting the turn num:
-		MASTER.setTurn(turn);
-			
-		MASTER.pl("Successfully connected to a valid TP RFTS game:" + game.getName() + " ; Current turn number: " + turn);
 			
 		//testing!!!
 		//testMethods();
@@ -176,7 +142,7 @@ public class Client
 	 * 
 	 * @return A connection pipeline. Optimally, it should be closed after usage, but will otherwise close upon clean exit.
 	 */
-	public synchronized SequentialConnection<TP04Visitor> getPipeline()
+	public synchronized SequentialConnection<TP03Visitor> getPipeline()
 	{
 		return connMgr.createPipeline();
 	}
@@ -184,10 +150,10 @@ public class Client
 	
 	public synchronized Object getObjectById(int id) throws IOException, TPException
 	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
+		SequentialConnection<TP03Visitor> conn = getPipeline();
 		try
 		{
-			net.thousandparsec.netlib.tp04.Object object = ConnectionMethods.getObjectById(conn, id);
+			Object object = ConnectionMethods.getObjectById(conn, id);
 			return object;
 		}
 		finally
@@ -198,7 +164,7 @@ public class Client
 	
 	public synchronized int getTimeRemaining() throws IOException, TPException
 	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
+		SequentialConnection<TP03Visitor> conn = getPipeline();
 		
 		try
 		{
@@ -213,7 +179,7 @@ public class Client
 	
 	public Collection<Design> getDesigns() throws TPException, IOException
 	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
+		SequentialConnection<TP03Visitor> conn = getPipeline();
 		
 		try
 		{
@@ -225,26 +191,10 @@ public class Client
 			conn.close();
 		}
 	}
-
-	/**
-	 * Tells the server that this client has finished doing all actions for this turn. 
-	 */
-	public void finishedTurn() throws TPException, IOException
-	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
-		try
-		{
-			ConnectionMethods.finishedTurn(conn);
-		}
-		finally
-		{
-			conn.close();
-		}
-	}
 	
 	
 	/**
-	 * The {@link GCTP04Visitor} pushes this flag every time a turn starts.
+	 * The {@link GCTP03Visitor} pushes this flag every time a turn starts.
 	 * The {@link Master} pushes this flag back to original posotion, 
 	 * once it's notified about turn start.
 	 */
@@ -323,8 +273,8 @@ public class Client
 	{
 		try
 		{
-			SequentialConnection<TP04Visitor> conn = getPipeline();
-			GetResourceIDs gri = new GetResourceIDs();
+			SequentialConnection<TP03Visitor> conn = getPipeline();
+			net.thousandparsec.netlib.tp03.GetResourceIDs gri = new net.thousandparsec.netlib.tp03.GetResourceIDs();
 			gri.setKey(-1);
 			gri.setAmount(-1);
 			ResourceIDs ris = conn.sendFrame(gri, ResourceIDs.class);
@@ -336,7 +286,7 @@ public class Client
 			for (int i = 0; i < ris.getModtimes().size(); i++)
 				list.add(new IdsType(ris.getModtimes().get(i).getId()));
 			
-			net.thousandparsec.netlib.tp04.Sequence seq = conn.sendFrame(grs, Sequence.class);
+			net.thousandparsec.netlib.tp03.Sequence seq = conn.sendFrame(grs, Sequence.class);
 			
 			for (int i = 0; i < seq.getNumber(); i++)
 			{
@@ -369,7 +319,7 @@ public class Client
 	//VOID FOR NOW... WANT TO SEE HOW IT PRINTS THEM OUT.
 	public void getOrdersForObject(int objectId, int order_num) throws TPException, IOException
 	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
+		SequentialConnection<TP03Visitor> conn = getPipeline();
 		List<Order> orders = ConnectionMethods.getOrdersForObject(conn, objectId, order_num);
 		
 		//just print them out for now, and see..
@@ -380,7 +330,7 @@ public class Client
 					pl("--> " + o.toString() + " Details:\n------>");
 					OrderDesc od = new OrderDesc();
 					od.setId(o.getOtype());
-					List<OrderParams> params = o.getParameters(od);
+					List<OrderParams> params = o.getOrderparams(od);
 					for (OrderParams op : params)
 					{
 						OrderParams.OrderParamObject opo = (OrderParams.OrderParamObject) op;
@@ -400,7 +350,7 @@ public class Client
 	{
 		try
 		{
-			SequentialConnection<TP04Visitor> conn = getPipeline();
+			SequentialConnection<TP03Visitor> conn = getPipeline();
 			GetOrderDescIDs ged = new GetOrderDescIDs();
 			ged.setKey(-1);
 			ged.setAmount(-1);
@@ -436,7 +386,7 @@ public class Client
 	
 	public void getMessages() throws IOException, TPException
 	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
+		SequentialConnection<TP03Visitor> conn = getPipeline();
 		
 		GetBoardIDs gbids = new GetBoardIDs();
 		gbids.setAmount(-1);
@@ -458,40 +408,6 @@ public class Client
 		{
 			////// will complete a bit later :)
 		}
-		conn.close();
-	}
-	
-	
-	
-	private void printObjectDesc() throws TPException, IOException
-	{
-		SequentialConnection<TP04Visitor> conn = getPipeline();
-		
-		GetObjectDescIDs godi = new GetObjectDescIDs();
-		godi.setAmount(-1);
-		godi.setKey(-1);
-		
-		ObjectDescIDs odi = conn.sendFrame(godi, ObjectDescIDs.class);
-		GetObjectDesc god = new GetObjectDesc();
-		
-		String ids = "Ids : ";
-		for (ModtimesType mdt : odi.getModtimes())
-		{
-			god.getIds().add(new IdsType(mdt.getId()));
-			ids += mdt.getId();
-		}
-		
-		pl(ids);
-
-		Sequence seq = conn.sendFrame(god, Sequence.class);
-		pl("num: " + seq.getNumber());
-		for (int i = 0; i <seq.getNumber(); i++)
-		{
-			pl("?");
-			ObjectDesc od = conn.receiveFrame(ObjectDesc.class);
-			pl("Object: " + od.toString());
-		}
-		
 		conn.close();
 	}
 	

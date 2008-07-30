@@ -1,7 +1,6 @@
 package gencon.clientLib.RFTS;
 
 import gencon.clientLib.Client;
-import gencon.gamelib.Game_Player;
 import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
@@ -16,30 +15,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
-import net.thousandparsec.netlib.tp04.ObjectDesc;
-import net.thousandparsec.netlib.tp04.ObjectParams;
-import net.thousandparsec.netlib.tp04.Player;
-import net.thousandparsec.netlib.tp04.TP04Visitor;
-import net.thousandparsec.netlib.tp04.GetObjectIDsByPos.PosType;
-import net.thousandparsec.netlib.tp04.Object.ContainsType;
-import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamPosition3d;
-import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamPosition3d.PositionType;
-import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamResourceList.ResourcesType;
-import net.thousandparsec.netlib.tp04.ObjectParams.ObjectParamVelocity3d.VelocityType;
-import net.thousandparsec.netlib.tp04.Object;
-
-
-//////
-//////	THIS CLASS NEEDS TO CONFORM TO TP04!!!
-//////
-//////
-
-
+import net.thousandparsec.netlib.tp03.*;
+import net.thousandparsec.netlib.tp03.Object;
+import net.thousandparsec.netlib.tp03.Object.ContainsType;
+import net.thousandparsec.netlib.tp03.Object.PosType;
+import net.thousandparsec.netlib.tp03.Object.VelType;
+import net.thousandparsec.netlib.tp03.ObjectParams.Fleet.ShipsType;
+import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
 
 /**
- * A static class which converts classes from protocol library, to classes from gencon.gamelibRFTS library.
+ * A static class which converts classes from protocol library, 
+ * to classes which represent the RFTS gameworld.
  * 
  * @author Victor Ivri
  *
@@ -49,28 +36,16 @@ public class ObjectConverter
 	private ObjectConverter(){} //dummy constructor.
 	
 	
-	public static synchronized Body convertToBody(Object object, int parent, Client client, ObjectDesc od) throws IOException, TPException
+	public static synchronized Body convertToBody(Object object, int parent) throws IOException, TPException
 	{
-		//Generic parameters:
-		//-----------------------
-		List<ObjectParams> params = object.getParameters(od);
-		
-		
 		int game_id = object.getId();
 		String name = object.getName();
-			//3D position:
+			
+		//3D position:
+		PosType pos = object.getPos();
+		long[] position = {pos.getX(), pos.getY(), pos.getZ()};
 		
-		//getting the correct param:
-		ObjectParams.ObjectParamPosition3d pos = null;
-		for (ObjectParams op : params)
-			if (op.getParameterType() == ObjectParamPosition3d.PARAM_TYPE)
-				pos = (ObjectParamPosition3d)op;
-		
-		assert pos != null; //there must be a position!
-		
-		PositionType pt = pos.getPosition();
-		long[] position = {pt.getX(), pt.getY(), pt.getZ()};
-		
+		//modtime:
 		long modtime = object.getModtime();
 		
 			//setting children:
@@ -145,22 +120,22 @@ public class ObjectConverter
 		for (ResourcesType rt : resources)  
 			if (rt != null)
 			{
-				switch (rt.getResourceid())  //rfts-specific mapping.
+				switch (rt.getUnits())  //rfts-specific mapping.
 				{
-					case (1): resource_pts = rt.getStored();
-					case (2): industry = rt.getStored();
-					case (3): population = rt.getStored();
-					case (4): social_env = rt.getStored();
-					case (5): planetary_env = rt.getStored();
-					case (6): pop_maintanance = rt.getStored();
-					case (7): colonist = rt.getStored();
-					case (8): ship_tech = rt.getStored();
-					case (9): pdb1 = rt.getStored();
-					case (10): pdb1_m = rt.getStored();
-					case (11): pdb2 = rt.getStored();
-					case (12): pdb2_m = rt.getStored();
-					case (13): pdb3 = rt.getStored();
-					case (14): pdb3_m = rt.getStored();
+					case (1): resource_pts = rt.getUnits();
+					case (2): industry = rt.getUnits();
+					case (3): population = rt.getUnits();
+					case (4): social_env = rt.getUnits();
+					case (5): planetary_env = rt.getUnits();
+					case (6): pop_maintanance = rt.getUnits();
+					case (7): colonist = rt.getUnits();
+					case (8): ship_tech = rt.getUnits();
+					case (9): pdb1 = rt.getUnits();
+					case (10): pdb1_m = rt.getUnits();
+					case (11): pdb2 = rt.getUnits();
+					case (12): pdb2_m = rt.getUnits();
+					case (13): pdb3 = rt.getUnits();
+					case (14): pdb3_m = rt.getUnits();
 				}
 			}
 		
@@ -172,7 +147,7 @@ public class ObjectConverter
 	 * Note that FOR NOW, it does not seek out designs by name, and dynamically assigns them, 
 	 * but uses a static mapping between ships-types and designs, which works for now.
 	 */
-	private static synchronized Ships convertShips(ObjectParams fleet)
+	private static synchronized Ships convertShips(ObjectParams.Fleet fleet)
 	{
 		List<ShipsType> shipTypes = fleet.getShips();
 		

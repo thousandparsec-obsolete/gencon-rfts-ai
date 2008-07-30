@@ -3,7 +3,6 @@ package gencon.clientLib.RFTS;
 import gencon.clientLib.Client;
 import gencon.clientLib.ClientMethods;
 import gencon.clientLib.ConnectionMethods;
-import gencon.gamelib.AbstractGameObject;
 import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
@@ -18,11 +17,10 @@ import java.util.List;
 
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
-import net.thousandparsec.netlib.tp04.Object;
-import net.thousandparsec.netlib.tp04.ObjectParams;
-import net.thousandparsec.netlib.tp04.Player;
-import net.thousandparsec.netlib.tp04.TP04Visitor;
-import net.thousandparsec.netlib.tp04.Object.ContainsType;
+import net.thousandparsec.netlib.tp03.*;
+import net.thousandparsec.netlib.tp03.Object;
+import net.thousandparsec.netlib.tp03.Object.ContainsType;
+
 
 public class ClientMethodsRFTS extends ClientMethods
 {
@@ -33,7 +31,7 @@ public class ClientMethodsRFTS extends ClientMethods
 
 	public synchronized List<Body> getAllObjects() throws IOException, TPException
 	{
-		SequentialConnection<TP04Visitor> conn = CLIENT.getPipeline();
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
 		Collection<Object> objects = ConnectionMethods.getAllObjects(conn);
 		conn.close();
 		
@@ -45,13 +43,13 @@ public class ClientMethodsRFTS extends ClientMethods
 			{
 				int parent = -2;
 				
-				if (obj.getObject().getParameterType() == ObjectParams..PARAM_TYPE)
+				if (obj.getObject().getParameterType() == ObjectParams.Universe.PARAM_TYPE)
 					parent = Universe.UNIVERSE_PARENT;
 				else
 					parent = findParent(objects, obj).getId(); 
 				//if it's not a universe, it must have a parent! If rule broken, null pointer will be thrown.
 			
-					bodies.add(ObjectConverter.convertToBody(obj, parent, this));
+					bodies.add(ObjectConverter.convertToBody(obj, parent));
 			}
 		}
 		
@@ -66,8 +64,8 @@ public class ClientMethodsRFTS extends ClientMethods
 	{
 		for (Object obj : objects)
 			if (obj != null)
-				for (ContainsType ct : obj())
-					if (ct.getId() == child.())
+				for (ContainsType ct : obj.getContains())
+					if (ct.getId() == child.getId())
 						return obj;	
 		
 		//IF NOT FOUND:
@@ -77,7 +75,7 @@ public class ClientMethodsRFTS extends ClientMethods
 	
 	public synchronized Game_Player getPlayerById(int id) throws IOException, TPException
 	{
-		SequentialConnection<TP04Visitor> conn = CLIENT.getPipeline();
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
 		Player pl = ConnectionMethods.getPlayerById(id, conn);
 		conn.close();
 		
@@ -87,7 +85,7 @@ public class ClientMethodsRFTS extends ClientMethods
 	
 	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
 	{
-		SequentialConnection<TP04Visitor> conn = CLIENT.getPipeline();
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
 		
 		try
 		{
@@ -115,7 +113,7 @@ public class ClientMethodsRFTS extends ClientMethods
 	 */
 	public synchronized boolean moveFleet(Fleet fleet, StarSystem destination_star_system, boolean urgent) throws TPException, IOException
 	{
-		SequentialConnection<TP04Visitor> conn = CLIENT.getPipeline();
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
 		try
 		{
 			boolean result = ConnectionMethods.orderMove(fleet, destination_star_system, urgent, conn);

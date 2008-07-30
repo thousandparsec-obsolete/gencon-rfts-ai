@@ -15,34 +15,11 @@ import java.util.List;
 import net.thousandparsec.netlib.Frame;
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
-import net.thousandparsec.netlib.tp04.Design;
-import net.thousandparsec.netlib.tp04.DesignIDs;
-import net.thousandparsec.netlib.tp04.Fail;
-import net.thousandparsec.netlib.tp04.FinishedTurn;
-import net.thousandparsec.netlib.tp04.GetDesign;
-import net.thousandparsec.netlib.tp04.GetDesignIDs;
-import net.thousandparsec.netlib.tp04.GetObjectIDs;
-import net.thousandparsec.netlib.tp04.GetObjectsByID;
-import net.thousandparsec.netlib.tp04.GetOrder;
-import net.thousandparsec.netlib.tp04.GetOrderDesc;
-import net.thousandparsec.netlib.tp04.GetPlayer;
-import net.thousandparsec.netlib.tp04.GetTimeRemaining;
-import net.thousandparsec.netlib.tp04.Object;
-import net.thousandparsec.netlib.tp04.ObjectIDs;
-import net.thousandparsec.netlib.tp04.Okay;
-import net.thousandparsec.netlib.tp04.Order;
-import net.thousandparsec.netlib.tp04.OrderDesc;
-import net.thousandparsec.netlib.tp04.OrderInsert;
-import net.thousandparsec.netlib.tp04.OrderParams;
-import net.thousandparsec.netlib.tp04.OrderProbe;
-import net.thousandparsec.netlib.tp04.Player;
-import net.thousandparsec.netlib.tp04.Response;
-import net.thousandparsec.netlib.tp04.Sequence;
-import net.thousandparsec.netlib.tp04.TP04Visitor;
-import net.thousandparsec.netlib.tp04.TimeRemaining;
-import net.thousandparsec.netlib.tp04.GetWithID.IdsType;
-import net.thousandparsec.netlib.tp04.GetWithIDSlot.SlotsType;
-import net.thousandparsec.netlib.tp04.IDSequence.ModtimesType;
+import net.thousandparsec.netlib.tp03.*;
+import net.thousandparsec.netlib.tp03.Object;
+import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
+import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
+import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
 
 public class ConnectionMethods
 {
@@ -55,13 +32,13 @@ public class ConnectionMethods
 	private ConnectionMethods(){}	//dummy constructor: static class.
 	//private final static PrintStream stout = System.out;
 	
-	public synchronized static int getTimeRemaining(SequentialConnection<TP04Visitor> conn) throws IOException, TPException
+	public synchronized static int getTimeRemaining(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
      	TimeRemaining tr = sendFrame(new GetTimeRemaining(), TimeRemaining.class, conn);
 		return tr.getTime();
 	}
 
-	public synchronized static Object getObjectById(SequentialConnection<TP04Visitor> conn, int id) throws IOException, TPException
+	public synchronized static Object getObjectById(SequentialConnection<TP03Visitor> conn, int id) throws IOException, TPException
 	{
 		GetObjectsByID get = new GetObjectsByID();
 		get.getIds().add(new IdsType(id));
@@ -72,7 +49,7 @@ public class ConnectionMethods
 		return object;
 	}
 	
-	public synchronized static Collection<Object> getAllObjects(SequentialConnection<TP04Visitor> conn) throws IOException, TPException
+	public synchronized static Collection<Object> getAllObjects(SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		GetObjectIDs gids = new GetObjectIDs();
 		//sets 'gids' to receive all objects:
@@ -104,14 +81,14 @@ public class ConnectionMethods
 		return objects;
 	}
 
-	public synchronized static Player getPlayerById(int id, SequentialConnection<TP04Visitor> conn) throws IOException, TPException
+	public synchronized static Player getPlayerById(int id, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		GetPlayer get = new GetPlayer();
 		get.getIds().add(new IdsType(id));
 		return sendFrame(get, Player.class, conn);
 	}
 	
-	public synchronized static Collection<Player> getAllPlayers(SequentialConnection<TP04Visitor> conn, Collection<Body> game_objects) throws IOException, TPException
+	public synchronized static Collection<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn, Collection<Body> game_objects) throws IOException, TPException
 	{
 		Collection<Integer> playerIds = new HashSet<Integer>(game_objects.size());
 		
@@ -157,7 +134,7 @@ public class ConnectionMethods
 	
 	
 	
-	public synchronized static List<Order> getOrdersForObject(SequentialConnection<TP04Visitor> conn, int objectId, int order_quantity) throws TPException, IOException
+	public synchronized static List<Order> getOrdersForObject(SequentialConnection<TP03Visitor> conn, int objectId, int order_quantity) throws TPException, IOException
 	{
 		GetOrder getOrd = new GetOrder();
 		
@@ -189,7 +166,7 @@ public class ConnectionMethods
 	 * @param urgent If true, then order will be placed in the beginning of the queue; if false, at the end.
 	 * @return The number of turns for the order to complete, or -1 if it's a bad order.
 	 */
-	public synchronized static boolean orderMove(Fleet fleet, StarSystem destination_star_system, boolean urgent, SequentialConnection<TP04Visitor> conn) throws IOException, TPException
+	public synchronized static boolean orderMove(Fleet fleet, StarSystem destination_star_system, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderInsert order = new OrderInsert();
 		order.setOtype(Orders.MOVE_ORDER); //the type of the order
@@ -208,7 +185,7 @@ public class ConnectionMethods
 		//setting the parameters:
 		List<OrderParams> op = new ArrayList<OrderParams>(1);
 		op.add(destination_param);
-		order.setParameters(op, getODbyId(order.getOtype(), conn)); 
+		order.setOrderparams(op, getODbyId(order.getOtype(), conn)); 
 		
 		//getting the response:
 		Response response = sendFrame(order, Response.class, conn);
@@ -229,7 +206,7 @@ public class ConnectionMethods
 	}
 	
 	
-	public synchronized static int orderBuildFleet(Planet planet, Fleet newfleet, boolean urgent, SequentialConnection<TP04Visitor> conn) throws IOException, TPException
+	public synchronized static int orderBuildFleet(Planet planet, Fleet newfleet, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderInsert order = new OrderInsert();
 		order.setOtype(Orders.BUILD_FLEET); //the type of the order
@@ -251,7 +228,7 @@ public class ConnectionMethods
 		/// REGISTER THE SHIPS TYPE
 		/// REGISTER THE NAME OF THE FLEET
 		
-		order.setParameters(op, getODbyId(order.getOtype(), conn)); 
+		order.setOrderparams(op, getODbyId(order.getOtype(), conn)); 
 		
 		//getting the response:
 		Response response = sendFrame(order, Response.class, conn);
@@ -277,7 +254,7 @@ public class ConnectionMethods
 	 * 
 	 * The OrderDesc needs to be already set to the order type, to serve as the template for OrderParams.
 	 */
-	private synchronized static int orderProbeGetTurns(Order order, int order_id, SequentialConnection<TP04Visitor> conn) throws IOException, TPException
+	private synchronized static int orderProbeGetTurns(Order order, int order_id, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderProbe probe = new OrderProbe();
 		
@@ -288,7 +265,7 @@ public class ConnectionMethods
 		
 		//retrieving template and setting the order params:
 		OrderDesc od = getODbyId(order_id, conn);
-		probe.setParameters(order.getParameters(od), od);
+		probe.setOrderparams(order.getOrderparams(od), od);
 		
 		//probling:
 		Response whatIf = sendFrame(probe, Response.class, conn);
@@ -303,7 +280,7 @@ public class ConnectionMethods
 			throw new TPException("Unexpected frame while probing order.");
 	}
 	
-	public static synchronized OrderDesc getODbyId(int id, SequentialConnection<TP04Visitor> conn) throws TPException, IOException
+	public static synchronized OrderDesc getODbyId(int id, SequentialConnection<TP03Visitor> conn) throws TPException, IOException
 	{
 		GetOrderDesc god = new GetOrderDesc(); 
 		List<IdsType> list = god.getIds();
@@ -313,7 +290,7 @@ public class ConnectionMethods
 	}
 	
 	
-	public static synchronized Collection<Design> getDesigns(SequentialConnection<TP04Visitor> conn) throws TPException, IOException
+	public static synchronized Collection<Design> getDesigns(SequentialConnection<TP03Visitor> conn) throws TPException, IOException
 	{
 		GetDesignIDs gdids = new GetDesignIDs();
 		gdids.setAmount(-1);
@@ -335,16 +312,12 @@ public class ConnectionMethods
 	}
 	
 	
-	public synchronized static void finishedTurn(SequentialConnection<TP04Visitor> conn) throws TPException, IOException
-	{
-		sendFrame(new FinishedTurn(), Response.class, conn);
-	}
-	
-	
 	/*
-	 * Re-tries a fixed amount of times in case of failure. If still fails after n-times, fails to retry and throws that exception.
+	 * Use to replace {@link SequentialConnection}.sendFrame.
+	 * Re-tries a fixed amount of times in case of failure. 
+	 * If still fails after n-times, it throws the last exception that pops up.
 	 */
-	private synchronized static <F extends Frame<TP04Visitor>> F sendFrame(Frame<TP04Visitor> frame, Class<F> responseClass, SequentialConnection<TP04Visitor> conn) throws TPException, IOException
+	private synchronized static <F extends Frame<TP03Visitor>> F sendFrame(Frame<TP03Visitor> frame, Class<F> responseClass, SequentialConnection<TP03Visitor> conn) throws TPException, IOException
 	{
 		byte tries = 0;
 		

@@ -1,6 +1,7 @@
 package gencon.clientLib;
 
 import net.thousandparsec.netlib.*;
+import net.thousandparsec.netlib.tp03.TP03Visitor;
 import net.thousandparsec.netlib.tp04.TP04Visitor;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.concurrent.*;
  * @author Victor Ivri
  *
  */
-public class ConnectionManager<V extends TP04Visitor>
+public class ConnectionManager<V extends TP03Visitor>
 {
 	private final PipelinedConnection<V> pConn;
 	private List<SequentialConnection<V>> pipelines;

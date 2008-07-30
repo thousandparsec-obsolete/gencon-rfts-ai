@@ -2,8 +2,9 @@ package gencon.clientLib;
 
 import net.thousandparsec.netlib.Frame;
 import net.thousandparsec.netlib.TPException;
-import net.thousandparsec.netlib.tp04.*;
-import net.thousandparsec.netlib.tp04.TimeRemaining.Reason;
+import net.thousandparsec.netlib.tp03.Fail;
+import net.thousandparsec.netlib.tp03.TP03Visitor;
+import net.thousandparsec.netlib.tp03.TimeRemaining;
 
 /**
  * A {@link TP04Visitor} tailored for Genetic Conquest.
@@ -11,11 +12,11 @@ import net.thousandparsec.netlib.tp04.TimeRemaining.Reason;
  * @author Victor Ivri
  *
  */
-public class GCTP04Visitor extends TP04Visitor
+public class GCTP03Visitor extends TP03Visitor
 {
 	private final Client CLIENT;
 	
-	public GCTP04Visitor(Client client)
+	public GCTP03Visitor(Client client)
 	{
 		super();
 		CLIENT = client;
@@ -31,7 +32,7 @@ public class GCTP04Visitor extends TP04Visitor
     @Override
     public void frame(TimeRemaining frame)
     {
-    	if (frame.getReason() ==  Reason.TimerStarted)
+    	if (frame.getTime() != 0) //an asynch time-remaining frame with !0 value signifies start of turn.
     		CLIENT.pushTurnStartFlag();
     	
     	//else, do nothing.
@@ -40,12 +41,7 @@ public class GCTP04Visitor extends TP04Visitor
     @Override
     public void frame(Fail frame)
     {
-    	System.err.println("Request failed. Frame Seq. num.: " + frame.getSequenceNumber() + "| Reason: " + frame.getResult());
+    	System.err.println("Unexpected failure. Reason: " + frame.getResult());
     }
-
-	public void frame(Component frame) throws TPException
-	{
-		//do nothing. Don't care about new components.
-	}
 
 }
