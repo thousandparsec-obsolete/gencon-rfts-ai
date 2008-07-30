@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 import net.thousandparsec.util.Pair;
@@ -199,11 +198,11 @@ public class GenotypeUtils
 		Scanner fileIn = new Scanner(new File(classPath));
 
 		//how many alleles (lines):
-		int sizeOfGenum = Genotype.getNumOfAlleles();
+		byte sizeOfGenum = Genotype.getNumOfAlleles();
 		
 		//read and translate:
 		Map<Alleles, List<Byte>> traitsMap = new HashMap<Alleles, List<Byte>>();
-		for (int i = 0; i < sizeOfGenum; i++)
+		for (byte i = 0; i < sizeOfGenum; i++)
 		{
 			String line = fileIn.nextLine();
 			Pair<Alleles, List<Byte>> traitsPair = parseLine(line);
@@ -247,15 +246,17 @@ public class GenotypeUtils
 		return mapping.get(new Byte(value));
 	}
 	
-	/*
-	 * Checks the specified file, to see whether or not it fits the standard format.
+	/**
+	 * Checks the specified genome file, to see whether or not it fits the standard format.
 	 */
-	private static boolean checkFormat(String classPath) throws FileNotFoundException, Exception
+	public static boolean checkFormat(String classPath) throws FileNotFoundException, Exception
 	{
+		/* OBSOLETED:
 		//checks whether the filename is correct (has the "_gnm" suffix):
 		if (!classPath.substring(classPath.length() - 4, classPath.length()).equals("_gnm"))
 			return false;
-
+		*/
+		
 		//proceeds to read contents:
 		Scanner fileIn = new Scanner(new File(classPath));
 		
