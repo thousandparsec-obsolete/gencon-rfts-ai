@@ -70,7 +70,14 @@ public class RFTSRobot extends Robot
 		 */
 		
 		//test();
-		//proofOfConcept();
+		try
+		{
+			proofOfConcept();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
 	private void incrementTurn()

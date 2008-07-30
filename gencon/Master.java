@@ -105,22 +105,20 @@ public class Master implements Runnable
 			exit("Failed to extract genotype from file.", ABNORMAL_EXIT, e);
 		}
 		
-		//initializing game status and robot:
-		switch (ruleset)
+		//initializing game status and robot
+		if (ruleset == RULESET.RFTS)
 		{
-			case RFTS:
-			{
-				game_status = new FullGameStatusRFTS(this);
-				game_status.init();
-				robot = new RFTSRobot(genotype, CLIENT, (FullGameStatusRFTS)game_status, difficulty, getTurn());
-			}
-			case RISK:
-			{
-				game_status = new FullGameStatusRISK(this);
-				game_status.init();
-				robot = new RISKRobot(genotype, CLIENT, (FullGameStatusRISK)game_status, difficulty);
-			}
-		}	
+			game_status = new FullGameStatusRFTS(this);
+			game_status.init();
+			robot = new RFTSRobot(genotype, CLIENT, (FullGameStatusRFTS)game_status, difficulty, getTurn());
+		}
+		else
+		{
+			game_status = new FullGameStatusRISK(this);
+			game_status.init();
+			robot = new RISKRobot(genotype, CLIENT, (FullGameStatusRISK)game_status, difficulty);
+		}
+			
 		
 		pl("Done initializing GenCon.");
 	}
@@ -137,7 +135,9 @@ public class Master implements Runnable
 	{
 		while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
 		{
+			pr("?");
 			delayUntilNewTurn(); //wait till start of new turn.
+			pl("!");
 			CLIENT.pushTurnStartFlag(); //push the flag back to its place!
 			startOfTurnRoutine();
 		}
@@ -149,15 +149,15 @@ public class Master implements Runnable
 	 */
 	private void delayUntilNewTurn()
 	{
-		synchronized (CLIENT.END_OF_TURN_MONITOR)
+		while (!CLIENT.isTurnStart())
 		{
 			try
 			{
-				CLIENT.END_OF_TURN_MONITOR.wait();
+				Thread.sleep(500);
 			}
 			catch (InterruptedException e)
 			{
-				exit("Process interrupted.", ABNORMAL_EXIT, e);
+				exit("Thread interrupted", ABNORMAL_EXIT, e);
 			}
 		}
 	}

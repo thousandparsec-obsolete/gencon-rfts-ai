@@ -186,28 +186,7 @@ public class ConnectionMethods
 	
 	public synchronized static int orderBuildFleet(Planet planet, Fleet newfleet, boolean urgent, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
-		OrderInsert order = new OrderInsert();
-		order.setOtype(Orders.BUILD_FLEET); //the type of the order
-		order.setId(planet.GAME_ID); //the object at hand.
-		
-		if (!urgent)
-			order.setSlot(-1); //sets the location of the order at the end of the queue.
-		else
-			order.setSlot(0); //sets the location of the order at the beginning of the queue.
-		
-		
-		//GET THE NAME OUT OF THE FLEET
-		
-		//GET THE SHIPS OUT OF THE FLEET
-		
-		
-		//setting the parameters:
-		List<OrderParams> op = new ArrayList<OrderParams>();
-		/// REGISTER THE SHIPS TYPE
-		/// REGISTER THE NAME OF THE FLEET
-		
-		order.setOrderparams(op, getODbyId(order.getOtype(), conn)); 
-		
+
 		//getting the response:
 		Response response = sendFrame(order, Response.class, conn);
 		

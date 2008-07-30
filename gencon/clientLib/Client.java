@@ -50,7 +50,8 @@ public class Client
 	//	MAINTANANCE
 	//
 	private final Master MASTER;
-	public final java.lang.Object END_OF_TURN_MONITOR = new java.lang.Object();
+	//public final java.lang.Object END_OF_TURN_MONITOR = new java.lang.Object();
+	private boolean turn_start_flag= false; //if true: client has not yet acted upon new turn. 
 	
 	//
 	//	CONNECTION-RELATED
@@ -65,7 +66,6 @@ public class Client
 	//	GAME-RELATED
 	//
 
-	private boolean turnStartFlag = false; //if true: client has not yet acted upon new turn. 
 	
 	
 	
@@ -200,17 +200,14 @@ public class Client
 	 */
 	public synchronized void pushTurnStartFlag()
 	{
-		END_OF_TURN_MONITOR.notify();
+		turn_start_flag = !turn_start_flag;
+		//END_OF_TURN_MONITOR.notify();
 	}
 	
-	/**
-	 * If it's true, means that a new turn has commenced. 
-	 */
-	public synchronized boolean getTurnStartFlag()
+	public synchronized boolean isTurnStart()
 	{
-		return turnStartFlag;
+		return turn_start_flag;
 	}
-	
 	
 	public synchronized ClientMethods getClientMethods()
 	{
