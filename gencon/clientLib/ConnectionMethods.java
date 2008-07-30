@@ -183,13 +183,13 @@ public class ConnectionMethods
 	}
 	
 	
-	/*
+	/**
 	 * Probes the server, and returns the amount of turns to complete the order,
 	 * or -1 if it's illegal, or else a TPException for anything else (which is unexpected).
 	 * 
 	 * The OrderDesc needs to be already set to the order type, to serve as the template for OrderParams.
 	 */
-	private synchronized static int orderProbeGetTurns(Order order, int order_id, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
+	public synchronized static int orderProbeGetTurns(Order order, int order_id, SequentialConnection<TP03Visitor> conn) throws IOException, TPException
 	{
 		OrderProbe probe = new OrderProbe();
 		
