@@ -119,7 +119,7 @@ public class GenotypeUtils
 		}
 		//----------------
 		
-		// RANDOMLY GENERATING THE LOCATIONS, WHERE THE SUBSTITUTION WILL TAKE PLACE:
+		// RANDOMLY GENERATING THE LOCATIONS, WHERE SUBSTITUTION WILL TAKE PLACE:
 		//setting up a randomizer:
 		Random rand = new Random(System.currentTimeMillis());
 		
@@ -140,7 +140,7 @@ public class GenotypeUtils
 			byte value = allele_matrix[location.left][location.right];
 			byte mutant_value = (byte)rand.nextInt(3);
 			
-			while (value == mutant_value) //making sure the value will be different from the original!!
+			while (value == mutant_value) //making sure the value will be different from the original!! don't want 'make-believe' mutations.
 			{
 				mutant_value = (byte)rand.nextInt(3);
 			} 

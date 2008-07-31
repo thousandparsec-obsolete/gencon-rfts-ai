@@ -22,67 +22,11 @@ public class Genotype
 	 * Each trait has a numeric value of 0, 1 or 2. 
 	 * Each trait gives it's own meaning to the value.
 	 * 
-	 * Here's a complete rundown on the traits and their meaning:
-	 * 
-		////////////
-		// "A_" Action behaviors:
-		////////////
-		
-		A_COLONIALIST1, // (0) colonize own sector first ---- (1) colonize own and neighbouring non-hostile sectors --- (2) colonize own and not-neighbouring non-hostile sectors.
-		A_COLONIALIST2, // (0) send colonizer without defensive fleet ---- (1) send colonizer with weak defensive fleet --- (2) send colonizer with strong defensive fleet.
-		
-		A_ATTACK1, // (0) send army to bordering hostile sectors ---- (1) no preference ---- (2) send army to enemy heartland.
-		A_ATTACK2, // (0) send at least evenly matched army to hostile sectors --- (1) no preference ---- (2) only send huge flotillas to crush enemy.
-		
-		////////////
-		// "E_" Economic behaviors:
-		////////////
-		
-		E_OVERALL, // (0) prefer to develop economics over army ---- (1) no preference ---- (2) prefer to emass forces instead of developing economics.
-		
-		E_COLONIALIST1, // (0) produce few colonists/transports ---- (1) produce an intermediate quantity ---- (2) produce large quantity.
-		E_COLONIALIST2, // (0) prefer to produce colonialist fleet in Periphery sectors ---- (1) no preference --- (2) prefer to produce colonialist fleet in Stronghold sectors
-		E_COLONIALIST3, // (0) prefer to produce colonialist fleet in non-threatened sectors ---- (1) no preference ---- (2) prefern to produce colonialist fleet in threatened sectors.
-		
-		//the "develop economics" behaviors:
-		E_INDUSTRY, // (0) industry unimportant ---- (1) normal importance ---- (2) very important.
-		E_SOCENV, // (0) social-environment unimportant ---- (1) normal importance ---- (2) very important.
-		E_PLANENV, // (0) planetary-environment unimportant ---- (1) normal importance ---- (2) very important.
-		E_POPMAINT, // (0) population-maintanance unimportant ---- (1) normal importance ---- (2) very important.
-		
-		E_RESEARCH, // (0) ship-tech unimportant ---- (1) normal importance ---- (2) very important.
-	 * 
-	 * 
 	 */
 	public static enum Alleles
 	{
-		////////////
-		// "A_" Action behaviors:
-		////////////
-		
-		A_COLONIALIST1, // (0) colonize own sector first ---- (1) colonize own and neighbouring non-hostile sectors --- (2) colonize own and not-neighbouring non-hostile sectors.
-		A_COLONIALIST2, // (0) send colonizer without defensive fleet ---- (1) send colonizer with weak defensive fleet --- (2) send colonizer with strong defensive fleet.
-		
-		A_ATTACK1, // (0) send army to bordering hostile sectors ---- (1) no preference ---- (2) send army to enemy heartland.
-		A_ATTACK2, // (0) send at least evenly matched army to hostile sectors --- (1) no preference ---- (2) only send huge flotillas to crush enemy.
-		
-		////////////
-		// "E_" Economic behaviors:
-		////////////
-		
-		E_OVERALL, // (0) prefer to develop economics over army ---- (1) no preference ---- (2) prefer to emass forces instead of developing economics.
-		
-		E_COLONIALIST1, // (0) produce few colonists/transports ---- (1) produce an intermediate quantity ---- (2) produce large quantity.
-		E_COLONIALIST2, // (0) prefer to produce colonialist fleet in Periphery sectors ---- (1) no preference --- (2) prefer to produce colonialist fleet in Stronghold sectors
-		E_COLONIALIST3, // (0) prefer to produce colonialist fleet in non-threatened sectors ---- (1) no preference ---- (2) prefern to produce colonialist fleet in threatened sectors.
-		
-		//the "develop economics" behaviors:
-		E_INDUSTRY, // (0) industry unimportant ---- (1) normal importance ---- (2) very important.
-		E_SOCENV, // (0) social-environment unimportant ---- (1) normal importance ---- (2) very important.
-		E_PLANENV, // (0) planetary-environment unimportant ---- (1) normal importance ---- (2) very important.
-		E_POPMAINT, // (0) population-maintanance unimportant ---- (1) normal importance ---- (2) very important.
-		
-		E_RESEARCH, // (0) ship-tech unimportant ---- (1) normal importance ---- (2) very important.
+		ALLELE_1, ALLELE_2, ALLELE_3, ALLELE_4, ALLELE_5, ALLELE_6, ALLELE_7, ALLELE_8, ALLELE_9, ALLELE_10,
+		ALLELE_11, ALLELE_12, ALLELE_13, ALLELE_14, ALLELE_15, ALLELE_16, ALLELE_17, ALLELE_18, ALLELE_19, ALLELE_20;
 	}
 	
 	
@@ -96,12 +40,12 @@ public class Genotype
 	/**
 	 * The number of turns it takes to switch to the next value of the {@link Alleles} trait, in the 'time-release' {@link List} of the GENOME.
 	 */
-	public static byte TIME_RELEASE = 10; 
+	public static byte TIME_RELEASE = 7; 
 	
 	/**
 	 * The number of 'time-released' values each {@link Alleles} trait will have.
 	 */
-	public final static byte NUM_OF_TIME_RELEASE_VALUES = 16;
+	public final static byte NUM_OF_TIME_RELEASE_VALUES = 20;
 	
 	
 	
@@ -118,7 +62,9 @@ public class Genotype
 	
 	/**
 	 * Provides a mapping of each {@link Alleles} trait, and its {@link Byte} value,
-	 * with respect to the current turn number. 
+	 * with respect to the current turn number. The genome 'wraps around', 
+	 * in case the turn number becomes greater than the number of unique values specified by:
+	 * TIME_RELEASE * NUM_OF_TIME_RELEASE_VALUES .
 	 * 
 	 * Recall that the actual 'genome' code for each {@link Alleles} is a list of time-released values, 
 	 * and this method returns the relevant value relative to the 'age' of the robot. 
@@ -127,6 +73,9 @@ public class Genotype
 	 */
 	public Map<Alleles, Byte> getGenome(int turn_num)
 	{
+		//wrap-around if needed:
+		turn_num = (TIME_RELEASE * NUM_OF_TIME_RELEASE_VALUES) % turn_num;
+		
 		//determine the spot in the time-release list of values:
 		int spot = (turn_num - 1) / TIME_RELEASE;
 		
@@ -144,7 +93,7 @@ public class Genotype
 	 */
 	public List<Byte> getAlleleValues(Alleles allele)
 	{
-		return new ArrayList(GENOME.get(allele));
+		return new ArrayList<Byte>(GENOME.get(allele));
 	}
 	
 	

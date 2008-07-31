@@ -134,7 +134,7 @@ public class Client
 		MASTER.pl("Logged in successfully as : " + MASTER.getMyUsername());
 			
 		//testing!!!
-		//testMethods();
+		testMethods();
 				
 	}
 
@@ -253,10 +253,10 @@ public class Client
 	 */
 	public void testMethods() throws IOException, TPException
 	{
-		//getResourceDescs();
+		getResourceDescs();
 		//seeWhatsInside();
 		//getDesigns();
-		//getOrdersDesc();
+		getOrdersDesc();
 		//printObjectDesc();
 	}
 	
