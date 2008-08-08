@@ -16,6 +16,15 @@ public class test {
 	 */
 	public static void main(String[] args) 
 	{
+		try
+		{
+			GenotypeUtils.makeRandomGenome("/home/vitya/Thousand_Parsec_Devel_Folder/gencon-rfts-ai/Test_genome");
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		
 		String parent = "/home/vitya/Thousand_Parsec_Devel_Folder/gencon-rfts-ai/TestGenome2_gnm";
 		for (int i = 1; i < 10; i++)
 		{

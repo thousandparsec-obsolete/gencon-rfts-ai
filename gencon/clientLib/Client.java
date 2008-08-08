@@ -13,8 +13,10 @@ import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp03.Board;
 import net.thousandparsec.netlib.tp03.BoardIDs;
 import net.thousandparsec.netlib.tp03.Design;
+import net.thousandparsec.netlib.tp03.DesignIDs;
 import net.thousandparsec.netlib.tp03.GetBoardIDs;
 import net.thousandparsec.netlib.tp03.GetBoards;
+import net.thousandparsec.netlib.tp03.GetDesignIDs;
 import net.thousandparsec.netlib.tp03.GetMessage;
 import net.thousandparsec.netlib.tp03.GetOrderDesc;
 import net.thousandparsec.netlib.tp03.GetOrderDescIDs;
@@ -93,7 +95,7 @@ public class Client
 		MASTER.pl("Verbose debug mode on.");
 		
 		MASTER.setRuleset((RULESET)parsedArgs.get(0));
-		MASTER.pl("Ruleset to be played is: " + MASTER.getRuleset());
+		MASTER.pl("Ruleset being played is: " + MASTER.getRuleset());
 		
 		//setting the correct connection methods:
 		if (MASTER.getRuleset() == RULESET.RISK)
@@ -257,10 +259,10 @@ public class Client
 		//seeWhatsInside();
 		//getDesigns();
 		getOrdersDesc();
-		//printObjectDesc();
-	}
-	
-	
+		showAllObjects();
+		
+		throw new TPException("Tests finished.");
+	}	
 	
 	/**
 	 * REALLY, JUST A TEST METHOD TO MAP RESOURCE IDS TO RESOURCE TYPES.
@@ -407,6 +409,19 @@ public class Client
 		}
 		conn.close();
 	}
+	
+	private void showAllObjects() throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = getPipeline();
+		Collection<net.thousandparsec.netlib.tp03.Object> objects = ConnectionMethods.getAllObjects(conn);
+		
+		for (net.thousandparsec.netlib.tp03.Object obj : objects)
+			pl(obj.toString());
+		
+		conn.close();
+	}
+
+	
 	
 	/////////////////////////////////////////////////////
 	/////

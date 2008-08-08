@@ -78,7 +78,7 @@ public class Master implements Runnable
 	
 	private void init(String[] args) 
 	{
-		pl("Welcome to GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS ruleset.");
+		pl("Welcome to GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS and Risk rulesets.");
 		
 		//initializing input listener.
 		in.activate(this);

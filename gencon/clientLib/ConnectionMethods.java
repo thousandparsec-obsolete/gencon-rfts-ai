@@ -68,13 +68,10 @@ public class ConnectionMethods
 		
 		//preparing to store objects:
 		Collection<Object> objects = new HashSet<Object>();
-		
-		//receiving objects:
+
+		//receiving objects, and storing them:
 		for (int i = 0; i < seq.getNumber(); i++)
-		{
-			Object o = conn.receiveFrame(Object.class);
-			objects.add(o);
-		}
+			objects.add(conn.receiveFrame(Object.class));
 		
 		return objects;
 	}
@@ -229,7 +226,7 @@ public class ConnectionMethods
 		gdids.setAmount(-1);
 		gdids.setKey(-1);
 		DesignIDs dids = sendFrame(gdids, DesignIDs.class, conn);
-		
+	
 		GetDesign gd = new GetDesign();
 		for (ModtimesType mdt : dids.getModtimes())
 			gd.getIds().add(new IdsType(mdt.getId()));

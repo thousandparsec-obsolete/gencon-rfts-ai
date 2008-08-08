@@ -17,16 +17,15 @@ import java.util.Set;
 public class Genotype 
 {	
 	/**
-	 * The types of traits a {@link Genotype} has (Note that it has them necessarily).
+	 * The types of traits a {@link Genotype} has. A genotype may have a varying am
 	 *
-	 * Each trait has a numeric value of 0, 1 or 2. 
+	 * Each trait should have a numeric value (or list thereof) in range [0, 2] attached to it in a {@link Map}.
 	 * Each trait gives it's own meaning to the value.
 	 * 
 	 */
 	public static enum Alleles
 	{
-		ALLELE_1, ALLELE_2, ALLELE_3, ALLELE_4, ALLELE_5, ALLELE_6, ALLELE_7, ALLELE_8, ALLELE_9, ALLELE_10,
-		ALLELE_11, ALLELE_12, ALLELE_13, ALLELE_14, ALLELE_15, ALLELE_16, ALLELE_17, ALLELE_18, ALLELE_19, ALLELE_20;
+		ALLELE_1, ALLELE_2, ALLELE_3, ALLELE_4, ALLELE_5, ALLELE_6, ALLELE_7, ALLELE_8, ALLELE_9, ALLELE_10;
 	}
 	
 	
