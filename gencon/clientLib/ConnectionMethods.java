@@ -83,25 +83,25 @@ public class ConnectionMethods
 		return sendFrame(get, Player.class, conn);
 	}
 	
-	public synchronized static Collection<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn, Collection<Body> game_objects) throws IOException, TPException
+	public synchronized static Collection<Player> getAllPlayers(SequentialConnection<TP03Visitor> conn, Collection<Object> game_objects) throws IOException, TPException
 	{
 		Collection<Integer> playerIds = new HashSet<Integer>(game_objects.size());
 		
 		final int NEUTRAL = -1; //the standard demarcation of neutral objects.
 		
 		//add to list of ids if object is a fleet or non-neutral planet, unless the id has been encountered already.
-		for (Body obj : game_objects)
+		for (Object obj : game_objects)
 			if (obj != null)
 			{
-				if (obj.TYPE == Body.BodyType.FLEET)
+				if (obj.getObject().getParameterType() == ObjectParams.Fleet.PARAM_TYPE)
 				{
-					int owner = ((Fleet) obj).OWNER;
+					int owner = ((ObjectParams.Fleet)obj.getObject()).getOwner();
 					if (!checkIfInBag(playerIds, owner)) //if the id hasn't been encountered yet!
 						playerIds.add(new Integer(owner));
 				}
-				else if (obj.TYPE == Body.BodyType.PLANET)
+				else if (obj.getObject().getParameterType() == ObjectParams.Planet.PARAM_TYPE)
 				{
-					int owner = ((Planet) obj).OWNER;
+					int owner = ((ObjectParams.Planet)obj.getObject()).getOwner();
 					if (owner != NEUTRAL && !checkIfInBag(playerIds, owner))
 						playerIds.add(new Integer(owner));
 				}

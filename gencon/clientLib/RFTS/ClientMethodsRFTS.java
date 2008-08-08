@@ -31,13 +31,17 @@ public class ClientMethodsRFTS extends ClientMethods
 		super(client);
 	}
 
-	public synchronized List<Body> getAllObjects() throws IOException, TPException
+	public synchronized Collection<Body> getAllObjects() throws IOException, TPException
 	{
-		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
-		Collection<Object> objects = ConnectionMethods.getAllObjects(conn);
-		conn.close();
+		Collection<Object> objects = CLIENT.getAllObjects();
 		
-		List<Body> bodies = new ArrayList<Body>(objects.size());
+		return convertObjectsToBodies(objects);
+	}
+	
+	
+	public synchronized Collection<Body> convertObjectsToBodies(Collection<Object> objects) throws IOException, TPException
+	{
+		Collection<Body> bodies = new HashSet<Body>(objects.size());
 		
 		for (Object obj : objects)
 		{
@@ -85,7 +89,7 @@ public class ClientMethodsRFTS extends ClientMethods
 	}
 
 	
-	public synchronized Collection<Game_Player> getAllPlayers(Collection<Body> game_objects) throws IOException, TPException
+	public synchronized Collection<Game_Player> getAllPlayers(Collection<Object> game_objects) throws IOException, TPException
 	{
 		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
 		

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.*;
 
 import net.thousandparsec.netlib.TPException;
+import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.util.*;
 
 /**
@@ -77,10 +78,12 @@ public class FullGameStatusRFTS implements FullGameStatus
 			gameHistory.remove(0); 
 		
 
+		Collection<Object> all_objects = MASTER.CLIENT.getAllObjects();
+		
 		//generate new map:
-		UniverseMapRFTS map = makeMap();
+		UniverseMapRFTS map = makeMap(all_objects);
 		//retreive new list of players:
-		Players pl = setPlayers(map.ALL_BODIES);
+		Players pl = setPlayers(all_objects);
 		
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMapRFTS, Players>(map, pl); 
@@ -111,13 +114,13 @@ public class FullGameStatusRFTS implements FullGameStatus
 	}
 
 	
-	private UniverseMapRFTS makeMap() throws IOException, TPException
+	private UniverseMapRFTS makeMap(Collection<Object> objects) throws IOException, TPException
 	{
-		Collection<Body> bodies = CLIENT_RFTS.getAllObjects();
+		Collection<Body> bodies = CLIENT_RFTS.convertObjectsToBodies(objects);
 		return new UniverseMapRFTS(bodies);
 	}
 	
-	private Players setPlayers(Collection<Body> game_objects) throws IOException, TPException
+	private Players setPlayers(Collection<Object> game_objects) throws IOException, TPException
 	{
 		Collection<Game_Player> newPlayers = CLIENT_RFTS.getAllPlayers(game_objects);
 		return new Players(getPlayerName(), newPlayers);
