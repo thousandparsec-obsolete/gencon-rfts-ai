@@ -27,7 +27,7 @@ public class ClientMethodsRISK extends ClientMethods
 		return convertAllObjects(game_objects);
 	}
 	
-	private synchronized Collection<RiskGameObject> convertAllObjects(Collection<Object> objects)
+	public synchronized Collection<RiskGameObject> convertAllObjects(Collection<Object> objects)
 	{
 		//arrange all objects by category:
 		Collection<Object> galaxies = new HashSet<Object>();
@@ -80,5 +80,4 @@ public class ClientMethodsRISK extends ClientMethods
 		//if this point is reached, then everything's fine.
 		return riskObjects;
 	}
-
 }

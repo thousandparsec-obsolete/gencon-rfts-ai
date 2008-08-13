@@ -51,14 +51,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 	{
 		player_name = MASTER.getMyUsername();
 		gameHistory = new ArrayList<Pair<UniverseMapRFTS,Players>>(HISTORY_DEPTH);
-		try
-		{
-			incrementTurn();
-		}
-		catch (Exception e)
-		{
-			MASTER.exit("Failed to update status.", Master.ABNORMAL_EXIT, e);
-		}
+		incrementTurn();
 	}
 	
 	public String getPlayerName()

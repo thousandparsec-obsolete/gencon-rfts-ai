@@ -78,25 +78,6 @@ public class ClientMethodsRFTS extends ClientMethods
 		return null;
 	}
 	
-	public synchronized Collection<Game_Player> getAllPlayers(Collection<Object> game_objects) throws IOException, TPException
-	{
-		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
-		
-		try
-		{
-			Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
-			Collection<Game_Player> players = new HashSet<Game_Player>();
-			
-			for (Player player : pls)
-				players.add(ObjectConverter.convertPlayer(player));
-			
-			return players;
-		}
-		finally
-		{
-			conn.close();
-		}
-	}
 
 	/**
 	 * Order a fleet to move to any star-system in the game-world.

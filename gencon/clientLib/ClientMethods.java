@@ -5,10 +5,12 @@ import gencon.gamelib.Players.Game_Player;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.Design;
+import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.Player;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
 
@@ -30,6 +32,27 @@ public abstract class ClientMethods
 		
 		return ObjectConverter.convertPlayer(pl);
 	}
+	
+	public synchronized Collection<Game_Player> getAllPlayers(Collection<Object> game_objects) throws IOException, TPException
+	{
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
+		
+		try
+		{
+			Collection<Player> pls = ConnectionMethods.getAllPlayers(conn, game_objects);
+			Collection<Game_Player> players = new HashSet<Game_Player>();
+			
+			for (Player player : pls)
+				players.add(ObjectConverter.convertPlayer(player));
+			
+			return players;
+		}
+		finally
+		{
+			conn.close();
+		}
+	}
+
 	
 	public synchronized Object getObjectById(int id) throws IOException, TPException
 	{

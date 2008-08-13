@@ -1,10 +1,12 @@
 package gencon.gamelib;
 
 import gencon.clientLib.Client;
+import gencon.gamelib.RISK.UniverseMap;
 
 import java.io.IOException;
 
 import net.thousandparsec.netlib.TPException;
+import net.thousandparsec.util.Pair;
 
 public interface FullGameStatus 
 {	
@@ -31,7 +33,7 @@ public interface FullGameStatus
 	public boolean checkIfImAlive();
 	
 	/**
-	 * @return A shallow copy of this {@link FullGameStatus}.
+	 * @return A copy of this {@link FullGameStatus}.
 	 */
 	public FullGameStatus copyStatus();
 	
