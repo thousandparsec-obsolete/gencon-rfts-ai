@@ -1,7 +1,5 @@
 package gencon.gamelib.RFTS.gameobjects;
 
-import gencon.gamelib.AbstractGameObject;
-
 import java.util.List;
 
 /**
@@ -11,7 +9,7 @@ import java.util.List;
  * @author Victor Ivri
  *
  */
-public class Body implements AbstractGameObject
+public class Body
 {
 	public final int GAME_ID;
 	public final BodyType TYPE;

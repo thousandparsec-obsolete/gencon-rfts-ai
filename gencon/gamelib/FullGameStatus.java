@@ -11,8 +11,10 @@ public interface FullGameStatus
 	/**
 	 * Initializes at the start of the game.
 	 * 
+	 * @throws IOException
+	 * @throws TPException
 	 */
-	public void init();
+	public void init() throws IOException, TPException;
 	
 	/**
 	 * Updates game-world, using a {@link Client}. 

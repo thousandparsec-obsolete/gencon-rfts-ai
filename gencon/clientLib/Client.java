@@ -150,59 +150,7 @@ public class Client
 	}
 	
 	
-	public synchronized Object getObjectById(int id) throws IOException, TPException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		try
-		{
-			return ConnectionMethods.getObjectById(conn, id);
-		}
-		finally
-		{
-			conn.close();
-		}
-	}
-	
-	public synchronized Collection<net.thousandparsec.netlib.tp03.Object> getAllObjects() throws IOException, TPException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		try
-		{
-			return ConnectionMethods.getAllObjects(conn);
-		}
-		finally
-		{
-			conn.close();
-		}
-	}
-	
-	public synchronized int getTimeRemaining() throws IOException, TPException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		
-		try
-		{
-			return ConnectionMethods.getTimeRemaining(conn);
-		}
-		finally
-		{
-			conn.close();
-		}
-	}
-	
-	public Collection<Design> getDesigns() throws TPException, IOException
-	{
-		SequentialConnection<TP03Visitor> conn = getPipeline();
-		
-		try
-		{
-			return ConnectionMethods.getDesigns(conn);
-		}
-		finally
-		{
-			conn.close();
-		}
-	}
+
 	
 	
 	/**

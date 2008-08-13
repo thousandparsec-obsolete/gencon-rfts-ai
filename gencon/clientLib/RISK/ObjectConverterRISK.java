@@ -1,11 +1,82 @@
 package gencon.clientLib.RISK;
 
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.StringTokenizer;
+
+import net.thousandparsec.netlib.tp03.Object;
+import net.thousandparsec.netlib.tp03.ObjectParams;
+import net.thousandparsec.netlib.tp03.Object.ContainsType;
+import net.thousandparsec.netlib.tp03.ObjectParams.Planet;
+import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
 import gencon.clientLib.ObjectConverterGeneric;
+import gencon.gamelib.RISK.gameobjects.Constellation;
+import gencon.gamelib.RISK.gameobjects.Star;
+import gencon.gamelib.RISK.gameobjects.Wormhole;
 
 public class ObjectConverterRISK extends ObjectConverterGeneric
 {
 	private ObjectConverterRISK(){};
 	
+	public synchronized static Star convertStar(Object star_system, Object planet)
+	{
+		assert star_system.getObject().getParameterType() == ObjectParams.StarSystem.PARAM_TYPE
+			&& planet.getObject().getParameterType() == ObjectParams.Planet.PARAM_TYPE;
+		
+		String name = star_system.getName();
+		int starId = star_system.getId();
+		int planetId = planet.getId();
+		int owner = ((Planet)planet.getObject()).getOwner();
+		int army = getArmy((Planet)planet.getObject()); 
+		int reinforcements = getReinforcements((Planet)planet.getObject());
+		
+		Star star = new Star(name, starId, planetId);
+		star.setArmy(army);
+		star.setAvailableReinforcements(reinforcements);
+		star.setOwner(owner);
+		
+		return star;
+	}
 	
+	
+	private synchronized static int getArmy(Planet planet)
+	{
+		ResourcesType army = planet.getResources().get(0);
+		assert army.getId() == 1;
+		return army.getUnits();
+	}
+	
+	private synchronized static int getReinforcements(Planet planet)
+	{
+		ResourcesType army = planet.getResources().get(0);
+		assert army.getId() == 1;
+		return army.getUnitsminable();
+	}
+	
+	public synchronized static Constellation convertConstellation(Object galaxy)
+	{
+		assert galaxy.getObject().getParameterType() == ObjectParams.Galaxy.PARAM_TYPE;
+		
+		String name = galaxy.getName();
+		int gameId = galaxy.getId();
+		
+		Collection<Integer> starIds = new HashSet<Integer>();
+		for (ContainsType ct : galaxy.getContains())
+			starIds.add(ct.getId());
+		
+		return new Constellation(name, gameId, starIds);
+	}
+	
+	public synchronized static Wormhole convertWormhole(Object wormhole)
+	{
+		assert wormhole.getObject().getParameterType() == ObjectParams.Wormhole.PARAM_TYPE;
+		
+		StringTokenizer st = new StringTokenizer(wormhole.getName(), " to ");
+		String starA = st.nextToken();
+		String starB = st.nextToken();
+		
+		return new Wormhole(starA, starB);
+	}
 	
 }

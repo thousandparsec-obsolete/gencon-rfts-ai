@@ -90,8 +90,6 @@ public class UniverseMap
 		return star;
 	}
 	
-	private final static short INVALID = Short.MAX_VALUE; 
-	
 	/**
 	 * @return The distance between two {@link Star}s on the graph. If result = {@link Short}.MAX_VALUE , then no route exists. In a normal map, should never happen!!!
 	 */
@@ -108,7 +106,7 @@ public class UniverseMap
 	private short getDistRecurs(Star current, Star destination, Collection<Star> traversed, short dist)
 	{
 		if (FOUND) //don't bother if found quicker way!
-			return INVALID;
+			return Short.MAX_VALUE;
 		
 		if (current.equals(destination)) //final case!
 		{
@@ -131,12 +129,12 @@ public class UniverseMap
 					distances[i] = getDistRecurs(s, destination, newTraversed, (short)(dist + 1));
 				}
 				else 
-					distances[i] = INVALID;
+					distances[i] = Short.MAX_VALUE;
 					
 				i++;
 			}
 			
-			short minDist = INVALID;
+			short minDist = Short.MAX_VALUE;
 			for (int j = 0; j < distances.length; j++)
 				if (distances[j] < minDist)
 					minDist = distances[j];

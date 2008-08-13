@@ -109,13 +109,27 @@ public class Master implements Runnable
 		if (ruleset == RULESET.RFTS)
 		{
 			game_status = new FullGameStatusRFTS(this);
-			game_status.init();
+			try
+			{
+				game_status.init();
+			}
+			catch (Exception e)
+			{
+				exit("Failed to initialize RFTS game status." , ABNORMAL_EXIT, e);
+			}
 			robot = new RFTSRobot(genotype, CLIENT, (FullGameStatusRFTS)game_status, difficulty, getTurn());
 		}
 		else
 		{
 			game_status = new FullGameStatusRISK(this);
-			game_status.init();
+			try
+			{
+				game_status.init();
+			}
+			catch (Exception e)
+			{
+				exit("Failed to initialize Risk game status." , ABNORMAL_EXIT, e);
+			}
 			robot = new RISKRobot(genotype, CLIENT, (FullGameStatusRISK)game_status, difficulty);
 		}
 			
@@ -135,9 +149,7 @@ public class Master implements Runnable
 	{
 		while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
 		{
-			pr("?");
 			delayUntilNewTurn(); //wait till start of new turn.
-			pl("!");
 			CLIENT.pushTurnStartFlag(); //push the flag back to its place!
 			startOfTurnRoutine();
 		}
@@ -166,7 +178,7 @@ public class Master implements Runnable
 	{
 		try
 		{
-			int time = CLIENT.getTimeRemaining();
+			int time = CLIENT.getClientMethods().getTimeRemaining();
 			pl("Start of turn routine commencing... " + time + " seconds to end of turn.");
 			game_status.incrementTurn();
 			checkIfImAlive(); //check if I'm alive!

@@ -47,7 +47,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 		CLIENT_RFTS = (ClientMethodsRFTS)MASTER.CLIENT.getClientMethods();
 	}
 	
-	public void init()
+	public void init() throws IOException, TPException
 	{
 		player_name = MASTER.getMyUsername();
 		gameHistory = new ArrayList<Pair<UniverseMapRFTS,Players>>(HISTORY_DEPTH);
@@ -78,7 +78,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 			gameHistory.remove(0); 
 		
 
-		Collection<Object> all_objects = MASTER.CLIENT.getAllObjects();
+		Collection<Object> all_objects = MASTER.CLIENT.getClientMethods().getAllObjects();
 		
 		//generate new map:
 		UniverseMapRFTS map = makeMap(all_objects);

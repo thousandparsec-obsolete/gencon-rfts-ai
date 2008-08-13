@@ -22,14 +22,14 @@ public class FullGameStatusRISK implements FullGameStatus
 		CLIENT_RISK = (ClientMethodsRISK) MASTER.CLIENT.getClientMethods();
 	}
 	
-	public void init() 
+	public void init() throws IOException, TPException
 	{
 		
 	}
 	
 	
-	public void incrementTurn() throws IOException, TPException {
-		// TODO Auto-generated method stub
+	public void incrementTurn() throws IOException, TPException 
+	{
 		
 	}
 	

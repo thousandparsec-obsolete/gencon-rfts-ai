@@ -7,7 +7,8 @@ import gencon.gamelib.Players.Game_Player;
 
 /**
  * A class that represents a combination of Star System and its single Planet in Risk.
- * It carries the Name and Id of the Star System, and the Army and Owner of the Planet.
+ * It carries the Name of the Star System, its Id, as well as the Id, Army and Owner of the Planet.
+ * The Id of the Star System is {@link Star}.GAME_ID, and the Id of its Planet is {@link Star}.PlANET_ID.
  * 
  * It also contains a {@link Collection} of the game-ids of the adjacent {@link Star}s, stored as {@link Integer}s.
  * 
@@ -15,21 +16,26 @@ import gencon.gamelib.Players.Game_Player;
  */
 public class Star extends RiskGameObject
 {
-	private Game_Player owner;
+	public final int PLANET_ID;
+	private int owner;
 	private int army;
+	private int reinforcements;
 	
 	private Collection<Integer> adjacent;
 	
-	public Star(String name, int gameId)
+	public Star(String name, int starId, int planetId)
 	{
-		super(name, gameId);
+		super(name, starId);
+		PLANET_ID = planetId;
 	}
 	
 	public Star(Star other)
 	{
 		super(new String(other.NAME), other.GAME_ID);
+		this.PLANET_ID = other.PLANET_ID;
 		this.owner = other.getOwner();
 		this.army = other.getArmy();
+		this.reinforcements = other.getReinforcementsAvailable();
 		this.adjacent = other.getAdjacencies();
 	}
 	
@@ -43,12 +49,23 @@ public class Star extends RiskGameObject
 		army = newArmy;
 	}
 	
-	public Game_Player getOwner()
+	public int getReinforcementsAvailable()
+	{
+		return reinforcements;
+	}
+	
+	public void setAvailableReinforcements(int amount)
+	{
+		reinforcements = amount;
+	}
+	
+	
+	public int getOwner()
 	{
 		return owner;
 	}
 	
-	public void setOwner(Game_Player newOwner)
+	public void setOwner(int newOwner)
 	{
 		owner = newOwner;
 	}
@@ -71,7 +88,7 @@ public class Star extends RiskGameObject
 	
 	public boolean equals(Star a, Star b)
 	{
-		return a.GAME_ID == b.GAME_ID && a.NAME.equals(b.NAME) && a.getArmy() == b.getArmy() && a.getOwner().NUM == b.getOwner().NUM;
+		return a.GAME_ID == b.GAME_ID && a.NAME.equals(b.NAME) && a.getArmy() == b.getArmy() && a.getOwner() == b.getOwner();
 		//doesn't check for adjacencies, but should be fine.
 	}
 }

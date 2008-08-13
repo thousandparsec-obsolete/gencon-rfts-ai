@@ -31,9 +31,9 @@ public class ClientMethodsRFTS extends ClientMethods
 		super(client);
 	}
 
-	public synchronized Collection<Body> getAllObjects() throws IOException, TPException
+	public synchronized Collection<Body> getAllBodies() throws IOException, TPException
 	{
-		Collection<Object> objects = CLIENT.getAllObjects();
+		Collection<Object> objects = getAllObjects();
 		
 		return convertObjectsToBodies(objects);
 	}
