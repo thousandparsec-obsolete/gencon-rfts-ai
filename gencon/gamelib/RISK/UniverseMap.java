@@ -21,6 +21,20 @@ public class UniverseMap
 		init(gameObjects);
 	}
 	
+	/**
+	 * Deep copy constructor. 
+	 */
+	public UniverseMap(UniverseMap other)
+	{
+		stars = new HashSet<Star>();
+		constellations = new HashSet<Constellation>();
+		
+		for (Star s : other.stars)
+			stars.add(new Star(s));
+		for (Constellation c : other.constellations)
+			constellations.add(new Constellation(c));
+	}
+	
 	/*
 	 * sorts the objects, and creates adjacencies in planets.
 	 */

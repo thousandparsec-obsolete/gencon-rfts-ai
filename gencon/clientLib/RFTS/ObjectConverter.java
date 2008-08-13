@@ -1,6 +1,7 @@
 package gencon.clientLib.RFTS;
 
 import gencon.clientLib.Client;
+import gencon.clientLib.ObjectConverterGeneric;
 import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
@@ -31,7 +32,7 @@ import net.thousandparsec.netlib.tp03.ObjectParams.Planet.ResourcesType;
  * @author Victor Ivri
  *
  */
-public class ObjectConverter 
+public class ObjectConverter extends ObjectConverterGeneric
 {
 	private ObjectConverter(){} //dummy constructor.
 	
@@ -168,11 +169,5 @@ public class ObjectConverter
 		}
 		
 		return new Ships(transports, scouts, Mk1, Mk2, Mk3, Mk4);
-	}
-	
-	
-	public synchronized static Game_Player convertPlayer(Player player)
-	{
-		return new Game_Player(player.getId(), player.getName());
 	}
 }

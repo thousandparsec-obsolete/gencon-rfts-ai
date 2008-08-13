@@ -63,7 +63,7 @@ public class ClientMethodsRFTS extends ClientMethods
 	}
 
 	/*
-	 * Helper method for receiveAllObjects().
+	 * Helper method for convertObjectsToBodies().
 	 * Returns the immediate parent of the object
 	 */
 	private Object findParent(Collection<Object> objects, Object child)
@@ -77,17 +77,6 @@ public class ClientMethodsRFTS extends ClientMethods
 		//IF NOT FOUND:
 		return null;
 	}
-	
-	
-	public synchronized Game_Player getPlayerById(int id) throws IOException, TPException
-	{
-		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
-		Player pl = ConnectionMethods.getPlayerById(id, conn);
-		conn.close();
-		
-		return ObjectConverter.convertPlayer(pl);
-	}
-
 	
 	public synchronized Collection<Game_Player> getAllPlayers(Collection<Object> game_objects) throws IOException, TPException
 	{

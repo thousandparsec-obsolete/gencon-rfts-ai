@@ -1,6 +1,11 @@
 package gencon.clientLib.RISK;
 
-public class ObjectConverterRISK 
-{
+import gencon.clientLib.ObjectConverterGeneric;
 
+public class ObjectConverterRISK extends ObjectConverterGeneric
+{
+	private ObjectConverterRISK(){};
+	
+	
+	
 }

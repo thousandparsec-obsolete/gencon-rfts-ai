@@ -129,7 +129,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 	
 	public boolean checkIfImAlive()
 	{
-		return !(getCurrentStatus().right.getMe() == null);
+		return !(currentStatus.right.getMe() == null);
 	}
 	
 	
