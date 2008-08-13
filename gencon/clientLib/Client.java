@@ -219,7 +219,7 @@ public class Client
 		getOrdersDesc();
 		showAllObjects();
 		
-		throw new TPException("Tests finished.");
+		//throw new TPException("Tests finished.");
 	}	
 	
 	/**

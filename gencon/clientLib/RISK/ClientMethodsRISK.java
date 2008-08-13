@@ -37,7 +37,8 @@ public class ClientMethodsRISK extends ClientMethods
 		
 		for (Object object : objects)
 		{
-			if (object.getObject().getParameterType() == ObjectParams.Galaxy.PARAM_TYPE)
+			if (object.getObject().getParameterType() == ObjectParams.Galaxy.PARAM_TYPE
+					&& !object.getName().equals("Wormholes"))
 				galaxies.add(object);
 			else if (object.getObject().getParameterType() == ObjectParams.Wormhole.PARAM_TYPE)
 				wormholes.add(object);

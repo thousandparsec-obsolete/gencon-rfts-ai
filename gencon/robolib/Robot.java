@@ -23,6 +23,7 @@ public abstract class Robot
 	public Robot(Genotype genome)
 	{
 		GENOME = genome;
+		turn_num = 0;
 	}
 	
 	/**

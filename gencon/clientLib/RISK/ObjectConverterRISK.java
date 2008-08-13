@@ -3,7 +3,6 @@ package gencon.clientLib.RISK;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.StringTokenizer;
 
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.ObjectParams;
@@ -72,9 +71,14 @@ public class ObjectConverterRISK extends ObjectConverterGeneric
 	{
 		assert wormhole.getObject().getParameterType() == ObjectParams.Wormhole.PARAM_TYPE;
 		
-		StringTokenizer st = new StringTokenizer(wormhole.getName(), " to ");
-		String starA = st.nextToken();
-		String starB = st.nextToken();
+		int startIndex = wormhole.getName().indexOf(" to ");
+		int endIndex = startIndex + 4;
+		
+		String starA = wormhole.getName().substring(0, startIndex);
+		String starB = wormhole.getName().substring(endIndex, wormhole.getName().length());
+		
+		//testing:
+		//System.out.println("Wormhole: Converting from '" + wormhole.getName() + "' to: end a: '" + starA + "' and end b: '" + starB + "'");
 		
 		return new Wormhole(starA, starB);
 	}

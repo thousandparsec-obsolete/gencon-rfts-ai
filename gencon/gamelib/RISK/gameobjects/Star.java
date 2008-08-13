@@ -3,8 +3,6 @@ package gencon.gamelib.RISK.gameobjects;
 import java.util.Collection;
 import java.util.HashSet;
 
-import gencon.gamelib.Players.Game_Player;
-
 /**
  * A class that represents a combination of Star System and its single Planet in Risk.
  * It carries the Name of the Star System, its Id, as well as the Id, Army and Owner of the Planet.
@@ -27,6 +25,7 @@ public class Star extends RiskGameObject
 	{
 		super(name, starId);
 		PLANET_ID = planetId;
+		adjacent = new HashSet<Integer>();
 	}
 	
 	public Star(Star other)
@@ -80,7 +79,7 @@ public class Star extends RiskGameObject
 		return returned;
 	}
 	
-	public void addAdjacent(Integer star_id)
+	public void addAdjacent(int star_id)
 	{
 		adjacent.add(new Integer(star_id));
 	}

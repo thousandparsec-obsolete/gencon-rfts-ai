@@ -11,7 +11,9 @@ import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.gamelib.FullGameStatus;
 import gencon.gamelib.Players;
 import gencon.gamelib.Players.Game_Player;
+import gencon.gamelib.RISK.gameobjects.Constellation;
 import gencon.gamelib.RISK.gameobjects.RiskGameObject;
+import gencon.gamelib.RISK.gameobjects.Star;
 
 public class FullGameStatusRISK implements FullGameStatus
 {
@@ -29,6 +31,30 @@ public class FullGameStatusRISK implements FullGameStatus
 	public void init() throws IOException, TPException
 	{
 		incrementTurn();
+		
+		/*
+		//----------------------------\\
+		//		TESTING :
+		
+		MASTER.pl("\nTESTING RISK GAME-WORLD REPRESENTATION:");
+		
+		for (Star s : currentStatus.left.getStars())
+		{
+			MASTER.pl("Star : " + s.NAME + "--" + s.GAME_ID + " Owner: " + s.getOwner() + " Army: " + s.getArmy() + "Reinforcements: " + s.getReinforcementsAvailable() + "\n  Adjacencies: ");
+			for (Integer i : s.getAdjacencies())
+				MASTER.pr(i.intValue() + "  ");
+			
+			MASTER.pl("");
+		}
+		
+		for (Constellation c : currentStatus.left.getConstellations())
+		{
+			MASTER.pl("Constellation: " + c.NAME + "--" + c.GAME_ID + "\n  Stars:");
+			for (Integer i : c.getStars())
+				MASTER.pr(i.intValue() + "  ");
+			MASTER.pl("");
+		}
+		 */
 	}
 	
 	

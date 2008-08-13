@@ -18,6 +18,8 @@ public class UniverseMap
 	
 	public UniverseMap(Collection<RiskGameObject> gameObjects)
 	{
+		constellations = new HashSet<Constellation>();
+		stars = new HashSet<Star>();
 		init(gameObjects);
 	}
 	
@@ -47,10 +49,8 @@ public class UniverseMap
 		{
 			if (rgo.getClass() == Wormhole.class)
 				wormholes.add((Wormhole) rgo);
-			
 			else if (rgo.getClass() == Constellation.class)
 				constellations.add((Constellation) rgo);
-			
 			else if (rgo.getClass() == Star.class)
 				stars.add((Star) rgo);
 		}
@@ -61,7 +61,6 @@ public class UniverseMap
 			Star a = getStarWithName(wh.END_A);
 			Star b = getStarWithName(wh.END_B);
 			
-			//a and b should never be null!!!
 			a.addAdjacent(b.GAME_ID);
 			b.addAdjacent(a.GAME_ID);
 		}
@@ -73,7 +72,7 @@ public class UniverseMap
 			if (s.NAME.equals(name))
 				return s;
 		
-		return null; //if not found
+		return null; //if not found; SHOULD NEVER HAPPEN, THOUGH!
 	}
 	
 	public Star getStarWithId(int id)
