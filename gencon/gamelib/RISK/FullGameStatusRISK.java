@@ -30,31 +30,7 @@ public class FullGameStatusRISK implements FullGameStatus
 	
 	public void init() throws IOException, TPException
 	{
-		incrementTurn();
-		
-		/*
-		//----------------------------\\
-		//		TESTING :
-		
-		MASTER.pl("\nTESTING RISK GAME-WORLD REPRESENTATION:");
-		
-		for (Star s : currentStatus.left.getStars())
-		{
-			MASTER.pl("Star : " + s.NAME + "--" + s.GAME_ID + " Owner: " + s.getOwner() + " Army: " + s.getArmy() + "Reinforcements: " + s.getReinforcementsAvailable() + "\n  Adjacencies: ");
-			for (Integer i : s.getAdjacencies())
-				MASTER.pr(i.intValue() + "  ");
-			
-			MASTER.pl("");
-		}
-		
-		for (Constellation c : currentStatus.left.getConstellations())
-		{
-			MASTER.pl("Constellation: " + c.NAME + "--" + c.GAME_ID + "\n  Stars:");
-			for (Integer i : c.getStars())
-				MASTER.pr(i.intValue() + "  ");
-			MASTER.pl("");
-		}
-		 */
+		//don't need it (yet).
 	}
 	
 	
@@ -76,6 +52,28 @@ public class FullGameStatusRISK implements FullGameStatus
 		Players players = new Players(MASTER.getMyUsername(), gplyers);
 		
 		currentStatus = new Pair<UniverseMap, Players>(map, players);
+		
+		//----------------------------\\
+		//		TESTING :
+		
+		MASTER.pl("\nTESTING RISK GAME-WORLD REPRESENTATION:");
+		
+		for (Star s : currentStatus.left.getStars())
+		{
+			MASTER.pl("Star : " + s.NAME + "--" + s.GAME_ID + " Owner: " + s.getOwner() + " Army: " + s.getArmy() + " Reinforcements: " + s.getReinforcementsAvailable() + "\n  Adjacencies: ");
+			for (Integer i : s.getAdjacencies())
+				MASTER.pr(i.intValue() + "  ");
+			
+			MASTER.pl("");
+		}
+		
+		for (Constellation c : currentStatus.left.getConstellations())
+		{
+			MASTER.pl("Constellation: " + c.NAME + "--" + c.GAME_ID + "\n  Stars:");
+			for (Integer i : c.getStars())
+				MASTER.pr(i.intValue() + "  ");
+			MASTER.pl("");
+		}
 	}
 	
 	public boolean checkIfImAlive() 
@@ -107,5 +105,13 @@ public class FullGameStatusRISK implements FullGameStatus
 				new Players(currentStatus.right.ME, currentStatus.right.PLAYERS));
 	}
 
+	
+	/**
+	 * A convenience method, for seeing how much reinforcements there are.
+	 */
+	public int getReinforcements()
+	{
+		return currentStatus.left.getMyStars(currentStatus.right.getMe().NUM).iterator().next().getReinforcementsAvailable();
+	}
 
 }

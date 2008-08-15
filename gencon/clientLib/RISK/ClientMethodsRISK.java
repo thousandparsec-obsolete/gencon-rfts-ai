@@ -1,17 +1,28 @@
 package gencon.clientLib.RISK;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
+import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.ObjectParams;
+import net.thousandparsec.netlib.tp03.OrderInsert;
+import net.thousandparsec.netlib.tp03.OrderParams;
+import net.thousandparsec.netlib.tp03.TP03Visitor;
+import net.thousandparsec.netlib.tp03.OrderParams.OrderParamList.SelectionType;
+import net.thousandparsec.netlib.tp03.OrderParams.OrderParamReferenceList.ReferencesType;
 import net.thousandparsec.util.Pair;
 
 import gencon.clientLib.Client;
 import gencon.clientLib.ClientMethods;
+import gencon.clientLib.ConnectionMethods;
+import gencon.gamelib.RISK.gameobjects.OrderTypes;
 import gencon.gamelib.RISK.gameobjects.RiskGameObject;
+import gencon.gamelib.RISK.gameobjects.Star;
 
 public class ClientMethodsRISK extends ClientMethods
 {
@@ -80,5 +91,114 @@ public class ClientMethodsRISK extends ClientMethods
 		
 		//if this point is reached, then everything's fine.
 		return riskObjects;
+	}
+	
+	
+	public synchronized boolean orderMove(Star from, Star to, int troops, boolean urgent) throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
+		
+		OrderInsert order = new OrderInsert();
+		order.setOtype(OrderTypes.MOVE);
+		order.setId(from.PLANET_ID);
+		
+		if (!urgent)
+			order.setSlot(-1); //sets the location of the order at the end of the queue.
+		else
+			order.setSlot(0); //sets the location of the order at the beginning of the queue.
+		
+		//setting the parameters:
+		OrderParams.OrderParamList list = new OrderParams.OrderParamList();
+		
+		//setting destination and troops:
+		SelectionType st = new SelectionType();
+		st.setId(to.GAME_ID);
+		st.setNumber(troops);
+		list.getSelection().add(st);
+		
+		try
+		{
+		//registering the parameters:
+			List<OrderParams> op = new ArrayList<OrderParams>(1);
+			op.add(list);
+			order.setOrderparams(op, ConnectionMethods.getODbyId(order.getOtype(), conn)); 
+
+		//getting result:
+			return ConnectionMethods.sendOrder(order, conn);
+		}
+		finally
+		{
+			conn.close();
+		}
+	}
+	
+	public synchronized boolean orderColonize(Star star, int troops, boolean urgent) throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
+		
+		OrderInsert order = new OrderInsert();
+		order.setOtype(OrderTypes.COLONIZE);
+		
+		if (!urgent)
+			order.setSlot(-1); //sets the location of the order at the end of the queue.
+		else
+			order.setSlot(0); //sets the location of the order at the beginning of the queue.
+		
+		//setting the parameters:
+		OrderParams.OrderParamList list = new OrderParams.OrderParamList();
+		
+		//setting destination and troops:
+		SelectionType st = new SelectionType();
+		st.setId(star.GAME_ID);
+		st.setNumber(troops);
+		list.getSelection().add(st);
+		
+		try
+		{
+		//registering the parameters:
+			List<OrderParams> op = new ArrayList<OrderParams>(1);
+			op.add(list);
+			order.setOrderparams(op, ConnectionMethods.getODbyId(order.getOtype(), conn)); 
+
+		//getting result:
+			return ConnectionMethods.sendOrder(order, conn);
+		}
+		finally
+		{
+			conn.close();
+		}
+	}
+	
+	public synchronized boolean orderReinforce(Star star, int troops, boolean urgent) throws TPException, IOException
+	{
+		SequentialConnection<TP03Visitor> conn = CLIENT.getPipeline();
+		
+		OrderInsert order = new OrderInsert();
+		order.setOtype(OrderTypes.REINFORCE);
+		order.setId(star.PLANET_ID);
+		
+		if (!urgent)
+			order.setSlot(-1); //sets the location of the order at the end of the queue.
+		else
+			order.setSlot(0); //sets the location of the order at the beginning of the queue.
+		
+		//setting the parameters:
+		OrderParams.OrderParamTime param = new OrderParams.OrderParamTime();
+		param.setTurns(troops);
+		
+		try
+		{
+		//registering the parameters:
+			List<OrderParams> op = new ArrayList<OrderParams>(1);
+			op.add(param);
+			order.setOrderparams(op, ConnectionMethods.getODbyId(order.getOtype(), conn)); 
+
+		//getting result:
+			return ConnectionMethods.sendOrder(order, conn);
+		}
+		finally
+		{
+			conn.close();
+		}
 	}
 }

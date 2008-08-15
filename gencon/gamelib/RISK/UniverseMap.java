@@ -216,5 +216,17 @@ public class UniverseMap
 		
 		return copied;
 	}
+	
+	
+	public Collection<Star> getMyStars(int myPlayerId)
+	{
+		Collection<Star> copied = new HashSet<Star>();
+		
+		for (Star s : stars)
+			if (s.getOwner() == myPlayerId)
+				copied.add(new Star(s));
+		
+		return copied;
+	}
 
 }

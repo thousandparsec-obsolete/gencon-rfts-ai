@@ -105,14 +105,14 @@ public class ClientMethodsRFTS extends ClientMethods
 		destination_param.setObjectid(destination_star_system.GAME_ID);
 		
 		
-		//setting the parameters:
-		List<OrderParams> op = new ArrayList<OrderParams>(1);
-		op.add(destination_param);
-		order.setOrderparams(op, ConnectionMethods.getODbyId(order.getOtype(), conn)); 
-		
-		
 		try
 		{
+		//setting the parameters:
+			List<OrderParams> op = new ArrayList<OrderParams>(1);
+			op.add(destination_param);
+			order.setOrderparams(op, ConnectionMethods.getODbyId(order.getOtype(), conn)); 
+		
+		//getting result:
 			boolean result = ConnectionMethods.sendOrder(order, conn);
 			return result;
 		}

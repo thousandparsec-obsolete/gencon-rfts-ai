@@ -217,7 +217,7 @@ public class Client
 		//seeWhatsInside();
 		//getDesigns();
 		getOrdersDesc();
-		showAllObjects();
+		//showAllObjects();
 		
 		//throw new TPException("Tests finished.");
 	}	

@@ -145,6 +145,7 @@ public class Master implements Runnable
 		gameCycle();
 	}
 	
+	
 	private void gameCycle()
 	{
 		while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
