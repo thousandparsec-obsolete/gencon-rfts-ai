@@ -100,7 +100,7 @@ public class ClientMethodsRISK extends ClientMethods
 		
 		OrderInsert order = new OrderInsert();
 		order.setOtype(OrderTypes.MOVE);
-		order.setId(from.PLANET_ID);
+		order.setId(from.GAME_ID);
 		
 		if (!urgent)
 			order.setSlot(-1); //sets the location of the order at the end of the queue.
@@ -112,7 +112,7 @@ public class ClientMethodsRISK extends ClientMethods
 		
 		//setting destination and troops:
 		SelectionType st = new SelectionType();
-		st.setId(to.PLANET_ID);
+		st.setId(to.GAME_ID);
 		st.setNumber(troops);
 		list.getSelection().add(st);
 		
@@ -138,7 +138,7 @@ public class ClientMethodsRISK extends ClientMethods
 		
 		OrderInsert order = new OrderInsert();
 		order.setOtype(OrderTypes.COLONIZE);
-		order.setId(star.PLANET_ID);
+		//order.setId(star.PLANET_ID);
 		
 		
 		if (!urgent)
@@ -151,8 +151,8 @@ public class ClientMethodsRISK extends ClientMethods
 		
 		//setting destination and troops:
 		SelectionType st = new SelectionType();
-		st.setId(troops);
-		//st.setNumber(troops);
+		st.setId(star.GAME_ID);
+		st.setNumber(troops);
 		list.getSelection().add(st);
 		
 		try
@@ -177,7 +177,7 @@ public class ClientMethodsRISK extends ClientMethods
 		
 		OrderInsert order = new OrderInsert();
 		order.setOtype(OrderTypes.REINFORCE);
-		order.setId(star.PLANET_ID);
+		order.setId(star.GAME_ID);
 		
 		if (!urgent)
 			order.setSlot(-1); //sets the location of the order at the end of the queue.

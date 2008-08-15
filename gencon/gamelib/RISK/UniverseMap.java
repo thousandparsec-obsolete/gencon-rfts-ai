@@ -218,15 +218,16 @@ public class UniverseMap
 	}
 	
 	
-	public Collection<Star> getMyStars(int myPlayerId)
+	public Collection<Star> getStarsOfPlayer(int playerid)
 	{
 		Collection<Star> copied = new HashSet<Star>();
 		
 		for (Star s : stars)
-			if (s.getOwner() == myPlayerId)
+			if (s.getOwner() == playerid)
 				copied.add(new Star(s));
 		
 		return copied;
 	}
+	
 
 }

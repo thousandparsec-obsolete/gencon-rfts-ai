@@ -14,6 +14,7 @@ public class RISKRobot extends Robot
 	public final Client CLIENT;
 	public final ClientMethodsRISK CLIENT_RISK;
 	public final FullGameStatusRISK FGS;
+	public final AdvancedMap ADVANCED_MAP;
 
 	public RISKRobot(Genotype genome, Client client, FullGameStatusRISK fgs, short difficulty) 
 	{
@@ -22,6 +23,7 @@ public class RISKRobot extends Robot
 		CLIENT = client;
 		CLIENT_RISK = (ClientMethodsRISK) CLIENT.getClientMethods();
 		FGS = fgs;
+		ADVANCED_MAP = new AdvancedMap(FGS);
 	}
 
 	@Override

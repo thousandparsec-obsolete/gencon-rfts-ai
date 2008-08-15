@@ -24,13 +24,12 @@ public class ObjectConverterRISK extends ObjectConverterGeneric
 			&& planet.getObject().getParameterType() == ObjectParams.Planet.PARAM_TYPE;
 		
 		String name = star_system.getName();
-		int starId = star_system.getId();
-		int planetId = planet.getId();
+		int starId = planet.getId();
 		int owner = ((Planet)planet.getObject()).getOwner();
 		int army = getArmy((Planet)planet.getObject()); 
 		int reinforcements = getReinforcements((Planet)planet.getObject());
 		
-		Star star = new Star(name, starId, planetId);
+		Star star = new Star(name, starId);
 		star.setArmy(army);
 		star.setAvailableReinforcements(reinforcements);
 		star.setOwner(owner);

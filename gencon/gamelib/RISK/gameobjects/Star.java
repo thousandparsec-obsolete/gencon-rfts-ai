@@ -14,24 +14,21 @@ import java.util.HashSet;
  */
 public class Star extends RiskGameObject
 {
-	public final int PLANET_ID;
 	private int owner;
 	private int army;
 	private int reinforcements;
 	
 	private Collection<Integer> adjacent;
 	
-	public Star(String name, int starId, int planetId)
+	public Star(String name, int starId)
 	{
 		super(name, starId);
-		PLANET_ID = planetId;
 		adjacent = new HashSet<Integer>();
 	}
 	
 	public Star(Star other)
 	{
 		super(new String(other.NAME), other.GAME_ID);
-		this.PLANET_ID = other.PLANET_ID;
 		this.owner = other.getOwner();
 		this.army = other.getArmy();
 		this.reinforcements = other.getReinforcementsAvailable();

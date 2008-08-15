@@ -111,7 +111,7 @@ public class FullGameStatusRISK implements FullGameStatus
 	 */
 	public int getReinforcements()
 	{
-		return currentStatus.left.getMyStars(currentStatus.right.getMe().NUM).iterator().next().getReinforcementsAvailable();
+		return currentStatus.left.getStarsOfPlayer(currentStatus.right.getMe().NUM).iterator().next().getReinforcementsAvailable();
 	}
 
 }
