@@ -60,16 +60,18 @@ public class AdvancedMap
 			//iterating over neighbors:
 			for (Star neighbor : adjacent)
 			{
-				if (neighbor.getOwner() != as.STAR.getOwner() && !enemies.contains(neighbor.getOwner()))
+				if (neighbor.getOwner() != as.STAR.getOwner() && neighbor.getOwner() != -1) //if it's not friendly
 				{
 					enemyForces += neighbor.getArmy();
-					enemies.add(neighbor.getOwner());
+					
+					if (!enemies.contains(neighbor.getOwner())) //add to enemy list, if it's not already there!
+						enemies.add(neighbor.getOwner());
 				}
 				
 				else if (neighbor.getOwner() == as.STAR.getOwner()) //if it's friendly to it.
 					enemyForces -= neighbor.getArmy();
 				
-				backwaters = backwaters && neighbor.getOwner() == as.STAR.getOwner();
+				backwaters = backwaters && neighbor.getOwner() == as.STAR.getOwner(); //only true if all are friendly.
 			}
 			
 			//making the calculations:
