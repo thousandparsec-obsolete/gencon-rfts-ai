@@ -29,6 +29,8 @@ public class RISKRobot extends Robot
 	{
 		super.startTurn(time_remaining);
 		test();
+		
+		
 	}
 	
 	
@@ -78,7 +80,7 @@ public class RISKRobot extends Robot
 			e.printStackTrace();
 			System.exit(0);
 		}
-		/*
+
 		//testing reinforce:
 		try
 		{
@@ -92,7 +94,6 @@ public class RISKRobot extends Robot
 			System.exit(0);
 		}
 		
-		*/
 	}
 
 	
