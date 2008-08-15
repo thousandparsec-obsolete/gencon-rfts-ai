@@ -12,7 +12,6 @@ import gencon.gamelib.RISK.gameobjects.Star;
 public class AdvancedMap 
 {
 	private UniverseMap basicMap;
-	private Players players;
 	private final FullGameStatusRISK FGS;
 	
 	private Collection<AdvancedStar> advancedStars;
@@ -26,10 +25,9 @@ public class AdvancedMap
 	{
 		Pair<UniverseMap, Players> status = FGS.getCurrentStatus();
 		basicMap = status.left;
-		players = status.right;
 		
 		generateAdvancedStars();
-		generateThreatsToAdvStars();
+		generateParametersOfAdvStars();
 	}
 	
 	public void generateAdvancedStars()
@@ -41,7 +39,7 @@ public class AdvancedMap
 			advancedStars.add(new AdvancedStar(star));
 	}
 	
-	public void generateThreatsToAdvStars()
+	public void generateParametersOfAdvStars()
 	{
 		for (AdvancedStar as : advancedStars)
 		{
@@ -57,15 +55,21 @@ public class AdvancedMap
 			
 			int enemyForces = 0;
 			Collection<Integer> enemies = new HashSet<Integer>();
+			boolean backwaters = true;
 			
 			//iterating over neighbors:
 			for (Star neighbor : adjacent)
 			{
-				enemyForces += neighbor.getArmy();
-				
-				if (neighbor.getOwner() != -1 && neighbor.getOwner() != as.STAR.getOwner() 
-						&& !enemies.contains(neighbor.getOwner()))
+				if (neighbor.getOwner() != as.STAR.getOwner() && !enemies.contains(neighbor.getOwner()))
+				{
+					enemyForces += neighbor.getArmy();
 					enemies.add(neighbor.getOwner());
+				}
+				
+				else if (neighbor.getOwner() == as.STAR.getOwner()) //if it's friendly to it.
+					enemyForces -= neighbor.getArmy();
+				
+				backwaters = backwaters && neighbor.getOwner() == as.STAR.getOwner();
 			}
 			
 			//making the calculations:
@@ -75,6 +79,7 @@ public class AdvancedMap
 			//setting values:
 			as.setThreat(threat);
 			as.setThreatDiversity(enemyCount);
+			as.setBackwaters(backwaters);
 		}
 	}
 	
@@ -94,8 +99,9 @@ public class AdvancedMap
 	public static class AdvancedStar
 	{
 		public final Star STAR;
-		private double threat;
+		private double threat; //how much is it in danger?
 		private byte threat_diversity; //how many players threaten it?
+		private boolean backwaters;
 		
 		public AdvancedStar(Star star)
 		{
@@ -107,6 +113,7 @@ public class AdvancedMap
 			this.STAR = new Star(other.STAR);
 			this.threat = other.getThreat();
 			this.threat_diversity = other.getThreatDiversity();
+			this.backwaters = other.getBackwaters();
 		}
 		
 		public double getThreat()
@@ -127,6 +134,16 @@ public class AdvancedMap
 		public void setThreatDiversity(byte value)
 		{
 			threat_diversity = value;
+		}
+		
+		public boolean getBackwaters()
+		{
+			return backwaters;
+		}
+		
+		public void setBackwaters(boolean value)
+		{
+			backwaters = value;
 		}
 	}
 	
