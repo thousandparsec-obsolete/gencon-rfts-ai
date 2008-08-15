@@ -170,7 +170,10 @@ public class ConnectionMethods
 		
 		//if order illegal.
 		else if (response.getFrameType() == Fail.FRAME_TYPE) 
+		{
+			System.out.println(response.toString());
 			return false;
+		}
 		
 		else //unexpected frame.
 			throw new TPException("Unexpected frame while trying to insert move order.");

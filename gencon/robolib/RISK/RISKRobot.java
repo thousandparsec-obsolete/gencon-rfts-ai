@@ -36,8 +36,14 @@ public class RISKRobot extends Robot
 	
 	public void test()
 	{
-		
-		//testing colonize:
+		testColonize();
+		testMove();
+		testReinforce();
+	}
+	
+	
+	private void testColonize()
+	{
 		Star neutral = null;
 		for (Star s :FGS.getCurrentStatus().left.getStars())
 			if (s.getOwner() == -1)
@@ -56,8 +62,10 @@ public class RISKRobot extends Robot
 			e.printStackTrace();
 			System.exit(0);
 		}
-
-		//testing move:
+	}
+	
+	private void testMove()
+	{
 		Star star = null;
 		for (Star s : FGS.getCurrentStatus().left.getStars())
 			if (s.getOwner() == FGS.getCurrentStatus().right.getMe().NUM)
@@ -81,7 +89,18 @@ public class RISKRobot extends Robot
 			System.exit(0);
 		}
 
-		//testing reinforce:
+	}
+	
+	private void testReinforce()
+	{
+		Star star = null;
+		for (Star s : FGS.getCurrentStatus().left.getStars())
+			if (s.getOwner() == FGS.getCurrentStatus().right.getMe().NUM)
+			{
+				star = s;
+				break;
+			}
+		
 		try
 		{
 			boolean c = CLIENT_RISK.orderReinforce(star, 19, false);
@@ -93,7 +112,6 @@ public class RISKRobot extends Robot
 			e.printStackTrace();
 			System.exit(0);
 		}
-		
 	}
 
 	
