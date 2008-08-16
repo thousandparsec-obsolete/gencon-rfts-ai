@@ -13,7 +13,6 @@ import gencon.gamelib.RISK.gameobjects.Star;
 
 public class AdvancedMap 
 {
-	private UniverseMap basicMap;
 	private final FullGameStatusRISK FGS;
 	
 	private Collection<AdvancedStar> advancedStars;
@@ -26,7 +25,6 @@ public class AdvancedMap
 	public void updateMap()
 	{
 		Pair<UniverseMap, Players> status = FGS.getCurrentStatus();
-		basicMap = status.left;
 		
 		generateAdvancedStars();
 		generateParametersOfAdvStars();
@@ -34,6 +32,7 @@ public class AdvancedMap
 	
 	public void generateAdvancedStars()
 	{
+		UniverseMap basicMap = FGS.getCurrentStatus().left;
 		Collection<Star> stars = basicMap.getStars();
 		advancedStars = new HashSet<AdvancedStar>(stars.size());
 		
@@ -43,6 +42,7 @@ public class AdvancedMap
 	
 	public void generateParametersOfAdvStars()
 	{
+		UniverseMap basicMap = FGS.getCurrentStatus().left;
 		for (AdvancedStar as : advancedStars)
 		{
 			//collecting neighbors:
@@ -70,7 +70,7 @@ public class AdvancedMap
 						enemies.add(neighbor.getOwner());
 				}
 				
-				backwaters = backwaters && neighbor.getOwner() == as.STAR.getOwner(); //only true if all are friendly.
+				backwaters = backwaters && neighbor.getOwner() == as.STAR.getOwner(); //only true if all are friendly to it.
 			}
 			
 			//counting number of enemies:
@@ -150,6 +150,32 @@ public class AdvancedMap
 		}
 		
 		return left;
+	}
+	
+	public UniverseMap getBasicMap()
+	{
+		return FGS.getCurrentStatus().left;
+	}
+	
+	public Collection<AdvancedStar> getAllAdvStars()
+	{
+		Collection<AdvancedStar> returned = new HashSet<AdvancedStar>();
+
+		for (AdvancedStar as : advancedStars)
+			returned.add(new AdvancedStar(as));
+		
+		return returned;
+	}
+	
+	public Collection<AdvancedStar> getStarsOfPlayer(Collection<AdvancedStar> someStars, int playerId)
+	{
+		Collection<AdvancedStar> returned = new HashSet<AdvancedStar>();
+		
+		for (AdvancedStar as : someStars)
+			if (as.STAR.getOwner() == playerId)
+				returned.add(new AdvancedStar(as));
+		
+		return returned;
 	}
 	
 	
