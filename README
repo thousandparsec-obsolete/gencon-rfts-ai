@@ -17,7 +17,7 @@ which means that whenever another character is entered before 'q', this will not
 	 
 The argument syntax is as follows: (Case sensitive!)
 ----------------------------------
- 1) The game to be played: 'RFTS' or 'RISK'.
+ 1) The game to be played: 'rfts' or 'risk'.
  2) The server URI: The serverURI must include user info for autologin, 
 		e.g. "tp://guest:guest@thousandparsec.net/tp".
  3) The class-path to the genome file, which will be used.
@@ -25,7 +25,7 @@ The argument syntax is as follows: (Case sensitive!)
  5) Verbose debug mode, or normal (quiet) mode. 'd' signifies debug, while 'n' means normal mode.
 
  Here's an example of what a run might look like:
- > java GenConRunner RISK tp://me:me@localhost /genomes/DarkSide_risk_genome 8 n 
+ > java GenConRunner risk tp://me:me@localhost /genomes/DarkSide_risk_genome 8 n 
 
 
 *** If the argument syntax is incorrect, or else some argument is faulty for any reason, the client will terminate upon catching that.

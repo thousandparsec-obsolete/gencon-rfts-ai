@@ -45,7 +45,7 @@ public class Utils
 		try
 		{
 			assert args.length == 5;
-			assert args[0].equals("RFTS") || args[1].equals("RISK");
+			assert args[0].equals("rfts") || args[1].equals("risk");
 			assert args[3].matches("[1-9]");
 			assert args[4].equals("d") || args[4].equals("n"); //d - debug ; n - normal.
 		}
@@ -63,7 +63,7 @@ public class Utils
 		
 		//setting the rest based on results:
 		//---------------------------------
-		if (args[0].equals("RFTS"))
+		if (args[0].equals("rfts"))
 			ruleset = RULESET.RFTS;
 		//else: the default.
 		
