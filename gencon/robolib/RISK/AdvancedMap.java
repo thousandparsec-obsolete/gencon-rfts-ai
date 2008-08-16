@@ -1,7 +1,9 @@
 package gencon.robolib.RISK;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import net.thousandparsec.util.Pair;
 import gencon.gamelib.Players;
@@ -68,23 +70,29 @@ public class AdvancedMap
 						enemies.add(neighbor.getOwner());
 				}
 				
-				else if (neighbor.getOwner() == as.STAR.getOwner()) //if it's friendly to it.
-					enemyForces -= neighbor.getArmy();
-				
 				backwaters = backwaters && neighbor.getOwner() == as.STAR.getOwner(); //only true if all are friendly.
 			}
 			
-			//making the calculations:
-			double threat = enemyForces / forces;
-			byte enemyCount = (byte)enemies.size();
+			//counting number of enemies:
+			int enemyCount = enemies.size();
+			if (enemyCount < 1) //minimum 1, for calculation.
+				enemyCount = 1;
+			
+			/*
+			 * Calculating threat based on the amount of enemy soldiers nearby, 
+			 * and the amount of different players the threat comes from.
+			 * (More players means lower threat)
+			 * Also, checking if the planet is solely surrounded by friendly planets.
+			 * If so, it's marked 'backwaters'.
+			 */
+			//the threat formula:
+			double threat = (enemyForces / forces) * (1 / enemies.size());
 			
 			//setting values:
 			as.setThreat(threat);
-			as.setThreatDiversity(enemyCount);
 			as.setBackwaters(backwaters);
 		}
 	}
-	
 	
 	public AdvancedStar getAdvancedStarWithId(int id)
 	{
@@ -96,13 +104,59 @@ public class AdvancedMap
 		return star;
 	}
 	
+	/**
+	 * @return A {@link List} of {@link AdvancedStar}s, sorted high-to-low with respect to {@link AdvancedStar}.getThreat().
+	 */
+	public List<AdvancedStar> sortByThreat(Collection<AdvancedStar> advStars)
+	{
+		List<AdvancedStar> unsorted = new ArrayList<AdvancedStar>(advStars);
+		return mergeSort(unsorted);
+	}
+	
+	private List<AdvancedStar> mergeSort(List<AdvancedStar> unsorted)
+	{
+		if (unsorted.size() <= 1)
+			return unsorted;
+		
+		else
+		{
+			int midpoint = unsorted.size() / 2;
+			
+			List<AdvancedStar> left = mergeSort(unsorted.subList(0, midpoint));
+			List<AdvancedStar> right = mergeSort(unsorted.subList(midpoint, unsorted.size()));
+			
+			return merge(left, right);
+		}
+	}
+	
+	private List<AdvancedStar> merge(List<AdvancedStar> left, List<AdvancedStar> right)
+	{
+		for (AdvancedStar star : right)
+		{
+			//is it smaller than the smallest one? if so, put in the end.
+			if (star.getThreat() < left.get(left.size()).getThreat())
+				left.add(star);
+			
+			//if no, find one which is smaller than it, and squeeze it in front of the smaller one.
+			else
+				for (int i = 0; i < left.size(); i++)
+				{
+					if (star.getThreat() > left.get(i).getThreat())
+					{
+						left.add(i, star);
+						break;
+					}
+				}
+		}
+		
+		return left;
+	}
 	
 	
 	public static class AdvancedStar
 	{
 		public final Star STAR;
 		private double threat; //how much is it in danger?
-		private byte threat_diversity; //how many players threaten it?
 		private boolean backwaters;
 		
 		public AdvancedStar(Star star)
@@ -114,7 +168,6 @@ public class AdvancedMap
 		{
 			this.STAR = new Star(other.STAR);
 			this.threat = other.getThreat();
-			this.threat_diversity = other.getThreatDiversity();
 			this.backwaters = other.getBackwaters();
 		}
 		
@@ -126,16 +179,6 @@ public class AdvancedMap
 		public void setThreat(double value)
 		{
 			threat = value;
-		}
-		
-		public byte getThreatDiversity()
-		{
-			return threat_diversity;
-		}
-		
-		public void setThreatDiversity(byte value)
-		{
-			threat_diversity = value;
 		}
 		
 		public boolean getBackwaters()
