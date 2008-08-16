@@ -134,7 +134,7 @@ public class AdvancedMap
 		for (AdvancedStar star : right)
 		{
 			//is it smaller than the smallest one? if so, put in the end.
-			if (star.getThreat() < left.get(left.size()).getThreat())
+			if (star.getThreat() < left.get(left.size() - 1).getThreat())
 				left.add(star);
 			
 			//if no, find one which is smaller than it, and squeeze it in front of the smaller one.
