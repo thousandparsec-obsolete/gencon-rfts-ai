@@ -42,20 +42,20 @@ public class ActionMethods
 	 * Reinforces N-most-endangered planets, relative to the threat they face.
 	 * 
 	 * @param num_of_planets Number of planets to be reinforced.
-	 * @param gene Can be 0, 1 or 2. Determines the amount of reinforcements to be distributed: 
+	 * @param geneReinforce Can be 0, 1 or 2. Determines the amount of reinforcements to be distributed: 
 	 * 	0 (33% of total available reinforcements), 1 (50%), or 2 (66%).
 	 * @return true if all went well, false if (at least some) orders failed.
 	 */
-	public boolean ReinforceEndangeredPlanets(int num_of_stars, byte gene, int myPlrNum)
+	public boolean ReinforceEndangeredPlanets(int num_of_stars, byte geneReinforce, int myPlrNum)
 	{
-		assert gene == 0 || gene == 1 || gene == 2;
+		assert geneReinforce == 0 || geneReinforce == 1 || geneReinforce == 2;
 		
 		double importance = 0.0;
-		if (gene == 0)
+		if (geneReinforce == 0)
 			importance = 0.33333;
-		else if (gene == 1)
+		else if (geneReinforce == 1)
 			importance = 0.5;
-		else if (gene == 2)
+		else if (geneReinforce == 2)
 			importance = 0.66666;
 		
 		
@@ -110,6 +110,7 @@ public class ActionMethods
 				try
 				{
 					success = success && orderReinforce(star, reinforce, false);
+					star.setArmy(star.getArmy() + reinforce);
 				}
 				catch (Exception e)
 				{
@@ -129,14 +130,14 @@ public class ActionMethods
 	 * Transfers troops from backwater planets (ones which are surrounded by friendlies),
 	 * to nearby friendly planets, which are endangered. 
 	 * 
-	 * @param gene Can be 0, 1 or 2. Determines the behavior of troop transfer: 
+	 * @param geneBackwaterDistribute Can be 0, 1 or 2. Determines the behavior of troop transfer: 
 	 * 	0 means all troops to most endangered planet, 1 means 50% to most endangered, the rest evenly distributed between neighbors,
 	 * and 2 evenly distributes between all neighbors.
 	 * @return true if all went well, false if (at least some) orders failed.
 	 */
-	public boolean transferTroopsFromBackwaterStars(byte gene, int myPlrNum)
+	public boolean transferTroopsFromBackwaterStars(byte geneBackwaterDistribute, int myPlrNum)
 	{
-		assert gene == 0 || gene == 1 || gene == 2;
+		assert geneBackwaterDistribute == 0 || geneBackwaterDistribute == 1 || geneBackwaterDistribute == 2;
 
 		boolean success = true; //the value to be returned.
 		
@@ -157,7 +158,7 @@ public class ActionMethods
 			if (neighbors.isEmpty()) //nowhere to send!
 				return true;
 			
-			if (gene == 0 || gene == 1) //gives all troops to most endangered.
+			if (geneBackwaterDistribute == 0 || geneBackwaterDistribute == 1) //gives all troops to most endangered.
 			{
 				//get the most endangered one:
 				Iterator<AdvancedStar> iterator = neighbors.iterator();
@@ -170,11 +171,13 @@ public class ActionMethods
 				}
 				neighbors.remove(endangered); //no need to keep it there!
 				
-				if (gene == 0) //give all to 
+				if (geneBackwaterDistribute == 0) //give all to most endangered:
 				{
 					try
 					{
-						return orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, false);
+						success = orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, false);
+						endangered.STAR.setArmy(endangered.STAR.getArmy() + star.STAR.getArmy() - 1);
+						return success;
 					}
 					catch (Exception e)
 					{
@@ -187,6 +190,7 @@ public class ActionMethods
 				try
 				{
 					success = success && orderMove(star.STAR, endangered.STAR, halfArmy, false);
+					endangered.STAR.setArmy(endangered.STAR.getArmy() + halfArmy);
 				}
 				catch (Exception e)
 				{
@@ -203,6 +207,7 @@ public class ActionMethods
 					try
 					{
 						success = success && orderMove(star.STAR, neighbor.STAR, eachGets, false);
+						neighbor.STAR.setArmy(neighbor.STAR.getArmy() + eachGets);
 					}
 					catch (Exception e)
 					{
@@ -220,6 +225,7 @@ public class ActionMethods
 				try
 				{
 					success = success && orderMove(star.STAR, neighbor.STAR, eachGets, false);
+					neighbor.STAR.setArmy(neighbor.STAR.getArmy() + eachGets);
 				}
 				catch (Exception e)
 				{
@@ -230,6 +236,19 @@ public class ActionMethods
 		}
 		
 		return success;
+	}
+	
+	
+	
+	/**
+	 * 
+	 * @param gene
+	 * @param myPlrNum
+	 * @return
+	 */
+	public boolean offensiveAction(byte gene, int myPlrNum)
+	{
+		return null; //for now
 	}
 	
 	
