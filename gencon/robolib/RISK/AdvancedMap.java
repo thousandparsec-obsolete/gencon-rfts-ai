@@ -13,26 +13,20 @@ import gencon.gamelib.RISK.gameobjects.Star;
 
 public class AdvancedMap 
 {
-	private final FullGameStatusRISK FGS;
-	
+	private UniverseMap uMap;
 	private Collection<AdvancedStar> advancedStars;
 	
-	public AdvancedMap(FullGameStatusRISK status)
+	public AdvancedMap(){}
+	
+	public void updateMap(UniverseMap map, int myPlrNum)
 	{
-		FGS = status;
+		uMap = map;
+		generateAdvancedStars(map);
+		generateParametersOfAdvStars(map, myPlrNum);
 	}
 	
-	public void updateMap()
+	private void generateAdvancedStars(UniverseMap basicMap)
 	{
-		Pair<UniverseMap, Players> status = FGS.getCurrentStatus();
-		
-		generateAdvancedStars();
-		generateParametersOfAdvStars();
-	}
-	
-	public void generateAdvancedStars()
-	{
-		UniverseMap basicMap = FGS.getCurrentStatus().left;
 		Collection<Star> stars = basicMap.getStars();
 		advancedStars = new HashSet<AdvancedStar>(stars.size());
 		
@@ -40,15 +34,14 @@ public class AdvancedMap
 			advancedStars.add(new AdvancedStar(star));
 	}
 	
-	public void generateParametersOfAdvStars()
+	private void generateParametersOfAdvStars(UniverseMap basicMap, int myPlrNum)
 	{
-		UniverseMap basicMap = FGS.getCurrentStatus().left;
 		for (AdvancedStar as : advancedStars)
 		{
 			//collecting neighbors:
 			Collection<Star> adjacent = new HashSet<Star>();
 			for (Integer adjId : as.STAR.getAdjacencies())
-				adjacent.add(basicMap.getStarWithId(adjId));
+				adjacent.add(basicMap.getStarWithIdUnsafe(adjId));
 			
 			//getting friendly forces on planet:
 			int forces = as.STAR.getArmy();
@@ -62,7 +55,8 @@ public class AdvancedMap
 			//iterating over neighbors:
 			for (Star neighbor : adjacent)
 			{
-				if (neighbor.getOwner() != as.STAR.getOwner() && neighbor.getOwner() != -1) //if it's not friendly
+				if (neighbor.getOwner() != as.STAR.getOwner() && neighbor.getOwner() != -1
+						&& neighbor.getOwner() != myPlrNum) //if it's not friendly, or not mine!
 				{
 					enemyForces += neighbor.getArmy();
 					
@@ -94,12 +88,17 @@ public class AdvancedMap
 		}
 	}
 	
+	public UniverseMap getBasicMap()
+	{
+		return uMap;
+	}
+	
 	public AdvancedStar getAdvancedStarWithId(int id)
 	{
 		AdvancedStar star = null;
 		for (AdvancedStar as : advancedStars)
 			if (as.STAR.GAME_ID == id)
-				star = new AdvancedStar(as);
+				star = as;
 		
 		return star;
 	}
@@ -152,9 +151,15 @@ public class AdvancedMap
 		return left;
 	}
 	
-	public UniverseMap getBasicMap()
+	public Collection<AdvancedStar> getAllBackwaters(int plrId)
 	{
-		return FGS.getCurrentStatus().left;
+		Collection<AdvancedStar> backwaters = new HashSet<AdvancedStar>();
+		
+		for (AdvancedStar as : advancedStars)
+			if (as.STAR.getOwner() == plrId && as.getBackwaters())
+				backwaters.add(as);
+		
+		return backwaters;
 	}
 	
 	public Collection<AdvancedStar> getAllAdvStars()
@@ -162,7 +167,7 @@ public class AdvancedMap
 		Collection<AdvancedStar> returned = new HashSet<AdvancedStar>();
 
 		for (AdvancedStar as : advancedStars)
-			returned.add(new AdvancedStar(as));
+			returned.add(as);
 		
 		return returned;
 	}
@@ -173,9 +178,21 @@ public class AdvancedMap
 		
 		for (AdvancedStar as : someStars)
 			if (as.STAR.getOwner() == playerId)
-				returned.add(new AdvancedStar(as));
+				returned.add(as);
 		
 		return returned;
+	}
+	
+	public Collection<AdvancedStar> getNeighbors(AdvancedStar advStar)
+	{
+		Collection<AdvancedStar> neighbors = new HashSet<AdvancedStar>();
+		
+		Collection<Integer> neighborStars = advStar.STAR.getAdjacencies();
+		
+		for (Integer i : neighborStars)
+			neighbors.add(getAdvancedStarWithId(i));
+		
+		return neighbors;
 	}
 	
 	

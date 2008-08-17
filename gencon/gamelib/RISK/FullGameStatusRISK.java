@@ -104,14 +104,6 @@ public class FullGameStatusRISK implements FullGameStatus
 		return new Pair<UniverseMap, Players>(new UniverseMap(currentStatus.left), 
 				new Players(currentStatus.right.ME, currentStatus.right.PLAYERS));
 	}
-
 	
-	/**
-	 * A convenience method, for seeing how much reinforcements there are.
-	 */
-	public int getReinforcements()
-	{
-		return currentStatus.left.getStarsOfPlayer(currentStatus.right.getMe().NUM).iterator().next().getReinforcementsAvailable();
-	}
 
 }

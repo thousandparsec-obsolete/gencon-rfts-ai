@@ -23,14 +23,21 @@ public class RISKRobot extends Robot
 		CLIENT = client;
 		CLIENT_RISK = (ClientMethodsRISK) CLIENT.getClientMethods();
 		FGS = fgs;
-		ADVANCED_MAP = new AdvancedMap(FGS);
+		ADVANCED_MAP = new AdvancedMap();
 	}
 
 	@Override
 	public void startTurn(int time_remaining) 
 	{
+		int myPlrNum = FGS.getCurrentStatus().right.getMe().NUM;
 		super.startTurn(time_remaining);
-		test();
+		ADVANCED_MAP.updateMap(FGS.getCurrentStatus().left, myPlrNum);
+		
+		
+		
+		
+		
+		//test();
 		
 		
 	}

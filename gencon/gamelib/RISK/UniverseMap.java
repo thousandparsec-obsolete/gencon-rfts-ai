@@ -15,6 +15,7 @@ public class UniverseMap
 {
 	private Collection<Constellation> constellations;
 	private Collection<Star> stars;
+	private int myReinforcements;
 	
 	public UniverseMap(Collection<RiskGameObject> gameObjects)
 	{
@@ -64,7 +65,12 @@ public class UniverseMap
 			a.addAdjacent(b.GAME_ID);
 			b.addAdjacent(a.GAME_ID);
 		}
+		
+		//get reinforcements:
+		myReinforcements = 0;
+		
 	}
+	
 	
 	private Star getStarWithName(String name)
 	{
@@ -83,6 +89,23 @@ public class UniverseMap
 			if (s.GAME_ID == id)
 			{
 				star = new Star(s);
+				break;
+			}
+		
+		return star;
+	}
+	
+	/**
+	 * @return An unsafe reference. Used in game simulation.
+	 */
+	public Star getStarWithIdUnsafe(int id)
+	{
+		Star star = null;
+		
+		for (Star s : stars)
+			if (s.GAME_ID == id)
+			{
+				star = s;
 				break;
 			}
 		
@@ -147,12 +170,27 @@ public class UniverseMap
 	 */
 	public Collection<Star> getNclosest(Star star, byte N)
 	{
+		Collection<Star> copied = new HashSet<Star>();
+		Collection<Star> unsafeResult = getNclosestUnsafe(star, N);
+		
+		for (Star s : unsafeResult)
+			copied.add(new Star(s));
+		
+		return copied;
+	}
+	
+	
+	/**
+	 * @return An unsafe reference. Used in game simulation.
+	 */
+	public Collection<Star> getNclosestUnsafe(Star star, byte N)
+	{
 		Collection<Star> collectedSoFar = new HashSet<Star>();
 		Random rand = new Random(System.currentTimeMillis());
 		
 		List<Star> neighbors = new ArrayList<Star>();
 		for (Integer id : star.getAdjacencies())
-			neighbors.add(getStarWithId(id));
+			neighbors.add(getStarWithIdUnsafe(id));
 		
 		//fill up the collection until reaches right capacity
 		while (N != 0)
@@ -179,7 +217,7 @@ public class UniverseMap
 			for (Star s : neighbors)
 				for (Integer id : s.getAdjacencies())
 				{
-					Star s1 = getStarWithId(id);
+					Star s1 = getStarWithIdUnsafe(id);
 					if (!newNeighbors.contains(s1))
 						newNeighbors.add(s1);
 				}
@@ -205,6 +243,20 @@ public class UniverseMap
 	}
 	
 	/**
+	 * @return An unsafe reference. Used in game simulation.
+	 */
+	public Collection<Constellation> getConstellationsUnsafe()
+	{
+		Collection<Constellation> copied = new HashSet<Constellation>();
+		
+		for (Constellation c : constellations)
+			copied.add(c);
+		
+		return copied;
+	}
+	
+	
+	/**
 	 * @return A deep copy of the {@link Collection} of {@link Star}s.
 	 */
 	public Collection<Star> getStars()
@@ -213,6 +265,19 @@ public class UniverseMap
 		
 		for (Star s : stars)
 			copied.add(new Star(s));
+		
+		return copied;
+	}
+	
+	/**
+	 * @return An unsafe reference. Used in game simulation.
+	 */
+	public Collection<Star> getStarsUnsafe()
+	{
+		Collection<Star> copied = new HashSet<Star>();
+		
+		for (Star s : stars)
+			copied.add(s);
 		
 		return copied;
 	}
@@ -229,5 +294,28 @@ public class UniverseMap
 		return copied;
 	}
 	
+	/**
+	 * @return An unsafe reference. Used in game simulation.
+	 */
+	public Collection<Star> getStarsOfPlayerUnsafe(int playerid)
+	{
+		Collection<Star> copied = new HashSet<Star>();
+		
+		for (Star s : stars)
+			if (s.getOwner() == playerid)
+				copied.add(s);
+		
+		return copied;
+	}
 
+	
+	public int getMyReinforcements()
+	{
+		return myReinforcements;
+	}
+	
+	public void setMyReinforcements(int reinforcements)
+	{
+		myReinforcements = reinforcements;
+	}
 }
