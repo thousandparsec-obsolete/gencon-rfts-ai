@@ -4,6 +4,7 @@ import gencon.clientLib.Client;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.evolutionlib.Genotype;
 import gencon.gamelib.RISK.FullGameStatusRISK;
+import gencon.gamelib.RISK.UniverseMap;
 import gencon.gamelib.RISK.gameobjects.Star;
 import gencon.robolib.Robot;
 
@@ -29,9 +30,12 @@ public class RISKRobot extends Robot
 	@Override
 	public void startTurn(int time_remaining) 
 	{
-		int myPlrNum = FGS.getCurrentStatus().right.getMe().NUM;
 		super.startTurn(time_remaining);
-		ADVANCED_MAP.updateMap(FGS.getCurrentStatus().left, myPlrNum);
+		
+		UniverseMap simulationMap = FGS.getCurrentStatus().left;
+		int myPlrNum = FGS.getCurrentStatus().right.getMe().NUM;
+		
+		ADVANCED_MAP.updateMap(simulationMap, myPlrNum);
 		
 		
 		

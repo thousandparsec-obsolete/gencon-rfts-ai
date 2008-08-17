@@ -21,27 +21,27 @@ public class AdvancedMap
 	public void updateMap(UniverseMap map, int myPlrNum)
 	{
 		uMap = map;
-		generateAdvancedStars(map);
-		generateParametersOfAdvStars(map, myPlrNum);
+		generateAdvancedStars();
+		generateParametersOfAdvStars(myPlrNum);
 	}
 	
-	private void generateAdvancedStars(UniverseMap basicMap)
+	private void generateAdvancedStars()
 	{
-		Collection<Star> stars = basicMap.getStars();
+		Collection<Star> stars = uMap.getStars();
 		advancedStars = new HashSet<AdvancedStar>(stars.size());
 		
 		for (Star star : stars)
 			advancedStars.add(new AdvancedStar(star));
 	}
 	
-	private void generateParametersOfAdvStars(UniverseMap basicMap, int myPlrNum)
+	private void generateParametersOfAdvStars(int myPlrNum)
 	{
 		for (AdvancedStar as : advancedStars)
 		{
 			//collecting neighbors:
 			Collection<Star> adjacent = new HashSet<Star>();
 			for (Integer adjId : as.STAR.getAdjacencies())
-				adjacent.add(basicMap.getStarWithIdUnsafe(adjId));
+				adjacent.add(uMap.getStarWithIdUnsafe(adjId));
 			
 			//getting friendly forces on planet:
 			int forces = as.STAR.getArmy();
