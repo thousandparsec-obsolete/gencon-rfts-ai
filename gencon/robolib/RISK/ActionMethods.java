@@ -6,11 +6,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.LocatorEx.Snapshot;
+
 import net.thousandparsec.util.Pair;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.gamelib.RISK.gameobjects.Star;
 import gencon.robolib.RISK.AdvancedMap.AdvancedStar;
 
+/**
+ * A class, which contains methods that govern the behavior of the bot, 
+ * according to certain parameters (its 'genotype').
+ * 
+ * @author Victor Ivri
+ */
 public class ActionMethods 
 {
 	private final AdvancedMap MAP;
@@ -24,15 +32,15 @@ public class ActionMethods
 	}
 	
 	/**
+	 * SHOULD BE USED FIRST.
 	 * Transfers troops from backwater planets (ones which are surrounded by friendlies),
-	 * to nearby friendly planets, which are endangered. These orders are "top priority", 
-	 * and will be placed on top of the order queue.
+	 * to nearby friendly planets, which are endangered.
 	 * 
 	 * @param geneBackwaterDistribute Can be 0, 1 or 2. Determines the behavior of troop transfer: 
-	 * 	0 means all troops to the most endangered star, 
-	 * 	1 means 50% to most endangered with the rest evenly distributed between neighbors,
+	 * 	0 sends all troops to the most endangered star, 
+	 * 	1 sends 50% to most endangered, with the rest evenly distributed between neighbors,
 	 * 	and 2 evenly distributes between all neighbors.
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug!
+	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
 	public boolean transferTroopsFromBackwaterStars(byte geneBackwaterDistribute, int myPlrNum)
 	{
@@ -74,7 +82,7 @@ public class ActionMethods
 				{
 					try
 					{
-						success = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, true);
+						success = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, false);
 						endangered.STAR.setArmy(endangered.STAR.getArmy() + star.STAR.getArmy() - 1);
 					}
 					catch (Exception e)
@@ -143,28 +151,50 @@ public class ActionMethods
 	/**
 	 * Reinforces N-most-endangered planets, relative to the threat they face.
 	 * 
-	 * @param num_of_planets Number of planets to be reinforced.
+	 * @param geneDefence Can be 0, 1 or 2. Determines the threshold of risk for sending reinforcements:
+	 * 	0 (max helped: 3), 1 (max helped: 5), 2 (max helped: 7). Will help only those at risk.
 	 * @param geneReinforce Can be 0, 1 or 2. Determines the amount of reinforcements to be distributed: 
-	 * 	0 (33% of total available reinforcements), 1 (50%), or 2 (66%).
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug!
+	 * 	0 (33% of total available reinforcements), 1 (60%), or 2 (90%).
+	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean ReinforceEndangeredPlanets(int num_of_stars, byte geneReinforce, int myPlrNum)
+	public boolean ReinforceEndangeredPlanets(byte geneDefence, byte geneReinforce, int myPlrNum)
 	{
-		assert geneReinforce == 0 || geneReinforce == 1 || geneReinforce == 2;
+		assert (geneReinforce == 0 || geneReinforce == 1 || geneReinforce == 2) &&
+			(geneDefence == 0 || geneDefence == 1 || geneDefence == 2);
 		
 		double importance = 0.0;
 		if (geneReinforce == 0)
-			importance = 0.33333;
+			importance = 0.3;
 		else if (geneReinforce == 1)
-			importance = 0.5;
+			importance = 0.6;
 		else if (geneReinforce == 2)
-			importance = 0.66666;
+			importance = 0.9;
 		
+		int maxReinforcedStars = 0;
+		if (geneDefence == 0)
+			maxReinforcedStars = 3;
+		if (geneDefence == 1)
+			maxReinforcedStars = 5;
+		if (geneDefence == 2)
+			maxReinforcedStars = 7;
 		
-
 		//get list of stars by threats:
 		Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(MAP.getAllAdvStars(), myPlrNum);
 		List<AdvancedStar> riskList = MAP.sortByThreat(myStars);
+		
+		/*
+		 * calculate actual number of stars to be helped. 
+		 * A star will only be helped if the threat on it is > 0.
+		 * Maximum to be helped = maxReinforcedStars.
+		 */		
+		int num_of_stars = 0;
+		for (int i = 0; i < maxReinforcedStars; i++)
+		{
+			if (riskList.get(i).getThreat() > 0)
+				num_of_stars ++;
+			else
+				break;
+		}
 		
 		//register threat for each of n-stars:
 		double[] threat_by_star = new double[num_of_stars];
@@ -231,22 +261,22 @@ public class ActionMethods
 	/**
 	 * Commences a series of offensive actions. It will attack, until determined to be not beneficial according to the given parameters.
 	 * 
-	 * @param geneRisk Can be 0, 1 or 2. Determines the ratio of troops that needs to be established between my forces and enemy, to attack: 0 (+20%), 1 (+30%), 2 (+40%).
+	 * @param geneBravery Can be 0, 1 or 2. Determines the ratio of troops that needs to be established between my forces and enemy, to attack: 0 (+20%), 1 (+30%), 2 (+40%).
 	 * @param geneCannonfodder Can be 0, 1 or 2. Determines the ratio of troops to be sent to battle from each star: 0 (50%), 1 (70%), 2 (%90).
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug!
+	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean offensiveActions(byte geneRisk, byte geneCannonfodder, int myPlrNum)
+	public boolean offensiveActions(byte geneBravery, byte geneCannonfodder, int myPlrNum)
 	{
-		assert (geneRisk == 0 || geneRisk == 1 || geneRisk == 2) && 
+		assert (geneBravery == 0 || geneBravery == 1 || geneBravery == 2) && 
 			(geneCannonfodder == 0 || geneCannonfodder == 1 || geneCannonfodder == 2); 
 		
 		//determining the risk factor:
 		double risk = 0;
-		if (geneRisk == 0)
+		if (geneBravery == 0)
 			risk = 1.2;
-		else if (geneRisk == 1)
+		else if (geneBravery == 1)
 			risk = 1.3;
-		else if (geneRisk == 2)
+		else if (geneBravery == 2)
 			risk = 1.4;
 		
 		//determining the ratio of troops to be sent to combat:
@@ -340,24 +370,100 @@ public class ActionMethods
 			}
 		}
 		
-		//find best!
+		//find best target!
 		Iterator<Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>>> iterator = listOfTargets.iterator();
 		
-		if (iterator.hasNext()) //if there are candidates.
-		{
-			Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>> bestCandidate = iterator.next();
-			while (iterator.hasNext())
-			{
-				Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>> candidate = iterator.next();
-				if (candidate.right.right > bestCandidate.right.right)
-					bestCandidate = candidate;
-			}
+		if (!iterator.hasNext()) //if no enemies nearby!
+			return null;
 			
-			//found best target!
-			return new Pair<Collection<AdvancedStar>, AdvancedStar>(bestCandidate.left, bestCandidate.right.left);
+		Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>> bestCandidate = iterator.next();
+		while (iterator.hasNext())
+		{
+			Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>> candidate = iterator.next();
+			if (candidate.right.right > bestCandidate.right.right)
+				bestCandidate = candidate;
 		}
 		
-		//else: if no enemies nearby!
-		return null;
+		//found best target!
+		return new Pair<Collection<AdvancedStar>, AdvancedStar>(bestCandidate.left, bestCandidate.right.left);
+	}
+	
+	
+	/**
+	 * 
+	 * @param geneExpansionism Can be 0, 1 or 2. Determines the 
+	 * @param geneEmmigration
+	 * @param myPlrNum
+	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
+	 */
+	public boolean expandToNeutralStars(byte geneExpansionism, byte geneEmmigration, int myPlrNum)
+	{
+		
+	}
+	
+	
+	/**
+	 * SHOULD BE THE LAST ACTION UNDERTAKEN, AFTER ALL ELSE FAILED!
+	 * All planets under "grave threat" (as specified by geneCowardice) look if they can evacuate their troops to a safer place. 1 unit will remain.
+	 * 
+	 * @param geneCowardice Can be 0, 1 or 2. Determines the threshold of threat under which my forces need to escape to a safer location.
+	 * 	0 means being outnumbered by 10%, 1 (20%), 2 (30%).
+	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
+	 */
+	public boolean evacuateToSafety(byte geneCowardice, int myPlrNum)
+	{
+		assert geneCowardice == 0 || geneCowardice == 1 || geneCowardice == 2;
+		
+		//determine the coefficient, which decides on action:
+		double overrun = 0.0;
+		if (geneCowardice == 0)
+			overrun = 0.1;
+		else if (geneCowardice == 1)
+			overrun = 0.2;
+		else if (geneCowardice == 2)
+			overrun = 0.3;
+		
+		boolean success = true; //to be returned.
+		
+		//get my stars:
+		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
+		Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(allStars, myPlrNum);
+
+		for (AdvancedStar myStar : myStars)
+			if (myStar.getThreat() / myStar.STAR.getArmy() > overrun) //RUN, FOREST!
+			{
+				//collect all neighbors:
+				Collection<Integer> neighborIds = myStar.STAR.getAdjacencies();
+				Collection<AdvancedStar> neighbors = new HashSet<AdvancedStar>();
+				for (Integer i : neighborIds)
+					neighbors.add(MAP.getAdvancedStarWithId(i));
+				
+				//get the lowest-threat star:
+				Iterator<AdvancedStar> iterator = neighbors.iterator();
+				AdvancedStar sanctuary = iterator.next();
+				while (iterator.hasNext())
+				{
+					AdvancedStar possibleEscape = iterator.next();
+					if (possibleEscape.getThreat() < sanctuary.getThreat())
+						sanctuary = possibleEscape;
+				}
+				
+				//see if there's any point:
+				if (sanctuary.getThreat() < myStar.getThreat())
+				{
+					try
+					{
+						success = success && CLIENT_RISK.orderMove(myStar.STAR, sanctuary.STAR, myStar.STAR.getArmy() - 1, false);
+						myStar.STAR.setArmy(1); //simple!
+					}
+					catch (Exception e)
+					{
+						success = false;
+					}
+				}
+				
+			}
+		
+		return success;
 	}
 }

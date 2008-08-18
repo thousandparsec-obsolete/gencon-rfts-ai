@@ -56,7 +56,7 @@ public class AdvancedMap
 			for (Star neighbor : adjacent)
 			{
 				if (neighbor.getOwner() != as.STAR.getOwner() && neighbor.getOwner() != -1
-						&& neighbor.getOwner() != myPlrNum) //if it's not friendly, or not mine!
+						&& neighbor.getOwner() != myPlrNum) //if it's not friendly to it, not neutral, and not mine.
 				{
 					enemyForces += neighbor.getArmy();
 					
