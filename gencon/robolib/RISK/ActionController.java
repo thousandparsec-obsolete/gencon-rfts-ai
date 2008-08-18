@@ -18,6 +18,7 @@ public class ActionController
 	
 	public void incrementTurn(UniverseMap newMap, int myPlrId)
 	{
+		myPlayerId = myPlrId;
 		ACTIONS.incrementTurn(newMap, myPlrId);
 	}
 	
@@ -40,7 +41,8 @@ public class ActionController
 		
 		//always first:
 		ACTIONS.transferTroopsFromBackwaterStars(geneBackwaterDistribute, myPlayerId);
-		ACTIONS.ReinforceEndangeredPlanets(geneDefence, geneReinforce, myPlayerId);
+		ACTIONS.reinforceEndangeredPlanets(geneDefence, geneReinforce, myPlayerId);
+		ACTIONS.distributeRemainingReinforcements(myPlayerId);
 		
 		//depends on aggression:
 		if (geneAggression == 0) //expand first, attack later.

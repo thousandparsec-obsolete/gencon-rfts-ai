@@ -3,6 +3,7 @@ package gencon.robolib.RISK;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import gencon.gamelib.RISK.UniverseMap;
@@ -20,6 +21,41 @@ public class AdvancedMap
 		uMap = map;
 		generateAdvancedStars();
 		generateParametersOfAdvStars(myPlrNum);
+		
+		/*
+		//testing:
+		//showing stars with parameters:
+		System.out.println("---------- SHOWING ADVANCED STARS ----------");
+		
+		for (AdvancedStar as : advancedStars)
+			System.out.println(as.toString());
+		*/
+		
+		System.out.println("REINFORCEMENTS AVAILABLE: " + uMap.getMyReinforcements());
+		//showing stars of some players:
+		System.out.print("Getting my stars: ");
+		Collection<AdvancedStar> myStars = getStarsOfPlayer(advancedStars, 1);
+		for (AdvancedStar as : myStars)
+			System.out.print("<" + as.STAR.GAME_ID + "> ");
+		
+		System.out.print("\nGetting neutral stars: ");
+		Collection<AdvancedStar> neutrals = getStarsOfPlayer(advancedStars, -1);
+		for (AdvancedStar as : neutrals)
+			System.out.print("<" + as.STAR.GAME_ID + "> ");
+		System.out.println();
+		
+		/*
+		//showing sorting by threat:
+		List<AdvancedStar> sorted = sortByThreat(advancedStars);
+		System.out.println("Sorting by threat:");
+		for (int i = 0; i < sorted.size(); i++)
+			System.out.println("Star: " + sorted.get(i).STAR.GAME_ID + "; Threat: " + sorted.get(i).getThreat());
+		
+		System.out.println("----  Done testing  ----");
+		// done testing.
+		 
+		 */
+		 
 	}
 	
 	private void generateAdvancedStars()
@@ -95,57 +131,42 @@ public class AdvancedMap
 		AdvancedStar star = null;
 		for (AdvancedStar as : advancedStars)
 			if (as.STAR.GAME_ID == id)
+			{
 				star = as;
+				break;
+			}
+		
+		//System.out.print("Star with id " + id + ": ");
+		//System.out.println(star.toString());
 		
 		return star;
 	}
 	
 	/**
 	 * @return A {@link List} of {@link AdvancedStar}s, sorted high-to-low with respect to {@link AdvancedStar}.getThreat().
+	 * 
+	 * Sort implemented: bubble-sort.
 	 */
-	public List<AdvancedStar> sortByThreat(Collection<AdvancedStar> advStars)
+	public List<AdvancedStar> sortByThreat(Collection<AdvancedStar> unsorted)
 	{
-		List<AdvancedStar> unsorted = new ArrayList<AdvancedStar>(advStars);
-		return mergeSort(unsorted);
-	}
-	
-	private List<AdvancedStar> mergeSort(List<AdvancedStar> unsorted)
-	{
-		if (unsorted.size() <= 1)
-			return unsorted;
+		List<AdvancedStar> sorted = new ArrayList<AdvancedStar>();
 		
-		else
+		while (!unsorted.isEmpty())
 		{
-			int midpoint = unsorted.size() / 2;
+			Iterator<AdvancedStar> iterator = unsorted.iterator();
+			AdvancedStar highest = iterator.next();
 			
-			List<AdvancedStar> left = mergeSort(unsorted.subList(0, midpoint));
-			List<AdvancedStar> right = mergeSort(unsorted.subList(midpoint, unsorted.size()));
-			
-			return merge(left, right);
-		}
-	}
-	
-	private List<AdvancedStar> merge(List<AdvancedStar> left, List<AdvancedStar> right)
-	{
-		for (AdvancedStar star : right)
-		{
-			//is it smaller than the smallest one? if so, put in the end.
-			if (star.getThreat() < left.get(left.size() - 1).getThreat())
-				left.add(star);
-			
-			//if no, find one which is smaller than it, and squeeze it in front of the smaller one.
-			else
-				for (int i = 0; i < left.size(); i++)
-				{
-					if (star.getThreat() > left.get(i).getThreat())
-					{
-						left.add(i, star);
-						break;
-					}
-				}
+			while (iterator.hasNext())
+			{
+				AdvancedStar possibleHighest = iterator.next();
+				if (possibleHighest.getThreat() > highest.getThreat())
+					highest = possibleHighest;
+			}
+			sorted.add(highest);
+			unsorted.remove(highest);
 		}
 		
-		return left;
+		return sorted;
 	}
 	
 	public Collection<AdvancedStar> getAllBackwaters(int plrId)
@@ -162,7 +183,7 @@ public class AdvancedMap
 	public Collection<AdvancedStar> getAllAdvStars()
 	{
 		Collection<AdvancedStar> returned = new HashSet<AdvancedStar>();
-
+		
 		for (AdvancedStar as : advancedStars)
 			returned.add(as);
 		
@@ -233,6 +254,12 @@ public class AdvancedMap
 		public void setBackwaters(boolean value)
 		{
 			backwaters = value;
+		}
+		
+		@Override
+		public String toString()
+		{
+			return "Advanced star data: Star toString: [" + STAR.toString() + "]. Threat: " + getThreat() + "; Backwaters: " + getBackwaters();
 		}
 	}
 	

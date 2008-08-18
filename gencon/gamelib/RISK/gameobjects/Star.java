@@ -87,4 +87,15 @@ public class Star extends RiskGameObject
 		return a.GAME_ID == b.GAME_ID && a.NAME.equals(b.NAME) && a.getArmy() == b.getArmy() && a.getOwner() == b.getOwner();
 		//doesn't check for adjacencies, but should be fine.
 	}
+	
+	@Override
+	public String toString()
+	{
+		String s = "Name: " + NAME + "; Planet id: " + GAME_ID + "; Owner id: " + getOwner() + "; Army: " + getArmy() + "; Reinforcements: " + getReinforcementsAvailable() + "; Adjacencies: ";
+		
+		for (Integer i : getAdjacencies())
+			s = s + " <" + i.intValue() + "> ";
+		
+		return s;
+	}
 }

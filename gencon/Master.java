@@ -130,11 +130,11 @@ public class Master implements Runnable
 			{
 				exit("Failed to initialize Risk game status." , ABNORMAL_EXIT, e);
 			}
-			robot = new RISKRobot(genotype, CLIENT, (FullGameStatusRISK)game_status, difficulty);
+			robot = new RISKRobot(this, genotype);
 		}
 			
 		
-		pl("Done initializing GenCon.");
+		pl("Done initializing GenCon. Waiting for next turn to commence.");
 	}
 	
 	/**

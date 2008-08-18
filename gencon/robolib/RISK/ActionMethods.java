@@ -63,9 +63,11 @@ public class ActionMethods
 				
 			//collect all friendly neighbors, which aren't backwater themselves.
 			Collection<AdvancedStar> neighbors = MAP.getNeighbors(star);
+			Collection<AdvancedStar> backwaterNeighbors = new HashSet<AdvancedStar>();
 			for (AdvancedStar as : neighbors)
 				if (as.STAR.getOwner() != myPlrNum || as.getBackwaters() == true)
-					neighbors.remove(as);
+					backwaterNeighbors.add(as);
+			neighbors.removeAll(backwaterNeighbors);
 			
 			if (neighbors.isEmpty()) //nowhere to send!
 				return true;
@@ -162,7 +164,7 @@ public class ActionMethods
 	 * 	0 (33% of total available reinforcements), 1 (66%), or 2 (99%).
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean ReinforceEndangeredPlanets(byte geneDefence, byte geneReinforce, int myPlrNum)
+	public boolean reinforceEndangeredPlanets(byte geneDefence, byte geneReinforce, int myPlrNum)
 	{
 		assert (geneReinforce == 0 || geneReinforce == 1 || geneReinforce == 2) &&
 			(geneDefence == 0 || geneDefence == 1 || geneDefence == 2);
@@ -187,6 +189,10 @@ public class ActionMethods
 		Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(MAP.getAllAdvStars(), myPlrNum);
 		List<AdvancedStar> riskList = MAP.sortByThreat(myStars);
 		
+		//setting the actual value:
+		if (riskList.size() < maxReinforcedStars)
+			maxReinforcedStars = riskList.size();
+		
 		/*
 		 * calculate actual number of stars to be helped. 
 		 * A star will only be helped if the threat on it is > 0.
@@ -200,6 +206,10 @@ public class ActionMethods
 			else
 				break;
 		}
+		
+		//nothing to do!
+		if (num_of_stars == 0)
+			return true;
 		
 		//register threat for each of n-stars:
 		double[] threat_by_star = new double[num_of_stars];
@@ -238,8 +248,6 @@ public class ActionMethods
 		for (int i = 0; i < num_of_stars; i++)
 		{
 			int reinforce = (int) Math.round(Math.floor(reinforceCoefficient * threat_by_star[i]));
-			actualTotalReinforced += reinforce;
-			
 			if (reinforce > 0)
 			{
 				Star star = riskList.remove(0).STAR; //always remove the head!
@@ -247,6 +255,7 @@ public class ActionMethods
 				try
 				{
 					success = success && CLIENT_RISK.orderReinforce(star, reinforce, false);
+					actualTotalReinforced += reinforce;
 					star.setArmy(star.getArmy() + reinforce);
 				}
 				catch (Exception e)
@@ -258,9 +267,78 @@ public class ActionMethods
 		
 		//adjusting available reinforcements in the map:
 		MAP.getBasicMap().setMyReinforcements(MAP.getBasicMap().getMyReinforcements() - actualTotalReinforced);
-		
 		return success;
 	}
+	
+	/**
+	 * Evenly distributes a portion of the remaining reinforcements.
+	 * 
+	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
+	 */
+	public boolean distributeRemainingReinforcements(int myPlrNum)
+	{
+		int reinforcements = MAP.getBasicMap().getMyReinforcements();
+		
+		if (reinforcements == 0) //can't do anything!
+			return true;
+		
+		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
+		Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(allStars, myPlrNum);
+	
+		int totalReinforced = myStars.size();
+		int perPlanet = (int) Math.round(Math.floor(reinforcements / totalReinforced));
+		
+		assert totalReinforced * perPlanet <= reinforcements;
+		
+		boolean success = true; //to be returned
+		int actualReinforced = 0; //the actual number of reinforcements issued.
+		
+		//If spread too thin: reinforce one by one, until finished.
+		if (perPlanet == 0) 
+			while (reinforcements > 0)
+			{
+				for (AdvancedStar s : myStars)
+				{
+					if (reinforcements > 0)
+					{
+						try
+						{
+							System.out.print("Reinforcing " + s.STAR.GAME_ID + " with 1 troops");
+							success = success && CLIENT_RISK.orderReinforce(s.STAR, 1, false);
+							System.out.println(" <success>");
+							actualReinforced ++;
+							reinforcements --;
+						}
+						catch (Exception e)
+						{
+							success = false;
+						}
+					}
+				}
+			}
+		else //reinforce each planet by amount given. (Reason for this split: SPEED. it's inefficient sending too many order fames!)
+		{
+			for (AdvancedStar s : myStars)
+			{
+				try
+				{
+					System.out.print("Attempting to reinforce " + s.STAR.GAME_ID + " with " + perPlanet + " troops");
+					success = success && CLIENT_RISK.orderReinforce(s.STAR, perPlanet, false);
+					System.out.println(" <success>");
+					actualReinforced += perPlanet;
+				}
+				catch (Exception e)
+				{
+					success = false;
+				}
+			}
+		}
+		
+		MAP.getBasicMap().setMyReinforcements(reinforcements - actualReinforced);
+		return success;
+	}
+	
+	
 	
 	
 	/**
@@ -355,17 +433,15 @@ public class ActionMethods
 		for (AdvancedStar enemy : enemyStars)
 		{
 			//find my stars around it:
-			Collection<Integer> myStarIds = enemy.STAR.getAdjacencies();
-			Collection<AdvancedStar> myStars = new HashSet<AdvancedStar>();
-			for (Integer i : myStarIds)
-				myStars.add(MAP.getAdvancedStarWithId(i));
+			Collection<AdvancedStar> neighbors = MAP.getNeighbors(enemy);
+			Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(neighbors, myPlrNum);
 			
 			//find if I can overpower it:
 			int myStrength = 0;
 			for (AdvancedStar myStar : myStars)
 				myStrength += myStar.STAR.getArmy();
 			int defenders = enemy.STAR.getArmy();
-			int overpowerTheEnemy = defenders - myStrength;
+			int overpowerTheEnemy = myStrength - defenders;
 			
 			if (!myStars.isEmpty() && overpowerTheEnemy > 0) //weed out obviously bad options.
 			{
@@ -427,9 +503,17 @@ public class ActionMethods
 		
 		boolean success = true; //to be returned.
 		
-		//sort the friendly stars by threat:
+		//get the friendly stars, remove unfit to colonize, and sort them by threat:
 		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
 		Collection<AdvancedStar> friendly = MAP.getStarsOfPlayer(allStars, myPlrNum);
+		
+		//weeding out ones with army == 1: (unfit to colonize)
+		Collection<AdvancedStar> unfit = new HashSet<AdvancedStar>();
+		for (AdvancedStar as : friendly)
+			if (as.STAR.getArmy() == 1)
+				unfit.add(as);
+		friendly.removeAll(unfit);
+		//sorting:
 		List<AdvancedStar> friendlyByThreat = MAP.sortByThreat(friendly);
 		
 		//setting the actual number of maximum possible colonies:
@@ -466,6 +550,9 @@ public class ActionMethods
 				{
 					try
 					{
+						//for testing:
+						System.out.println("Moving to neutral star: <" + safestFutureColony.STAR.NAME + ">  From <" + possibleColonist.STAR.NAME + "> , with " + colonists + " troops.");
+						
 						success = success && CLIENT_RISK.orderMove(possibleColonist.STAR, safestFutureColony.STAR, colonists, false);
 						possibleColonist.STAR.setArmy(possibleColonist.STAR.getArmy() - colonists);
 						safestFutureColony.STAR.setOwner(myPlrNum);

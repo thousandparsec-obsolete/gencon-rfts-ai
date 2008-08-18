@@ -31,6 +31,7 @@ public class UniverseMap
 	{
 		stars = new HashSet<Star>();
 		constellations = new HashSet<Constellation>();
+		myReinforcements = other.getMyReinforcements();
 		
 		for (Star s : other.stars)
 			stars.add(new Star(s));
@@ -314,8 +315,20 @@ public class UniverseMap
 		return myReinforcements;
 	}
 	
-	public void setMyReinforcements(int reinforcements)
+	public void setMyReinforcements(int value)
 	{
-		myReinforcements = reinforcements;
+		myReinforcements = value;
+	}
+	
+	/**
+	 * To be performed at the start of each turn!
+	 */
+	public void initReinforcements(int myPlayerId)
+	{
+		Collection<Star> myStars = getStarsOfPlayer(myPlayerId);
+		if (myStars.isEmpty())
+			myReinforcements = 0;
+		else
+			myReinforcements = myStars.iterator().next().getReinforcementsAvailable();
 	}
 }

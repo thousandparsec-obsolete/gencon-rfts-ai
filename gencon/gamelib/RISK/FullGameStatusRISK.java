@@ -51,8 +51,12 @@ public class FullGameStatusRISK implements FullGameStatus
 		Collection<Game_Player> gplyers = CLIENT_RISK.getAllPlayers(gameObjects);
 		Players players = new Players(MASTER.getMyUsername(), gplyers);
 		
+		//initializing reinforcements:
+		map.initReinforcements(players.getMe().NUM);
+		
 		currentStatus = new Pair<UniverseMap, Players>(map, players);
 		
+		/*
 		//----------------------------\\
 		//		TESTING :
 		
@@ -74,6 +78,7 @@ public class FullGameStatusRISK implements FullGameStatus
 				MASTER.pr(i.intValue() + "  ");
 			MASTER.pl("");
 		}
+		*/
 	}
 	
 	public boolean checkIfImAlive() 

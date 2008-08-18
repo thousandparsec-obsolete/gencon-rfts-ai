@@ -133,7 +133,7 @@ public class Client
 		MASTER.pl("Logged in successfully as : " + MASTER.getMyUsername());
 			
 		//testing!!!
-		testMethods();
+		//testMethods();
 				
 	}
 

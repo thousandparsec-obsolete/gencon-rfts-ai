@@ -1,5 +1,6 @@
 package gencon.robolib.RISK;
 
+import gencon.Master;
 import gencon.clientLib.Client;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.evolutionlib.Genotype;
@@ -10,27 +11,36 @@ import gencon.robolib.Robot;
 
 public class RISKRobot extends Robot
 {
+	public final Master MASTER;
 	public final short DIFFICULTY;
 	public final ClientMethodsRISK CLIENT_RISK;
 	public final FullGameStatusRISK FGS;
 	public final ActionController CONTROLLER;
 
-	public RISKRobot(Genotype genome, Client client, FullGameStatusRISK fgs, short difficulty) 
+	public RISKRobot(Master master, Genotype genome) 
 	{
 		super(genome);
-		DIFFICULTY = difficulty;
-		CLIENT_RISK = (ClientMethodsRISK) client.getClientMethods();
-		FGS = fgs;
+		MASTER = master;
+		DIFFICULTY = MASTER.getDifficulty();
+		CLIENT_RISK = (ClientMethodsRISK) MASTER.CLIENT.getClientMethods();
+		FGS = (FullGameStatusRISK) MASTER.getStatus();
 		CONTROLLER = new ActionController(new ActionMethods(new AdvancedMap(), CLIENT_RISK));
 	}
 
 	@Override
 	public void startTurn(int time_remaining) 
 	{
+		MASTER.pr("Initializing bot with new data..... ");
+		long start = System.currentTimeMillis();
 		super.startTurn(time_remaining);
 		UniverseMap mapForSimulations = FGS.getCurrentStatus().left;
+		
 		CONTROLLER.incrementTurn(mapForSimulations, FGS.getCurrentStatus().right.getMe().NUM);
+		MASTER.pl("Engaging in action.");
 		CONTROLLER.performActions(getCurrentTraits());
+		long end = System.currentTimeMillis();
+		long time = end - start;
+		MASTER.pl("Finished performing actions for this turn. Total time required: " + time + " ms.");
 		//test();
 	}
 	
