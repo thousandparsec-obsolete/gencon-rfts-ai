@@ -1,16 +1,12 @@
 package gencon.utils;
 
-import gencon.Master;
 import gencon.Master.RULESET;
 import gencon.clientLib.Client;
 
 import java.io.PrintStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-
-import net.thousandparsec.util.Pair;
 
 /**
  * A collector class for general utility methods.

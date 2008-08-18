@@ -1,12 +1,10 @@
 package gencon.gamelib;
 
 import gencon.clientLib.Client;
-import gencon.gamelib.RISK.UniverseMap;
 
 import java.io.IOException;
 
 import net.thousandparsec.netlib.TPException;
-import net.thousandparsec.util.Pair;
 
 public interface FullGameStatus 
 {	

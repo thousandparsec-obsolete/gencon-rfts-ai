@@ -2,7 +2,6 @@ package gencon.clientLib;
 
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
-import net.thousandparsec.netlib.tp04.TP04Visitor;
 
 import java.io.IOException;
 import java.util.*;

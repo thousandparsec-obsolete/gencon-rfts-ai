@@ -1,9 +1,5 @@
 package gencon.clientLib;
 
-import gencon.gamelib.RFTS.gameobjects.Body;
-import gencon.gamelib.RFTS.gameobjects.Fleet;
-import gencon.gamelib.RFTS.gameobjects.Planet;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;

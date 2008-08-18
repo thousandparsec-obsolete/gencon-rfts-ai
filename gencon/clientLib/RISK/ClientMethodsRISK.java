@@ -14,7 +14,6 @@ import net.thousandparsec.netlib.tp03.OrderInsert;
 import net.thousandparsec.netlib.tp03.OrderParams;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
 import net.thousandparsec.netlib.tp03.OrderParams.OrderParamList.SelectionType;
-import net.thousandparsec.netlib.tp03.OrderParams.OrderParamReferenceList.ReferencesType;
 import net.thousandparsec.util.Pair;
 
 import gencon.clientLib.Client;

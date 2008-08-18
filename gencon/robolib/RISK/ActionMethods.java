@@ -8,6 +8,7 @@ import java.util.List;
 
 import net.thousandparsec.util.Pair;
 import gencon.clientLib.RISK.ClientMethodsRISK;
+import gencon.gamelib.RISK.UniverseMap;
 import gencon.gamelib.RISK.gameobjects.Star;
 import gencon.robolib.RISK.AdvancedMap.AdvancedStar;
 
@@ -29,8 +30,13 @@ public class ActionMethods
 		CLIENT_RISK = clientRisk;
 	}
 	
+	public void incrementTurn(UniverseMap newMap, int myPlrId)
+	{
+		MAP.updateMap(newMap, myPlrId);
+	}
+	
 	/**
-	 * SHOULD BE USED FIRST.
+	 * BEST IF ACTED ON FIRST.
 	 * 
 	 * Transfers troops from backwater planets (ones which are surrounded by friendlies),
 	 * to nearby friendly planets, which are endangered.
@@ -150,7 +156,7 @@ public class ActionMethods
 	/**
 	 * Reinforces N-most-endangered planets, relative to the threat they face.
 	 * 
-	 * @param geneDefence Can be 0, 1 or 2. Determines the threshold of risk for sending reinforcements:
+	 * @param geneDefence Can be 0, 1 or 2. Determines the maximum amount of stars reinforced:
 	 * 	0 (max helped: 3), 1 (max helped: 5), 2 (max helped: 7). Will help only those at risk.
 	 * @param geneReinforce Can be 0, 1 or 2. Determines the amount of reinforcements to be distributed: 
 	 * 	0 (33% of total available reinforcements), 1 (66%), or 2 (99%).

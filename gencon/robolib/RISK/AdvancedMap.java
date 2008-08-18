@@ -5,9 +5,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import net.thousandparsec.util.Pair;
-import gencon.gamelib.Players;
-import gencon.gamelib.RISK.FullGameStatusRISK;
 import gencon.gamelib.RISK.UniverseMap;
 import gencon.gamelib.RISK.gameobjects.Star;
 
@@ -80,7 +77,7 @@ public class AdvancedMap
 			 * If so, it's marked 'backwaters'.
 			 */
 			//the threat formula:
-			double threat = (enemyForces / forces) * (1 / enemies.size());
+			double threat = (enemyForces / forces) * (1 /enemyCount);
 			
 			//setting values:
 			as.setThreat(threat);

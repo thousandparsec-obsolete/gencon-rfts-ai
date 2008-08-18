@@ -3,7 +3,6 @@ package gencon.clientLib.RFTS;
 import gencon.clientLib.Client;
 import gencon.clientLib.ClientMethods;
 import gencon.clientLib.ConnectionMethods;
-import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RFTS.gameobjects.Body;
 import gencon.gamelib.RFTS.gameobjects.Fleet;
 import gencon.gamelib.RFTS.gameobjects.Orders;

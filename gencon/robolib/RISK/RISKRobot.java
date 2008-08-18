@@ -11,40 +11,28 @@ import gencon.robolib.Robot;
 public class RISKRobot extends Robot
 {
 	public final short DIFFICULTY;
-	public final Client CLIENT;
 	public final ClientMethodsRISK CLIENT_RISK;
 	public final FullGameStatusRISK FGS;
-	public final AdvancedMap ADVANCED_MAP;
+	public final ActionController CONTROLLER;
 
 	public RISKRobot(Genotype genome, Client client, FullGameStatusRISK fgs, short difficulty) 
 	{
 		super(genome);
 		DIFFICULTY = difficulty;
-		CLIENT = client;
-		CLIENT_RISK = (ClientMethodsRISK) CLIENT.getClientMethods();
+		CLIENT_RISK = (ClientMethodsRISK) client.getClientMethods();
 		FGS = fgs;
-		ADVANCED_MAP = new AdvancedMap();
+		CONTROLLER = new ActionController(new ActionMethods(new AdvancedMap(), CLIENT_RISK));
 	}
 
 	@Override
 	public void startTurn(int time_remaining) 
 	{
 		super.startTurn(time_remaining);
-		
-		UniverseMap simulationMap = FGS.getCurrentStatus().left;
-		int myPlrNum = FGS.getCurrentStatus().right.getMe().NUM;
-		
-		ADVANCED_MAP.updateMap(simulationMap, myPlrNum);
-		
-		
-		
-		
-		
+		UniverseMap mapForSimulations = FGS.getCurrentStatus().left;
+		CONTROLLER.incrementTurn(mapForSimulations, FGS.getCurrentStatus().right.getMe().NUM);
+		CONTROLLER.performActions(getCurrentTraits());
 		//test();
-		
-		
 	}
-	
 	
 	public void test()
 	{
@@ -52,7 +40,6 @@ public class RISKRobot extends Robot
 		testMove();
 		testReinforce();
 	}
-	
 	
 	private void testColonize()
 	{
