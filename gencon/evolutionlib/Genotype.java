@@ -25,7 +25,7 @@ public class Genotype
 	 */
 	public static enum Alleles
 	{
-		ALLELE_1, ALLELE_2, ALLELE_3, ALLELE_4, ALLELE_5, ALLELE_6, ALLELE_7, ALLELE_8, ALLELE_9;
+		ALLELE_1, ALLELE_2, ALLELE_3, ALLELE_4, ALLELE_5, ALLELE_6, ALLELE_7, ALLELE_8, ALLELE_9, ALLELE_10;
 	}
 	
 	

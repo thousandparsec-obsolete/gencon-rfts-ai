@@ -271,13 +271,21 @@ public class ActionMethods
 	}
 	
 	/**
-	 * Evenly distributes a portion of the remaining reinforcements.
+	 * Evenly distributes a portion of the remaining reinforcements, as directed by geneCheapness.
 	 * 
+	 * @param geneCheapness Can be 0, 1 or 2. Determines what percentage of available reinforcements to distribute amongst owned stars.
+	 * 	0 (50%) , 1 (75%) , 2 (100%)
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean distributeRemainingReinforcements(int myPlrNum)
+	public boolean distributeRemainingReinforcements(byte geneCheapness, int myPlrNum)
 	{
 		int reinforcements = MAP.getBasicMap().getMyReinforcements();
+		
+		//setting the actual value:
+		if (geneCheapness == 0)
+			reinforcements = (int)Math.round(Math.floor(reinforcements / 2));
+		else if (geneCheapness == 1)
+			reinforcements = (int)Math.round(Math.floor(3 * reinforcements / 4));
 		
 		if (reinforcements == 0) //can't do anything!
 			return true;

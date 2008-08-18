@@ -35,6 +35,7 @@ public class ActionController
 		byte geneEmigration = currentTraits.get(Alleles.ALLELE_7);
 		byte geneStoicism = currentTraits.get(Alleles.ALLELE_8);
 		byte geneAggression = currentTraits.get(Alleles.ALLELE_9);
+		byte geneCheapness = currentTraits.get(Alleles.ALLELE_10);
 		
 		//------------------------------------
 		//LET'S FIRE 'ER UP. DIE, INFIDELS!
@@ -42,7 +43,7 @@ public class ActionController
 		//always first:
 		ACTIONS.transferTroopsFromBackwaterStars(geneBackwaterDistribute, myPlayerId);
 		ACTIONS.reinforceEndangeredPlanets(geneDefence, geneReinforce, myPlayerId);
-		ACTIONS.distributeRemainingReinforcements(myPlayerId);
+		ACTIONS.distributeRemainingReinforcements(geneCheapness, myPlayerId);
 		
 		//depends on aggression:
 		if (geneAggression == 0) //expand first, attack later.
