@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.LocatorEx.Snapshot;
-
 import net.thousandparsec.util.Pair;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.gamelib.RISK.gameobjects.Star;
@@ -33,6 +31,7 @@ public class ActionMethods
 	
 	/**
 	 * SHOULD BE USED FIRST.
+	 * 
 	 * Transfers troops from backwater planets (ones which are surrounded by friendlies),
 	 * to nearby friendly planets, which are endangered.
 	 * 
@@ -154,7 +153,7 @@ public class ActionMethods
 	 * @param geneDefence Can be 0, 1 or 2. Determines the threshold of risk for sending reinforcements:
 	 * 	0 (max helped: 3), 1 (max helped: 5), 2 (max helped: 7). Will help only those at risk.
 	 * @param geneReinforce Can be 0, 1 or 2. Determines the amount of reinforcements to be distributed: 
-	 * 	0 (33% of total available reinforcements), 1 (60%), or 2 (90%).
+	 * 	0 (33% of total available reinforcements), 1 (66%), or 2 (99%).
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
 	public boolean ReinforceEndangeredPlanets(byte geneDefence, byte geneReinforce, int myPlrNum)
@@ -164,18 +163,18 @@ public class ActionMethods
 		
 		double importance = 0.0;
 		if (geneReinforce == 0)
-			importance = 0.3;
+			importance = 1 / 3;
 		else if (geneReinforce == 1)
-			importance = 0.6;
-		else if (geneReinforce == 2)
-			importance = 0.9;
+			importance = 2 / 3;
+		else
+			importance = 0.999999999;
 		
 		int maxReinforcedStars = 0;
 		if (geneDefence == 0)
 			maxReinforcedStars = 3;
-		if (geneDefence == 1)
+		else if (geneDefence == 1)
 			maxReinforcedStars = 5;
-		if (geneDefence == 2)
+		else
 			maxReinforcedStars = 7;
 		
 		//get list of stars by threats:
@@ -276,7 +275,7 @@ public class ActionMethods
 			risk = 1.2;
 		else if (geneBravery == 1)
 			risk = 1.3;
-		else if (geneBravery == 2)
+		else
 			risk = 1.4;
 		
 		//determining the ratio of troops to be sent to combat:
@@ -285,7 +284,7 @@ public class ActionMethods
 			cannonFodder = 0.5;
 		else if (cannonFodder == 1)
 			cannonFodder = 0.7;
-		else if (cannonFodder == 2)
+		else
 			cannonFodder = 0.9;
 		
 		boolean success = true; //to be returned.
@@ -390,37 +389,114 @@ public class ActionMethods
 	
 	
 	/**
+	 * Governs expansion to nearby neutral planets. From the lowest-threat friendly stars, to their lowest-threat neutral neighbors.
 	 * 
-	 * @param geneExpansionism Can be 0, 1 or 2. Determines the 
-	 * @param geneEmmigration
+	 * @param geneExpansionism Can be 0, 1 or 2. Determines the maximum number of stars to be colonized at a turn.
+	 * 	0 (max. of 4), 1 (max. of 7), 2 (max. of 10).
+	 * @param geneEmigration Can be 0, 1 or 2. Determines the ratio of troops to be dispatched.
+	 * 	0 (20% of army), 1 (40%), 2 (60%).
 	 * @param myPlrNum
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean expandToNeutralStars(byte geneExpansionism, byte geneEmmigration, int myPlrNum)
+	public boolean expandToNeutralStars(byte geneExpansionism, byte geneEmigration, int myPlrNum)
 	{
+		assert (geneExpansionism == 0 || geneExpansionism == 1 || geneExpansionism == 2) && 
+			(geneEmigration == 0 || geneEmigration == 1 || geneEmigration == 2);  
 		
+		int maxColonies = 0;
+		if (geneExpansionism == 0)
+			maxColonies = 4;
+		else if (geneExpansionism == 1)
+			maxColonies = 7;
+		else
+			maxColonies = 10;
+		
+		double emigration = 0.0;
+		if (geneEmigration == 0)
+			emigration = 0.2;
+		else if (geneEmigration == 1)
+			emigration = 0.4;
+		else
+			emigration = 0.6;
+		
+		boolean success = true; //to be returned.
+		
+		//sort the friendly stars by threat:
+		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
+		Collection<AdvancedStar> friendly = MAP.getStarsOfPlayer(allStars, myPlrNum);
+		List<AdvancedStar> friendlyByThreat = MAP.sortByThreat(friendly);
+		
+		//setting the actual number of maximum possible colonies:
+		if (maxColonies > friendlyByThreat.size())
+			maxColonies = friendlyByThreat.size();
+		
+		//iterate on friendly stars, lowest threat first, for 'maxColonies' times.
+		for (int i = friendlyByThreat.size() - 1; i > friendlyByThreat.size() - 1 - maxColonies; i--)
+		{
+			AdvancedStar possibleColonist = friendlyByThreat.get(i);
+			int colonists = (int) Math.round(Math.floor(possibleColonist.STAR.getArmy() * emigration));
+			
+			//see if it'll be safe and viable to colonize!
+			if (possibleColonist.getThreat() < possibleColonist.STAR.getArmy() - colonists && colonists > 0)
+			{
+				//get all neutral neighbors, and sort them by threat:
+				Collection<Integer> neighborIds = possibleColonist.STAR.getAdjacencies();
+				Collection<AdvancedStar> neutralNeighbors = new HashSet<AdvancedStar>();
+				for (Integer id : neighborIds)
+				{
+					AdvancedStar neighbor = MAP.getAdvancedStarWithId(id);
+					if (neighbor.STAR.getOwner() == -1)
+						neutralNeighbors.add(neighbor);
+				}
+				
+				//find the safest place to colonize, and see if it's safe enough:
+				AdvancedStar safestFutureColony = null;
+				for (AdvancedStar possibleColony : neutralNeighbors)
+					if (safestFutureColony == null || possibleColony.getThreat() < safestFutureColony.getThreat())
+						safestFutureColony = possibleColony;
+				
+				//if this place exists, and it's safe enough.
+				if (safestFutureColony != null && safestFutureColony.getThreat() < colonists)
+				{
+					try
+					{
+						success = success && CLIENT_RISK.orderMove(possibleColonist.STAR, safestFutureColony.STAR, colonists, false);
+						possibleColonist.STAR.setArmy(possibleColonist.STAR.getArmy() - colonists);
+						safestFutureColony.STAR.setOwner(myPlrNum);
+						safestFutureColony.STAR.setArmy(colonists);
+					}
+					catch (Exception e)
+					{
+						success = false;
+					}
+				}
+			}
+		}
+		
+		return success;
 	}
 	
 	
 	/**
-	 * SHOULD BE THE LAST ACTION UNDERTAKEN, AFTER ALL ELSE FAILED!
+	 * SHOULD BE THE LAST ACTION UNDERTAKEN, AFTER ALL ELSE FAILED.
+	 * 
 	 * All planets under "grave threat" (as specified by geneCowardice) look if they can evacuate their troops to a safer place. 1 unit will remain.
 	 * 
-	 * @param geneCowardice Can be 0, 1 or 2. Determines the threshold of threat under which my forces need to escape to a safer location.
+	 * @param geneStoicism Can be 0, 1 or 2. Determines the threshold of threat under which my forces need to escape to a safer location.
 	 * 	0 means being outnumbered by 10%, 1 (20%), 2 (30%).
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean evacuateToSafety(byte geneCowardice, int myPlrNum)
+	public boolean evacuateToSafety(byte geneStoicism, int myPlrNum)
 	{
-		assert geneCowardice == 0 || geneCowardice == 1 || geneCowardice == 2;
+		assert geneStoicism == 0 || geneStoicism == 1 || geneStoicism == 2;
 		
 		//determine the coefficient, which decides on action:
 		double overrun = 0.0;
-		if (geneCowardice == 0)
+		if (geneStoicism == 0)
 			overrun = 0.1;
-		else if (geneCowardice == 1)
+		else if (geneStoicism == 1)
 			overrun = 0.2;
-		else if (geneCowardice == 2)
+		else
 			overrun = 0.3;
 		
 		boolean success = true; //to be returned.

@@ -10,7 +10,6 @@ import gencon.robolib.Robot;
 
 public class RISKRobot extends Robot
 {
-	
 	public final short DIFFICULTY;
 	public final Client CLIENT;
 	public final ClientMethodsRISK CLIENT_RISK;

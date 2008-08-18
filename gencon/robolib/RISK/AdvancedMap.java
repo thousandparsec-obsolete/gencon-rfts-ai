@@ -214,6 +214,10 @@ public class AdvancedMap
 			this.backwaters = other.getBackwaters();
 		}
 		
+		/**
+		 * 
+		 * @return The net number of unfriendly troops that surround the star. Does not include my forces.
+		 */
 		public double getThreat()
 		{
 			return threat;
