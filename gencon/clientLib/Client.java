@@ -88,11 +88,11 @@ public class Client
 	{
 		List<java.lang.Object> parsedArgs = Utils.parseArgs(args);
 		
-		MASTER.setVerboseDebugMode((Boolean) parsedArgs.get(4));
-		MASTER.pl("Verbose debug mode on.");
+		MASTER.out.setVerboseMode((Boolean) parsedArgs.get(4));
+		MASTER.out.pl("Verbose debug mode on.");
 		
 		MASTER.setRuleset((RULESET)parsedArgs.get(0));
-		MASTER.pl("Ruleset being played is: " + MASTER.getRuleset());
+		MASTER.out.pl("Ruleset being played is: " + MASTER.getRuleset());
 		
 		//setting the correct connection methods:
 		if (MASTER.getRuleset() == RULESET.RISK)
@@ -102,13 +102,13 @@ public class Client
 		//-----------------------------------------
 		
 		serverURI = new URI((String)parsedArgs.get(1));
-		MASTER.pl("Server URI is: " + serverURI.toString());
+		MASTER.out.pl("Server URI is: " + serverURI.toString());
 		
 		MASTER.setGenomeFileClasspath((String) parsedArgs.get(2));
-		MASTER.pl("Genome file classpath is: " + MASTER.getGenomeFileClasspath());
+		MASTER.out.pl("Genome file classpath is: " + MASTER.getGenomeFileClasspath());
 		
 		MASTER.setDifficulty((Short) parsedArgs.get(3));
-		MASTER.pl("Difficulty set to: " + MASTER.getDifficulty());
+		MASTER.out.pl("Difficulty set to: " + MASTER.getDifficulty());
 		
 		connect();
 	}
@@ -121,16 +121,16 @@ public class Client
 	private void connect() throws IOException, TPException
 	{
 		TP03Decoder decoder = new TP03Decoder();
-		MASTER.pr("Establishing connection to server... ");
+		MASTER.out.pr("Establishing connection to server... ");
 			
 		Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, true, VISITOR);
 		basicCon.addConnectionListener(EVENT_LOGGER);
 			
 		connMgr = new ConnectionManager<TP03Visitor>(basicCon);
 			
-		MASTER.pl("connection established to : " + serverURI);
+		MASTER.out.pl("connection established to : " + serverURI);
 		MASTER.setMyUsername(Utils.getUsrnameFromURI(serverURI));
-		MASTER.pl("Logged in successfully as : " + MASTER.getMyUsername());
+		MASTER.out.pl("Logged in successfully as : " + MASTER.getMyUsername());
 			
 		//testing!!!
 		//testMethods();
@@ -180,9 +180,9 @@ public class Client
 	{
 		if (connMgr != null)
 		{
-			MASTER.pr("Closing connection... ");
+			MASTER.out.pr("Closing connection... ");
 			connMgr.close();
-			MASTER.pl("done.");
+			MASTER.out.pl("done.");
 		}
 	}
 
@@ -288,7 +288,7 @@ public class Client
 					for (OrderParams op : params)
 					{
 						OrderParams.OrderParamObject opo = (OrderParams.OrderParamObject) op;
-						MASTER.pr("Object: " + opo.getObjectid());
+						MASTER.out.pr("Object: " + opo.getObjectid());
 						OrderParams.OrderParamString ops = (OrderParams.OrderParamString) op;
 						pr("  Destination : " + opo.getObjectid() + "\n");
 					}

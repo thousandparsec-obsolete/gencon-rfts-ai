@@ -72,11 +72,14 @@ public class Genotype
 	 */
 	public Map<Alleles, Byte> getGenome(int turn_num)
 	{
+		//System.err.print("Turn : " + turn_num);
 		//wrap-around if needed:
 		turn_num = (TIME_RELEASE * NUM_OF_TIME_RELEASE_VALUES) % turn_num;
 		
 		//determine the spot in the time-release list of values:
 		int spot = (turn_num - 1) / TIME_RELEASE;
+		
+		//System.err.println("Spot: " + spot);
 		
 		Map<Alleles, Byte> map = new HashMap<Alleles, Byte>();
 		Set<Alleles> keyset = GENOME.keySet();

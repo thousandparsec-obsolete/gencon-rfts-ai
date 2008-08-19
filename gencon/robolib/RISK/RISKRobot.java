@@ -1,9 +1,13 @@
 package gencon.robolib.RISK;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import gencon.Master;
 import gencon.clientLib.Client;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.evolutionlib.Genotype;
+import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RISK.FullGameStatusRISK;
 import gencon.gamelib.RISK.UniverseMap;
 import gencon.gamelib.RISK.gameobjects.Star;
@@ -16,6 +20,7 @@ public class RISKRobot extends Robot
 	public final ClientMethodsRISK CLIENT_RISK;
 	public final FullGameStatusRISK FGS;
 	public final ActionController CONTROLLER;
+	public final AdvancedMap MAP;
 
 	public RISKRobot(Master master, Genotype genome) 
 	{
@@ -24,24 +29,44 @@ public class RISKRobot extends Robot
 		DIFFICULTY = MASTER.getDifficulty();
 		CLIENT_RISK = (ClientMethodsRISK) MASTER.CLIENT.getClientMethods();
 		FGS = (FullGameStatusRISK) MASTER.getStatus();
-		CONTROLLER = new ActionController(new ActionMethods(new AdvancedMap(), CLIENT_RISK));
+		MAP = new AdvancedMap();
+		CONTROLLER = new ActionController(new ActionMethods(MAP, CLIENT_RISK, MASTER.out));
 	}
 
 	@Override
-	public void startTurn(int time_remaining) 
+	public void startTurn(int time_remaining, int turn_num) 
 	{
-		MASTER.pr("Initializing bot with new data..... ");
+		MASTER.out.pr("Initializing bot with new data..... ");
 		long start = System.currentTimeMillis();
-		super.startTurn(time_remaining);
+		super.startTurn(time_remaining, turn_num);
 		UniverseMap mapForSimulations = FGS.getCurrentStatus().left;
 		
 		CONTROLLER.incrementTurn(mapForSimulations, FGS.getCurrentStatus().right.getMe().NUM);
-		MASTER.pl("Engaging in action.");
+		
+		//generating output:
+		Collection<Integer> playerIds = new HashSet<Integer>();
+		for (Game_Player gp : FGS.getCurrentStatus().right.PLAYERS)
+			playerIds.add(gp.NUM);
+		playerIds.add(-1); //add neutral!
+		MAP.printData(MASTER.out, playerIds);
+		
+		MASTER.out.pl("Engaging in action.");
 		CONTROLLER.performActions(getCurrentTraits());
 		long end = System.currentTimeMillis();
 		long time = end - start;
-		MASTER.pl("Finished performing actions for this turn. Total time required: " + time + " ms.");
+		MASTER.out.pl("Finished performing actions for this turn. Total time required: " + time + " ms.");
 		//test();
+	}
+	
+	
+	public void pl(String st)
+	{
+		MASTER.out.pl(st);
+	}
+	
+	public void pr(String st)
+	{
+		MASTER.out.pr(st);
 	}
 	
 	public void test()

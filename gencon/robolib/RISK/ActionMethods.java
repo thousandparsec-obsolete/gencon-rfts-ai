@@ -1,16 +1,15 @@
 package gencon.robolib.RISK;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import net.thousandparsec.util.Pair;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.gamelib.RISK.UniverseMap;
 import gencon.gamelib.RISK.gameobjects.Star;
 import gencon.robolib.RISK.AdvancedMap.AdvancedStar;
+import gencon.utils.DebugOut;
 
 /**
  * A class, which contains methods that govern the behavior of the bot, 
@@ -22,10 +21,12 @@ public class ActionMethods
 {
 	private final AdvancedMap MAP;
 	private final ClientMethodsRISK CLIENT_RISK;
+	private final DebugOut out;
 	//private final double DOUBLE_TOLERANCE = 1e-3;
 	
-	public ActionMethods(AdvancedMap advMap, ClientMethodsRISK clientRisk)
+	public ActionMethods(AdvancedMap advMap, ClientMethodsRISK clientRisk, DebugOut output)
 	{
+		out = output;
 		MAP = advMap;
 		CLIENT_RISK = clientRisk;
 	}
@@ -63,11 +64,11 @@ public class ActionMethods
 				
 			//collect all friendly neighbors, which aren't backwater themselves.
 			Collection<AdvancedStar> neighbors = MAP.getNeighbors(star);
-			Collection<AdvancedStar> backwaterNeighbors = new HashSet<AdvancedStar>();
+			Collection<AdvancedStar> invalidNeighbors = new HashSet<AdvancedStar>();
 			for (AdvancedStar as : neighbors)
 				if (as.STAR.getOwner() != myPlrNum || as.getBackwaters() == true)
-					backwaterNeighbors.add(as);
-			neighbors.removeAll(backwaterNeighbors);
+					invalidNeighbors.add(as);
+			neighbors.removeAll(invalidNeighbors);
 			
 			if (neighbors.isEmpty()) //nowhere to send!
 				return true;
@@ -89,8 +90,10 @@ public class ActionMethods
 				{
 					try
 					{
+						out.pl("Transfering " + (star.STAR.getArmy() - 1) +  " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">");
 						success = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, false);
 						endangered.STAR.setArmy(endangered.STAR.getArmy() + star.STAR.getArmy() - 1);
+						star.STAR.setArmy(1);
 					}
 					catch (Exception e)
 					{
@@ -103,51 +106,61 @@ public class ActionMethods
 					int halfArmy = (int) Math.round(Math.floor((star.STAR.getArmy() - 1) / 2));
 					try
 					{
+						out.pl("Transfering " + halfArmy + " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">");
 						success = success && CLIENT_RISK.orderMove(star.STAR, endangered.STAR, halfArmy, false);
 						endangered.STAR.setArmy(endangered.STAR.getArmy() + halfArmy);
+						star.STAR.setArmy(star.STAR.getArmy() - halfArmy);
 					}
 					catch (Exception e)
 					{
 						success = false;
 					}
 					
-					//distributing evenly between rest:
+					//distributing evenly between all neighbors:
 					int remainingArmy = star.STAR.getArmy() - halfArmy;
-					int remainingNeighbors = neighbors.size();
-					int eachGets = (int) Math.round(Math.floor(remainingArmy / remainingNeighbors));
-					
-					for (AdvancedStar neighbor : neighbors)
-					{
-						try
+					while (remainingArmy > 0)
+						for (AdvancedStar neighbor : neighbors)
 						{
-							success = success && CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, eachGets, false);
-							neighbor.STAR.setArmy(neighbor.STAR.getArmy() + eachGets);
+							try
+							{
+								success = success && CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
+								out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">");
+								star.STAR.setArmy(star.STAR.getArmy() - 1);
+								remainingArmy--;
+							}
+							catch (Exception e)
+							{
+								success = false;
+							}
+							
+							if (remainingArmy == 0)
+								break;
 						}
-						catch (Exception e)
-						{
-							success = false;
-						}
-					}
 				}
 			}
 	
 			else // gene == 2. Disribute evenly:
 			{
-				int remainingNeighbors = neighbors.size();
-				int eachGets = (int) Math.round(Math.floor(star.STAR.getArmy() / remainingNeighbors));
-				
-				for (AdvancedStar neighbor : neighbors)
-				{
-					try
+				//distributing evenly between all neighbors:
+				int total = star.STAR.getArmy();
+				while (total > 0)
+					for (AdvancedStar neighbor : neighbors)
 					{
-						success = success && CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, eachGets, false);
-						neighbor.STAR.setArmy(neighbor.STAR.getArmy() + eachGets);
+						try
+						{
+							success = success && CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
+							out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">");
+							star.STAR.setArmy(star.STAR.getArmy() - 1);
+							total--;
+						}
+						catch (Exception e)
+						{
+							success = false;
+						}
+						
+						if (total == 0)
+							break;
 					}
-					catch (Exception e)
-					{
-						success = false;
-					}
-				}
 			}
 			
 		}
@@ -255,6 +268,7 @@ public class ActionMethods
 				try
 				{
 					success = success && CLIENT_RISK.orderReinforce(star, reinforce, false);
+					out.pl("Reinforcing endangered star <" + star.GAME_ID + "> with " + reinforce + " troops.");
 					actualTotalReinforced += reinforce;
 					star.setArmy(star.getArmy() + reinforce);
 				}
@@ -307,21 +321,20 @@ public class ActionMethods
 			{
 				for (AdvancedStar s : myStars)
 				{
-					if (reinforcements > 0)
+					try
 					{
-						try
-						{
-							System.out.print("Reinforcing " + s.STAR.GAME_ID + " with 1 troops");
-							success = success && CLIENT_RISK.orderReinforce(s.STAR, 1, false);
-							System.out.println(" <success>");
-							actualReinforced ++;
-							reinforcements --;
-						}
-						catch (Exception e)
-						{
-							success = false;
-						}
+						success = success && CLIENT_RISK.orderReinforce(s.STAR, 1, false);
+						out.pl("Reinforcing <" + s.STAR.GAME_ID + "> with 1 troops");
+						actualReinforced ++;
+						reinforcements --;
 					}
+					catch (Exception e)
+					{
+						success = false;
+					}
+					
+					if (reinforcements == 0)
+						break;
 				}
 			}
 		else //reinforce each planet by amount given. (Reason for this split: SPEED. it's inefficient sending too many order fames!)
@@ -330,9 +343,8 @@ public class ActionMethods
 			{
 				try
 				{
-					System.out.print("Attempting to reinforce " + s.STAR.GAME_ID + " with " + perPlanet + " troops");
 					success = success && CLIENT_RISK.orderReinforce(s.STAR, perPlanet, false);
-					System.out.println(" <success>");
+					out.pl("Reinforcing <" + s.STAR.GAME_ID + "> with " + perPlanet + " troops");
 					actualReinforced += perPlanet;
 				}
 				catch (Exception e)
@@ -350,10 +362,10 @@ public class ActionMethods
 	
 	
 	/**
-	 * Commences a series of offensive actions. It will attack, until determined to be not beneficial according to the given parameters.
+	 * Commences a series of offensive actions. For each owned star, it will see if it's beneficial to attack, according to the given genetic parameters.
 	 * 
-	 * @param geneBravery Can be 0, 1 or 2. Determines the ratio of troops that needs to be established between my forces and enemy, to attack: 0 (+20%), 1 (+30%), 2 (+40%).
-	 * @param geneCannonfodder Can be 0, 1 or 2. Determines the ratio of troops to be sent to battle from each star: 0 (50%), 1 (70%), 2 (%90).
+	 * @param geneBravery Can be 0, 1 or 2. Determines the ratio of troops that needs to be established between my forces and enemy, to attack: 0 (+0%), 1 (+15%), 2 (+30%).
+	 * @param geneCannonfodder Can be 0, 1 or 2. Determines the ratio of troops to be sent to battle from each star: 0 (70%), 1 (85%), 2 (%99).
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
 	public boolean offensiveActions(byte geneBravery, byte geneCannonfodder, int myPlrNum)
@@ -362,121 +374,69 @@ public class ActionMethods
 			(geneCannonfodder == 0 || geneCannonfodder == 1 || geneCannonfodder == 2); 
 		
 		//determining the risk factor:
-		double risk = 0;
+		double attackThreshold = 0;
 		if (geneBravery == 0)
-			risk = 1.2;
+			attackThreshold = 1;
 		else if (geneBravery == 1)
-			risk = 1.3;
+			attackThreshold = 1.15;
 		else
-			risk = 1.4;
+			attackThreshold = 1.3;
 		
 		//determining the ratio of troops to be sent to combat:
 		double cannonFodder = 0;
 		if (cannonFodder == 0)
-			cannonFodder = 0.5;
-		else if (cannonFodder == 1)
 			cannonFodder = 0.7;
+		else if (cannonFodder == 1)
+			cannonFodder = 0.85;
 		else
-			cannonFodder = 0.9;
+			cannonFodder = 0.99;
 		
 		boolean success = true; //to be returned.
 		
-		boolean stop = false; //continue until no further aggression is beneficial, according to params.
-		do
+		//getting all my stars:
+		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
+		Collection<AdvancedStar> allMyStars = MAP.getStarsOfPlayer(allStars, myPlrNum);
+		
+		//iterate for each star I own, see if it can attack.
+		for (AdvancedStar myStar : allMyStars)
 		{
-			Pair<Collection<AdvancedStar>, AdvancedStar> bestTarget = findBestTarget(myPlrNum);
+			int attackers = (int) Math.round(Math.floor(myStar.STAR.getArmy() * cannonFodder));
 			
-			if (bestTarget == null) //nothing to attack!
-				return true;
+			//System.err.println("Troops: " + myStar.STAR.getArmy() + "; Cannonfodder: " + cannonFodder + "; Attackers: " + attackers);
 			
-			int totalAttackers = 0;
-			for (AdvancedStar myStar : bestTarget.left)
-				totalAttackers += (int) Math.round(Math.floor(myStar.STAR.getArmy() * cannonFodder));
+			//finding enemies
+			Collection<AdvancedStar> enemies = new HashSet<AdvancedStar>();
+			for (AdvancedStar neighbor : MAP.getNeighbors(myStar))
+				if (neighbor.STAR.getOwner() != myPlrNum && neighbor.STAR.getOwner() != -1)
+					enemies.add(neighbor);
 			
-			int defenders = bestTarget.right.STAR.getArmy();
-			
-			double attackRatio = totalAttackers / defenders;
-			
-			if (attackRatio >= risk) //valid target!
-				for (AdvancedStar attacker : bestTarget.left)
-				{
-					int troopsAttack = (int) Math.round(Math.floor(attacker.STAR.getArmy() * cannonFodder));
-					
-					if (troopsAttack > 0) //sometimes this will be the case! such is life.
-					{
-						try
-						{
-							success = success && CLIENT_RISK.orderMove(attacker.STAR, bestTarget.right.STAR, troopsAttack, false);
-							attacker.STAR.setArmy(attacker.STAR.getArmy() - troopsAttack);
-						}
-						catch (Exception e)
-						{
-							success = false;
-						}
-					}
-				}
-				
-			else // not beneficial anymore!
-				stop = true;
-			
-		} while (!stop);
-		
-		return success;
-	}
-	
-	/*
-	 * @return Enemy star, most threatened by me, and the collection of friendly stars that surround it.
-	 */
-	private Pair<Collection<AdvancedStar>, AdvancedStar> findBestTarget(int myPlrNum)
-	{
-		//get all enemy advanced stars!
-		Collection<AdvancedStar> enemyStars = MAP.getAllAdvStars();
-		enemyStars.removeAll(MAP.getStarsOfPlayer(enemyStars, myPlrNum)); //remove mine.
-		enemyStars.removeAll(MAP.getStarsOfPlayer(enemyStars, -1)); //remove neutral.
-		
-		//list of targets:
-		List<Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>>> listOfTargets = new ArrayList<Pair<Collection<AdvancedStar>,Pair<AdvancedStar,Integer>>>();
-		
-		//populating list:
-		for (AdvancedStar enemy : enemyStars)
-		{
-			//find my stars around it:
-			Collection<AdvancedStar> neighbors = MAP.getNeighbors(enemy);
-			Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(neighbors, myPlrNum);
-			
-			//find if I can overpower it:
-			int myStrength = 0;
-			for (AdvancedStar myStar : myStars)
-				myStrength += myStar.STAR.getArmy();
-			int defenders = enemy.STAR.getArmy();
-			int overpowerTheEnemy = myStrength - defenders;
-			
-			if (!myStars.isEmpty() && overpowerTheEnemy > 0) //weed out obviously bad options.
+			//finding weakest enemy it can possibly attack!
+			AdvancedStar target = null;
+			for (AdvancedStar enemy : enemies)
 			{
-				Pair<AdvancedStar, Integer> enemyPair = new Pair<AdvancedStar, Integer>(enemy, overpowerTheEnemy);
-				Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>> listPair = new Pair<Collection<AdvancedStar>, Pair<AdvancedStar,Integer>>(myStars, enemyPair);
-				listOfTargets.add(listPair);
+				int defenders = enemy.STAR.getArmy();
+				double ratio = attackers / defenders;
+				if (ratio > attackThreshold && (target == null || defenders < target.STAR.getArmy()))
+					target = enemy;
+			}
+			
+			if (target != null && myStar.STAR.getArmy() - attackers >= 1 && attackers > 0) //if it's there, and it's valid!
+			{
+				try
+				{
+					success = success && CLIENT_RISK.orderMove(myStar.STAR, target.STAR, attackers, false);
+					out.pl("Attacking <" + target.STAR.GAME_ID + "> from <" + myStar.STAR.GAME_ID + ">  with " + attackers + " troops.");
+					myStar.STAR.setArmy(myStar.STAR.getArmy() - attackers);
+				}
+				catch (Exception e)
+				{
+					success = false;
+				}
 			}
 		}
 		
-		//find best target!
-		Iterator<Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>>> iterator = listOfTargets.iterator();
-		
-		if (!iterator.hasNext()) //if no enemies nearby!
-			return null;
-			
-		Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>> bestCandidate = iterator.next();
-		while (iterator.hasNext())
-		{
-			Pair<Collection<AdvancedStar>, Pair<AdvancedStar, Integer>> candidate = iterator.next();
-			if (candidate.right.right > bestCandidate.right.right)
-				bestCandidate = candidate;
-		}
-		
-		//found best target!
-		return new Pair<Collection<AdvancedStar>, AdvancedStar>(bestCandidate.left, bestCandidate.right.left);
+		return success;
 	}
-	
 	
 	/**
 	 * Governs expansion to nearby neutral planets. From the lowest-threat friendly stars, to their lowest-threat neutral neighbors.
@@ -515,7 +475,7 @@ public class ActionMethods
 		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
 		Collection<AdvancedStar> friendly = MAP.getStarsOfPlayer(allStars, myPlrNum);
 		
-		//weeding out ones with army == 1: (unfit to colonize)
+		//weeding out ones with army == 1: (unfit to move their units)
 		Collection<AdvancedStar> unfit = new HashSet<AdvancedStar>();
 		for (AdvancedStar as : friendly)
 			if (as.STAR.getArmy() == 1)
@@ -537,7 +497,7 @@ public class ActionMethods
 			//see if it'll be safe and viable to colonize!
 			if (possibleColonist.getThreat() < possibleColonist.STAR.getArmy() - colonists && colonists > 0)
 			{
-				//get all neutral neighbors, and sort them by threat:
+				//get all neutral neighbors:
 				Collection<Integer> neighborIds = possibleColonist.STAR.getAdjacencies();
 				Collection<AdvancedStar> neutralNeighbors = new HashSet<AdvancedStar>();
 				for (Integer id : neighborIds)
@@ -558,12 +518,9 @@ public class ActionMethods
 				{
 					try
 					{
-						//for testing:
-						System.out.println("Moving to neutral star: <" + safestFutureColony.STAR.NAME + ">  From <" + possibleColonist.STAR.NAME + "> , with " + colonists + " troops.");
-						
 						success = success && CLIENT_RISK.orderMove(possibleColonist.STAR, safestFutureColony.STAR, colonists, false);
+						out.pl("Moving to neutral star: <" + safestFutureColony.STAR.GAME_ID + ">  From <" + possibleColonist.STAR.GAME_ID + "> , with " + colonists + " troops.");
 						possibleColonist.STAR.setArmy(possibleColonist.STAR.getArmy() - colonists);
-						safestFutureColony.STAR.setOwner(myPlrNum);
 						safestFutureColony.STAR.setArmy(colonists);
 					}
 					catch (Exception e)
@@ -584,7 +541,7 @@ public class ActionMethods
 	 * All planets under "grave threat" (as specified by geneCowardice) look if they can evacuate their troops to a safer place. 1 unit will remain.
 	 * 
 	 * @param geneStoicism Can be 0, 1 or 2. Determines the threshold of threat under which my forces need to escape to a safer location.
-	 * 	0 means being outnumbered by 10%, 1 (20%), 2 (30%).
+	 * 	0 (outnumbered by 10%), 1 (20%), 2 (30%).
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
 	public boolean evacuateToSafety(byte geneStoicism, int myPlrNum)
@@ -594,11 +551,11 @@ public class ActionMethods
 		//determine the coefficient, which decides on action:
 		double overrun = 0.0;
 		if (geneStoicism == 0)
-			overrun = 0.1;
+			overrun = 1.1;
 		else if (geneStoicism == 1)
-			overrun = 0.2;
+			overrun = 1.2;
 		else
-			overrun = 0.3;
+			overrun = 1.3;
 		
 		boolean success = true; //to be returned.
 		
@@ -631,6 +588,7 @@ public class ActionMethods
 					try
 					{
 						success = success && CLIENT_RISK.orderMove(myStar.STAR, sanctuary.STAR, myStar.STAR.getArmy() - 1, false);
+						out.pl("Evacuating from <" + myStar.STAR.GAME_ID + "> to <" + sanctuary.STAR.GAME_ID + "> , with " + (myStar.STAR.getArmy() - 1) + " troops.");
 						myStar.STAR.setArmy(1); //simple!
 					}
 					catch (Exception e)
@@ -638,7 +596,6 @@ public class ActionMethods
 						success = false;
 					}
 				}
-				
 			}
 		
 		return success;

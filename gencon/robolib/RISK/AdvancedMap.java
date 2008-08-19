@@ -8,6 +8,7 @@ import java.util.List;
 
 import gencon.gamelib.RISK.UniverseMap;
 import gencon.gamelib.RISK.gameobjects.Star;
+import gencon.utils.DebugOut;
 
 public class AdvancedMap 
 {
@@ -21,41 +22,6 @@ public class AdvancedMap
 		uMap = map;
 		generateAdvancedStars();
 		generateParametersOfAdvStars(myPlrNum);
-		
-		/*
-		//testing:
-		//showing stars with parameters:
-		System.out.println("---------- SHOWING ADVANCED STARS ----------");
-		
-		for (AdvancedStar as : advancedStars)
-			System.out.println(as.toString());
-		*/
-		
-		System.out.println("REINFORCEMENTS AVAILABLE: " + uMap.getMyReinforcements());
-		//showing stars of some players:
-		System.out.print("Getting my stars: ");
-		Collection<AdvancedStar> myStars = getStarsOfPlayer(advancedStars, 1);
-		for (AdvancedStar as : myStars)
-			System.out.print("<" + as.STAR.GAME_ID + "> ");
-		
-		System.out.print("\nGetting neutral stars: ");
-		Collection<AdvancedStar> neutrals = getStarsOfPlayer(advancedStars, -1);
-		for (AdvancedStar as : neutrals)
-			System.out.print("<" + as.STAR.GAME_ID + "> ");
-		System.out.println();
-		
-		/*
-		//showing sorting by threat:
-		List<AdvancedStar> sorted = sortByThreat(advancedStars);
-		System.out.println("Sorting by threat:");
-		for (int i = 0; i < sorted.size(); i++)
-			System.out.println("Star: " + sorted.get(i).STAR.GAME_ID + "; Threat: " + sorted.get(i).getThreat());
-		
-		System.out.println("----  Done testing  ----");
-		// done testing.
-		 
-		 */
-		 
 	}
 	
 	private void generateAdvancedStars()
@@ -120,6 +86,40 @@ public class AdvancedMap
 			as.setBackwaters(backwaters);
 		}
 	}
+	
+	public void printData(DebugOut out, Collection<Integer> playerIds)
+	{
+		out.pl("\n>>>");
+		out.pl("Generating abridged output of game-world:");
+		
+		for (Integer i : playerIds)
+		{
+			out.pr("Stars owned by player " + i.intValue() + ": ");
+			Collection<AdvancedStar> stars = getStarsOfPlayer(advancedStars, i);
+			int totalStrength = 0;
+			for (AdvancedStar as : stars)
+			{
+				out.pr("<" + as.STAR.GAME_ID + "> ");
+				totalStrength += as.STAR.getArmy();
+			}
+			int reinforcements = 0;
+			if (!uMap.getStarsOfPlayer(i).isEmpty())
+				reinforcements = uMap.getStarsOfPlayer(i).iterator().next().getReinforcementsAvailable();
+			out.pl("\n		Total stars: " + stars.size() + "; Total army strength: " + totalStrength + "; Total reinforcements: " + reinforcements);
+		}
+		out.pl(">>>");
+	}
+	
+	public void printDataFull(DebugOut out)
+	{
+		out.pl("\n>>>");
+		out.pl("Generating full output for Advanced Map:");
+		for (AdvancedStar star : advancedStars)
+			out.pl(star.toString());
+		out.pl(">>>");
+	}
+	
+	
 	
 	public UniverseMap getBasicMap()
 	{

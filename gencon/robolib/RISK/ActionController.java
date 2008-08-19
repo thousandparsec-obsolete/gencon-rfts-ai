@@ -2,6 +2,8 @@ package gencon.robolib.RISK;
 
 import gencon.evolutionlib.Genotype.Alleles;
 import gencon.gamelib.RISK.UniverseMap;
+import gencon.robolib.Robot;
+import gencon.utils.DebugOut;
 
 import java.util.Map;
 

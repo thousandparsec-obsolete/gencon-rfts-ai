@@ -10,6 +10,7 @@ import gencon.gamelib.RISK.FullGameStatusRISK;
 import gencon.robolib.*;
 import gencon.robolib.RFTS.RFTSRobot;
 import gencon.robolib.RISK.RISKRobot;
+import gencon.utils.DebugOut;
 import gencon.utils.ScannerListener;
 import gencon.utils.Utils;
 
@@ -36,11 +37,10 @@ public class Master implements Runnable
 	 * All standard input has to come from {@link Master}.in.
 	 */
 	public final static ScannerListener in = new ScannerListener(new Scanner(System.in));
+	public final DebugOut out;
 	public final static String QUIT = "q";
 	
 	
-	//maintanance
-	private boolean verboseDebugMode = true; //true by default
 	public final static int NORMAL_EXIT = 0;
 	public final static int ABNORMAL_EXIT = -1;
 	
@@ -72,17 +72,18 @@ public class Master implements Runnable
 
 	public Master(String[] args)
 	{
+		out = new DebugOut(System.out);
 		CLIENT = new Client(this);
 		init(args);
 	}
 	
 	private void init(String[] args) 
 	{
-		pl("Welcome to GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS and Risk rulesets.");
+		System.out.println("Welcome to GenCon (Genetic Conquest): An AI Client for Thousand Parsec : RFTS and Risk rulesets.");
 		
 		//initializing input listener.
 		in.activate(this);
-		pl("To quit at any time, enter 'q', then press RETURN.");
+		System.out.println("To quit at any time, enter 'q', then press RETURN.");
 		
 		//initializing client
 		try
@@ -134,7 +135,7 @@ public class Master implements Runnable
 		}
 			
 		
-		pl("Done initializing GenCon. Waiting for next turn to commence.");
+		out.pl("Done initializing GenCon. Waiting for next turn to commence.");
 	}
 	
 	/**
@@ -180,10 +181,11 @@ public class Master implements Runnable
 		try
 		{
 			int time = CLIENT.getClientMethods().getTimeRemaining();
-			pl("Start of turn routine commencing... " + time + " seconds to end of turn.");
+			turn++;
+			out.pl("\nTurn number: <" + turn + "> (since launch of client). Start of turn routine commencing... " + time + " seconds to end of turn.");
 			game_status.incrementTurn();
 			checkIfImAlive(); //check if I'm alive!
-			robot.startTurn(time);
+			robot.startTurn(time, turn);
 			//CLIENT.eventLogger.dumpLogStd();
 		}
 		catch (Exception e) 
@@ -216,7 +218,7 @@ public class Master implements Runnable
 		if (e != null)
 		{
 			System.out.println("! Fatal exception ! (If Verbose Debug Mode is on, see details below)");
-			Utils.PrintTraceIfDebug(e, isVerboseDebugMode());
+			Utils.PrintTraceIfDebug(e, out.getVerboseMode());
 		}
 		
 		try
@@ -237,20 +239,10 @@ public class Master implements Runnable
 		catch (Exception exc)
 		{
 			System.out.println("Error on closing GenCon. Exiting anyway.");
-			Utils.PrintTraceIfDebug(exc, isVerboseDebugMode());
+			Utils.PrintTraceIfDebug(exc, out.getVerboseMode());
 			System.exit(ABNORMAL_EXIT);
 		}
 		
-	}
-	
-	public boolean isVerboseDebugMode()
-	{
-		return verboseDebugMode;
-	}
-
-	public void setVerboseDebugMode(boolean mode)
-	{
-		verboseDebugMode = mode;
 	}
 	
 	public RULESET getRuleset()
@@ -307,25 +299,5 @@ public class Master implements Runnable
 
 	public void setMyUsername(String myUsername) {
 		this.myUsername = myUsername;
-	}
-
-	/**
-	 * Use this method to substitute for {@link System}.out.println(). 
-	 * It prints to standard-out only if verbose-debug mode is on.
-	 */
-	public void pl(String st)
-	{
-		if (isVerboseDebugMode())
-			System.out.println(st);
-	}
-
-	/**
-	 * Use this method to substitute for {@link System}.out.print(). 
-	 * It prints to standard-out only if verbose-debug mode is on.
-	 */
-	public void pr(String st)
-	{
-		if (isVerboseDebugMode())
-			System.out.print(st);
 	}
 }

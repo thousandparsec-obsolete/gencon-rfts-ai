@@ -59,9 +59,9 @@ public class RFTSRobot extends Robot
 	}
 	
 	@Override
-	public void startTurn(int time_remaining)
+	public void startTurn(int time_remaining, int turn)
 	{
-		super.startTurn(time_remaining);
+		super.startTurn(time_remaining, turn);
 		incrementTurn();
 		
 		/*

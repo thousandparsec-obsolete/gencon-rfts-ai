@@ -15,7 +15,6 @@ import gencon.evolutionlib.Genotype.Alleles;
 public abstract class Robot 
 {
 	public final Genotype GENOME;
-	private int turn_num;
 
 	
 	private Map<Alleles, Byte> currentTraits;
@@ -23,7 +22,6 @@ public abstract class Robot
 	public Robot(Genotype genome)
 	{
 		GENOME = genome;
-		turn_num = 0;
 	}
 	
 	/**
@@ -34,9 +32,8 @@ public abstract class Robot
 	 * 
 	 * @param seconds The amount of seconds left to make a move.
 	 */
-	public void startTurn(int time_remaining)
+	public void startTurn(int time_remaining, int turn_num)
 	{
-		turn_num ++;
 		updateTraits(turn_num);
 	}
 	
