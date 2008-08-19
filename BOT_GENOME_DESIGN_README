@@ -1,0 +1,59 @@
+A GUIDE FOR THE BOT-GENETICIST
+------------------------------------------
+
+This is a brief introduction into the essense of GenCon's logic, followed by a description of how you can homebrew your own "genome" to control the bot's behavior.
+
+~ ~ ~
+GenCon's behavior can be undeterministic, if viewed from the side by an observer or opponent in the game. This gives it an edge over opponents that try to outwit it, such as a human, but with a price; namely, it can behave in ways, which are suboptimal. It is up to the designers of "robot genomes" to create a bot, which will behave close-to-optimal in all situations, and still maintain a freedom to be unpredictable at any stage of the game.
+
+This is acheived by constantly supplying the bot's internal algorithms with new variables for their computations. These variables come from “genome” files, which have a certain format to them. Let's take a look at one:
+
+0~22222221111111111111
+1~00000111112222111111
+2~00111111112112111122
+3~00011111111100000000
+4~22211111111121021021
+5~11222111110000000000
+6~22111111111100000000
+7~00000000000000000000
+8~22222222222222222222
+9~22222222222222222222
+
+The leftmost digits and tilde (~) are there for convenience, to make navigation easy. The rows must have a certain (and equal to all other rows) amount of digits to be considered valid. Each row digits controls a single trait, or variable if you wish. The value can be 0, 1 or 2. GenCon only looks at a single digit at a time, when supplying the bot with a value for that trait. This happens by scanning the row left-to-right at fixed intervals (currently, every 7 turns), and providing the bot with the correct value. For example, if it's turn #18, it will supply 2 for the first trait, 0 for the second and so on. For turn #18, the third digit in each row is supplied. If the turn number is greater than (interval * num_of_values), it wraps around itself. You can control the bot's behavior by manipulating the values of its traits. 
+
+~ ~ ~
+You can create your own “genome” file like so:
+
+1)type “java gencon/evolutionlib/CreateAGenome”
+2)Supply with arguments: filename filedir
+An example: “java gencon/evolutionlib/CreateAGenome Empire /home/me/genomes”
+3)This will create a valid genome file with a random distribution of values, to assist in sticking to format. Change the values as you like! (As long as the number of values in each row remains the same.) Below is a guide to what they mean, and to the logic  of the bot. May the Schwartz be with you! 
+
+
+~ ~ ~
+Here's a rundown of traits for the game of Risk, by row number:
+
+(0)– geneBackwaterDistribute : Determines the behavior of troop transfer from stars, which are completely surrounded by friendly stars. 0 sends all troops to the most endangered friendly neighbor. 1 sends half the troops there, while distributing the other half amongst all neighbors evenly.
+(1)- geneDefence : Determines the maximum amount of stars to be reinforced if they are endangered. 0 means max of 3, 1 max of 5, 2 max of 7.
+(2)- geneReinforce : Determines the ratio of total reinforcements  to be distributed to stars in need. 0 sends 50%, 1 sends 66% and 2 sends 99%.
+(3)- geneBravery : Determines the ratio to be established between my forces and the enemy, to attack. 0 means 1-1, 1 means 1.15-1, 2 means 1.3-1.
+(4)- geneCannonfodder : Determines the ratio of troops to be sent from a star to attack, with respect to the troops-total on the star. 0 sends 70% to slaughter, 1 sends 85%, 2 sends 99%.
+(5)- geneExpansionism : Determines the maximum number of neutral neighboring planets to be expanded to on each given turn. 0 sets it at 4, 1 at 7, and 2 at 10.
+(6)- geneEmigration : Determines the ratio of troops to be sent to neutral neighboring planets, with respect to the troops-total on the star. 0 means 30%, 1 means 50% and 2 sends a whopping 80%.
+(7)- geneStoicism : Determines how outgunned a star might be by its neighbors, to retreat to a sanctuary with all of its forces. 0 needs a ratio of 1-1.1, 1 a ratio of 1-1.2, and 2 a ratio of 1-1.3.
+(8)- geneAgression : Determines whether the bot looks for new territory to colonize, or enemies to conquer first, and the other second. 0 sends all friendly stars looking for greener pastures first, 1 makes it an even balance (randomly selects between the two), and 2 sends it looking for weaklings it can beat up.
+(9)- geneCheapness : Determines the percentage of total reinforcements getting distributed amongst all stars, after the ones in danger got their share. 0 allocates 50% of the remaining, 1 allocates 75%, and 2 allocates 100%.
+
+
+~ ~ ~
+Here's the order, by which the bot makes his decisions. This will help you design a better genome!
+
+1)Transfer all troops from stars, which are surrounded by friendly stars (“backwater” stars).
+2)Reinforce endangered stars.
+3)Distribute remaining reinforcements.
+4)Move to neutral planets, or fight.
+5)Fight or move to neutral planets.
+6)Evacuate to safety if outgunned.
+
+
+

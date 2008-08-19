@@ -174,7 +174,7 @@ public class ActionMethods
 	 * @param geneDefence Can be 0, 1 or 2. Determines the maximum amount of stars reinforced:
 	 * 	0 (max helped: 3), 1 (max helped: 5), 2 (max helped: 7). Will help only those at risk.
 	 * @param geneReinforce Can be 0, 1 or 2. Determines the amount of reinforcements to be distributed: 
-	 * 	0 (33% of total available reinforcements), 1 (66%), or 2 (99%).
+	 * 	0 (50% of total available reinforcements), 1 (66%), or 2 (99%).
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
 	public boolean reinforceEndangeredPlanets(byte geneDefence, byte geneReinforce, int myPlrNum)
@@ -184,7 +184,7 @@ public class ActionMethods
 		
 		double importance = 0.0;
 		if (geneReinforce == 0)
-			importance = 1 / 3;
+			importance = 1 / 2;
 		else if (geneReinforce == 1)
 			importance = 2 / 3;
 		else
@@ -444,7 +444,7 @@ public class ActionMethods
 	 * @param geneExpansionism Can be 0, 1 or 2. Determines the maximum number of stars to be colonized at a turn.
 	 * 	0 (max. of 4), 1 (max. of 7), 2 (max. of 10).
 	 * @param geneEmigration Can be 0, 1 or 2. Determines the ratio of troops to be dispatched.
-	 * 	0 (20% of army), 1 (40%), 2 (60%).
+	 * 	0 (30% of army), 1 (50%), 2 (80%).
 	 * @param myPlrNum
 	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
@@ -463,11 +463,11 @@ public class ActionMethods
 		
 		double emigration = 0.0;
 		if (geneEmigration == 0)
-			emigration = 0.2;
+			emigration = 0.3;
 		else if (geneEmigration == 1)
-			emigration = 0.4;
+			emigration = 0.5;
 		else
-			emigration = 0.6;
+			emigration = 0.7;
 		
 		boolean success = true; //to be returned.
 		
