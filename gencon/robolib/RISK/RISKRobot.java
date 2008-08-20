@@ -30,7 +30,7 @@ public class RISKRobot extends Robot
 		CLIENT_RISK = (ClientMethodsRISK) MASTER.CLIENT.getClientMethods();
 		FGS = (FullGameStatusRISK) MASTER.getStatus();
 		MAP = new AdvancedMap();
-		CONTROLLER = new ActionController(new ActionMethods(MAP, CLIENT_RISK, MASTER.out));
+		CONTROLLER = new ActionController(new ActionMethods(MAP, CLIENT_RISK, MASTER.out), MASTER.out);
 	}
 
 	@Override

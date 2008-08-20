@@ -89,7 +89,7 @@ public class AdvancedMap
 	
 	public void printData(DebugOut out, Collection<Integer> playerIds)
 	{
-		out.pl("\n>>>");
+		out.pl("\n- - -");
 		out.pl("Generating abridged output of game-world:");
 		
 		for (Integer i : playerIds)
@@ -107,7 +107,7 @@ public class AdvancedMap
 				reinforcements = uMap.getStarsOfPlayer(i).iterator().next().getReinforcementsAvailable();
 			out.pl("\n		Total stars: " + stars.size() + "; Total army strength: " + totalStrength + "; Total reinforcements: " + reinforcements);
 		}
-		out.pl(">>>");
+		out.pl("- - -");
 	}
 	
 	public void printDataFull(DebugOut out)

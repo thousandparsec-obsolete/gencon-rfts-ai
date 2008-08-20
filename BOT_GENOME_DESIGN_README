@@ -36,11 +36,11 @@ Here's a rundown of traits for the game of Risk, by row number:
 (0)– geneBackwaterDistribute : Determines the behavior of troop transfer from stars, which are completely surrounded by friendly stars. 0 sends all troops to the most endangered friendly neighbor. 1 sends half the troops there, while distributing the other half amongst all neighbors evenly.
 (1)- geneDefence : Determines the maximum amount of stars to be reinforced if they are endangered. 0 means max of 3, 1 max of 5, 2 max of 7.
 (2)- geneReinforce : Determines the ratio of total reinforcements  to be distributed to stars in need. 0 sends 50%, 1 sends 66% and 2 sends 99%.
-(3)- geneBravery : Determines the ratio to be established between my forces and the enemy, to attack. 0 means 1-1, 1 means 1.15-1, 2 means 1.3-1.
+(3)- geneBravery : Determines the ratio to be established between my forces and the enemy, to attack. 0 means 1/1, 1 means 1.1/1, 2 means 1.2/1.
 (4)- geneCannonfodder : Determines the ratio of troops to be sent from a star to attack, with respect to the troops-total on the star. 0 sends 70% to slaughter, 1 sends 85%, 2 sends 99%.
 (5)- geneExpansionism : Determines the maximum number of neutral neighboring planets to be expanded to on each given turn. 0 sets it at 4, 1 at 7, and 2 at 10.
 (6)- geneEmigration : Determines the ratio of troops to be sent to neutral neighboring planets, with respect to the troops-total on the star. 0 means 30%, 1 means 50% and 2 sends a whopping 80%.
-(7)- geneStoicism : Determines how outgunned a star might be by its neighbors, to retreat to a sanctuary with all of its forces. 0 needs a ratio of 1-1.1, 1 a ratio of 1-1.2, and 2 a ratio of 1-1.3.
+(7)- geneStoicism : Determines how outgunned a star might be by its neighbors, to retreat to a sanctuary with all of its forces. 0 needs a ratio of 1/1.1, 1 a ratio of 1/1.2, and 2 a ratio of 1/1.3.
 (8)- geneAgression : Determines whether the bot looks for new territory to colonize, or enemies to conquer first, and the other second. 0 sends all friendly stars looking for greener pastures first, 1 makes it an even balance (randomly selects between the two), and 2 sends it looking for weaklings it can beat up.
 (9)- geneCheapness : Determines the percentage of total reinforcements getting distributed amongst all stars, after the ones in danger got their share. 0 allocates 50% of the remaining, 1 allocates 75%, and 2 allocates 100%.
 

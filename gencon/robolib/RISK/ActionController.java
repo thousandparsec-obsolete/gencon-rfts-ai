@@ -11,11 +11,13 @@ public class ActionController
 {
 	private final ActionMethods ACTIONS;
 	private int myPlayerId;
+	private final DebugOut out;
 	
 	
-	public ActionController(ActionMethods actions)
+	public ActionController(ActionMethods actions, DebugOut output)
 	{
 		ACTIONS = actions;
+		out = output;
 	}
 	
 	public void incrementTurn(UniverseMap newMap, int myPlrId)
@@ -39,12 +41,18 @@ public class ActionController
 		byte geneAggression = currentTraits.get(Alleles.ALLELE_9);
 		byte geneCheapness = currentTraits.get(Alleles.ALLELE_10);
 		
+		//output the genome values:
+		/*out.pl("The current genetic traits are (by trait number): < 0 > (" + geneBackwaterDistribute + "); < 1 > (" + geneDefence + 
+					"); < 2 > (" + geneReinforce + "); < 3 > (" + geneBravery + "); < 4 > (" + geneCannonfodder + "); < 5 > (" +
+					geneExpansionism + "); < 6 > (" + geneEmigration + "); < 7 > (" + geneStoicism + "); < 8 > (" + 
+					geneAggression + "); < 9 > (" + geneCheapness + ");");
+		*/
 		//------------------------------------
 		//LET'S FIRE 'ER UP. DIE, INFIDELS!
 		
 		//always first:
 		ACTIONS.transferTroopsFromBackwaterStars(geneBackwaterDistribute, myPlayerId);
-		ACTIONS.reinforceEndangeredPlanets(geneDefence, geneReinforce, myPlayerId);
+		ACTIONS.reinforceEndangeredStars(geneDefence, geneReinforce, myPlayerId);
 		ACTIONS.distributeRemainingReinforcements(geneCheapness, myPlayerId);
 		
 		//depends on aggression:

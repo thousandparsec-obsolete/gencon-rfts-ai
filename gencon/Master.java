@@ -182,11 +182,13 @@ public class Master implements Runnable
 		{
 			int time = CLIENT.getClientMethods().getTimeRemaining();
 			turn++;
-			out.pl("\nTurn number: <" + turn + "> (since launch of client). Start of turn routine commencing... " + time + " seconds to end of turn.");
+			out.pl("\n>>>");
+			out.pl("Turn number: <" + turn + "> (since launch of client). Start of turn routine commencing... " + time + " seconds to end of turn.");
 			game_status.incrementTurn();
 			checkIfImAlive(); //check if I'm alive!
 			robot.startTurn(time, turn);
 			//CLIENT.eventLogger.dumpLogStd();
+			out.pl("\n>>>");
 		}
 		catch (Exception e) 
 		{

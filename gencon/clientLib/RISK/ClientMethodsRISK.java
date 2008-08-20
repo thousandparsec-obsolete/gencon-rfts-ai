@@ -10,6 +10,7 @@ import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
 import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.ObjectParams;
+import net.thousandparsec.netlib.tp03.Order;
 import net.thousandparsec.netlib.tp03.OrderInsert;
 import net.thousandparsec.netlib.tp03.OrderParams;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
