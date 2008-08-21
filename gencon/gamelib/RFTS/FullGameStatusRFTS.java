@@ -62,7 +62,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 	/**
 	 * Gets new info about the game, and archives the old, up to a set number (HISTORY_DEPTH).
 	 */
-	public void incrementTurn() throws IOException, TPException
+	public boolean incrementTurn() throws IOException, TPException
 	{
 		//first, archive the previous status. (if not null!)
 		gameHistory.add(getCurrentStatus());
@@ -80,6 +80,8 @@ public class FullGameStatusRFTS implements FullGameStatus
 		
 		//redirect reference to new status:
 		currentStatus = new Pair<UniverseMapRFTS, Players>(map, pl); 
+		
+		return checkIfImAlive();
 		
 		//MASTER.pl("Done retrieving info from server.");
 		
@@ -120,7 +122,7 @@ public class FullGameStatusRFTS implements FullGameStatus
 	}
 	
 	
-	public boolean checkIfImAlive()
+	private boolean checkIfImAlive()
 	{
 		return !(currentStatus.right.getMe() == null);
 	}

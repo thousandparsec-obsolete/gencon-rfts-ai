@@ -186,8 +186,11 @@ public class Master implements Runnable
 			out.pl("\n>>>");
 			out.pl(myUsername + "'s output:");
 			out.pl("Turn number: <" + turn + "> (since launch of client). Start of turn routine commencing... " + time + " seconds to end of turn.");
-			game_status.incrementTurn();
-			checkIfImAlive(); //check if I'm alive!
+			
+			//increment turn, and check if alive:
+			if (!game_status.incrementTurn())
+				exit("WIPED OUT. Sorry boss, there was just too many of them.", NORMAL_EXIT, null);
+
 			robot.startTurn(time, turn);
 			//CLIENT.eventLogger.dumpLogStd();
 			out.pl("\n>>>");
@@ -196,15 +199,6 @@ public class Master implements Runnable
 		{
 			exit("Unexpected failure to play turn. Possible cause: connection lost.", ABNORMAL_EXIT, e);
 		}
-	}
-	
-	/*
-	 * Check if this player is still visible, meaning alive.
-	 */
-	private void checkIfImAlive()
-	{
-		if (!game_status.checkIfImAlive())
-			exit("WIPED OUT. Sorry boss, there was just too many of them.", NORMAL_EXIT, null);
 	}
 
 	/**

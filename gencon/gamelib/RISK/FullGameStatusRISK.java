@@ -34,7 +34,7 @@ public class FullGameStatusRISK implements FullGameStatus
 	}
 	
 	
-	public void incrementTurn() throws IOException, TPException 
+	public boolean incrementTurn() throws IOException, TPException 
 	{
 		/*
 		 * This method simply creates a whole whackload of new objects each turn, 
@@ -51,10 +51,15 @@ public class FullGameStatusRISK implements FullGameStatus
 		Collection<Game_Player> gplyers = CLIENT_RISK.getAllPlayers(gameObjects);
 		Players players = new Players(MASTER.getMyUsername(), gplyers);
 		
-		//initializing reinforcements:
-		map.initReinforcements(players.getMe().NUM);
-		
 		currentStatus = new Pair<UniverseMap, Players>(map, players);
+		
+		//checking if alive:
+		boolean alive = checkIfImAlive();
+		
+		if (alive)
+			map.initReinforcements(players.getMe().NUM); //initializing reinforcements:
+		
+		return alive;
 		
 		/*
 		//----------------------------\\
@@ -81,7 +86,7 @@ public class FullGameStatusRISK implements FullGameStatus
 		*/
 	}
 	
-	public boolean checkIfImAlive() 
+	private boolean checkIfImAlive() 
 	{
 		return !(currentStatus.right.getMe() == null);
 	}

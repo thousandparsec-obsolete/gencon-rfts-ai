@@ -23,12 +23,7 @@ public interface FullGameStatus
 	 * @throws IOException
 	 * @throws TPException
 	 */
-	public void incrementTurn() throws IOException, TPException;
-	
-	/**
-	 * @return True if this player is in the game.
-	 */
-	public boolean checkIfImAlive();
+	public boolean incrementTurn() throws IOException, TPException;
 	
 	/**
 	 * @return A copy of this {@link FullGameStatus}.
