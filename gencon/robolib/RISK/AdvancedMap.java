@@ -102,18 +102,20 @@ public class AdvancedMap
 				owner = "Neutral stars: ";
 			out.pr(owner);
 			Collection<AdvancedStar> stars = getStarsOfPlayer(advancedStars, i);
+			
+			int totalStrength = 0;
+			for (AdvancedStar as : stars)
+			{
+				out.pr("<" + as.STAR.GAME_ID + "> ");
+				totalStrength += as.STAR.getArmy();
+			}
+			out.pl("");
 			if (i != -1)
 			{
-			int totalStrength = 0;
-				for (AdvancedStar as : stars)
-				{
-					out.pr("<" + as.STAR.GAME_ID + "> ");
-					totalStrength += as.STAR.getArmy();
-				}
 				int reinforcements = 0;
 				if (!uMap.getStarsOfPlayer(i).isEmpty())
 					reinforcements = uMap.getStarsOfPlayer(i).iterator().next().getReinforcementsAvailable();
-				out.pl("\n		Total stars: " + stars.size() + "; Total army strength: " + totalStrength + "; Total reinforcements: " + reinforcements);
+				out.pl("	Total stars: " + stars.size() + "; Total army strength: " + totalStrength + "; Total reinforcements: " + reinforcements);
 			}
 		}
 		out.pl("- - -");
