@@ -41,7 +41,7 @@ public class Utils
 		try
 		{
 			assert args.length == 5;
-			assert args[0].equals("rfts") || args[1].equals("risk");
+			assert args[0].equals("rfts") || args[0].equals("risk");
 			assert args[3].matches("[1-9]");
 			assert args[4].equals("d") || args[4].equals("n"); //d - debug ; n - normal.
 		}

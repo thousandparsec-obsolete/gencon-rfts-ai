@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.thousandparsec.netlib.TPException;
+import net.thousandparsec.util.Pair;
 
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.gamelib.RISK.UniverseMap;
@@ -27,6 +28,9 @@ public class ActionMethods
 	private final DebugOut out;
 	//private final double DOUBLE_TOLERANCE = 1e-3;
 	
+	//a collection of stars being reinforced each turn. To use when deciding to evacuate.
+	private Collection<Pair<AdvancedStar, Integer>> reinforced;
+	
 	public ActionMethods(AdvancedMap advMap, ClientMethodsRISK clientRisk, DebugOut output)
 	{
 		out = output;
@@ -36,6 +40,7 @@ public class ActionMethods
 	
 	public void incrementTurn(UniverseMap newMap, int myPlrId)
 	{
+		reinforced = new HashSet<Pair<AdvancedStar,Integer>>();
 		MAP.updateMap(newMap, myPlrId);
 	}
 	
@@ -93,7 +98,8 @@ public class ActionMethods
 						{
 							boolean done = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, false);
 							out.pl("Transfering " + (star.STAR.getArmy() - 1) +  " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">; Sever said '" + done + "'");
-							star.STAR.setArmy(1);
+							if (done)
+								star.STAR.setArmy(1);
 						}
 						catch (Exception e)
 						{
@@ -240,7 +246,11 @@ public class ActionMethods
 				{
 					boolean done = CLIENT_RISK.orderReinforce(threatened.STAR, reinforce, false);
 					out.pl("Reinforcing endangered star <" + threatened.STAR.GAME_ID + "> with " + reinforce + " troops. Threat: " + threatened.getThreat() + "; Sever said '" + done + "'");
-					actualTotalReinforced += reinforce;
+					if (done)
+					{
+						actualTotalReinforced += reinforce;
+						reinforced.add(new Pair<AdvancedStar, Integer>(threatened, reinforce));
+					}
 				}
 				catch (TPException e)
 				{
@@ -295,8 +305,12 @@ public class ActionMethods
 				{
 					boolean done = CLIENT_RISK.orderReinforce(s.STAR, reinforceEach, false);
 					out.pl("Reinforcing <" + s.STAR.GAME_ID + "> with " + reinforceEach + " troops; Sever said '" + done + "'");
-					actualReinforced += reinforceEach;
-					reinforcements -= reinforceEach;
+					if (done)
+					{
+						actualReinforced += reinforceEach;
+						reinforcements -= reinforceEach;
+						reinforced.add(new Pair<AdvancedStar, Integer>(s, reinforceEach));
+					}
 				}
 				catch (TPException e)
 				{
@@ -315,8 +329,12 @@ public class ActionMethods
 				{
 					boolean done = CLIENT_RISK.orderReinforce(s.STAR, 1, false);
 					out.pl("Reinforcing <" + s.STAR.GAME_ID + "> with 1 troops; Sever said '" + done + "'");
-					actualReinforced ++;
-					reinforcements --;
+					if (done)
+					{
+						actualReinforced ++;
+						reinforcements --;
+						reinforced.add(new Pair<AdvancedStar, Integer>(s, 1));
+					}
 				}
 				catch (TPException e)
 				{
@@ -401,7 +419,8 @@ public class ActionMethods
 				{
 					boolean done = CLIENT_RISK.orderMove(myStar.STAR, target.STAR, attackers, false);
 					out.pl("Attacking <" + target.STAR.GAME_ID + "> (Army: " + target.STAR.getArmy() + ") from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") with " + attackers + " troops; Sever said '" + done + "'");
-					myStar.STAR.setArmy(myStar.STAR.getArmy() - attackers);
+					if (done)
+						myStar.STAR.setArmy(myStar.STAR.getArmy() - attackers);
 				}
 				catch (TPException e)
 				{
@@ -491,7 +510,8 @@ public class ActionMethods
 					{
 						boolean done = CLIENT_RISK.orderMove(possibleColonist.STAR, safestFutureColony.STAR, colonists, false);
 						out.pl("Moving to neutral star: <" + safestFutureColony.STAR.GAME_ID + ">  From <" + possibleColonist.STAR.GAME_ID + "> (Army: " + possibleColonist.STAR.getArmy() + ") with " + colonists + " troops; Sever said '" + done + "'");
-						possibleColonist.STAR.setArmy(possibleColonist.STAR.getArmy() - colonists);
+						if (done)
+							possibleColonist.STAR.setArmy(possibleColonist.STAR.getArmy() - colonists);
 					}
 					catch (TPException e)
 					{
@@ -530,7 +550,17 @@ public class ActionMethods
 		Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(allStars, myPlrNum);
 
 		for (AdvancedStar myStar : myStars)
-			if (myStar.getThreat() > overrun && myStar.STAR.getArmy() > 1) //RUN, FOREST!
+		{
+			//search for the star in the reinforced, and adjust the threat formula:
+			int reinforcedBy = 0;
+			for (Pair<AdvancedStar, Integer> pair : reinforced)
+				if (pair.left.STAR.GAME_ID == myStar.STAR.GAME_ID)
+					reinforcedBy += pair.right.intValue();
+			//equation works for 1 enemy player. Extra-safe for > 1.
+			double threatAfterReinforce = (myStar.getThreat() * myStar.STAR.getArmy()) / (myStar.STAR.getArmy() + reinforcedBy);
+			//out.pl("Evacuation candidate: Threat: " + myStar.getThreat() + "; After reinforce: " + threatAfterReinforce);
+			
+			if (threatAfterReinforce > overrun && myStar.STAR.getArmy() > 1) //RUN, FOREST!
 			{
 				//collect all neighbors:
 				Collection<AdvancedStar> neighbors = MAP.getNeighbors(myStar);
@@ -552,8 +582,9 @@ public class ActionMethods
 					try
 					{
 						boolean done = CLIENT_RISK.orderMove(myStar.STAR, sanctuary.STAR, myStar.STAR.getArmy() - 1, false);
-						out.pl("Evacuating from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") to <" + sanctuary.STAR.GAME_ID + "> , with " + (myStar.STAR.getArmy() - 1) + " troops. Threat: " + myStar.getThreat() + "; Sever said '" + done + "'");
-						myStar.STAR.setArmy(1); //simple!
+						out.pl("Evacuating from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") to <" + sanctuary.STAR.GAME_ID + "> , with " + (myStar.STAR.getArmy() - 1) + " troops. Threat: " + myStar.getThreat() + "; Threat after reinforcement: " + threatAfterReinforce + "; Sever said '" + done + "'");
+						if (done)
+							myStar.STAR.setArmy(1); //simple!
 					}
 					catch (TPException e)
 					{
@@ -561,6 +592,7 @@ public class ActionMethods
 					}
 				}
 			}
+		}
 		
 	}
 }
