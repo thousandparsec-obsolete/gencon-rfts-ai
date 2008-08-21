@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RISK.UniverseMap;
 import gencon.gamelib.RISK.gameobjects.Star;
 import gencon.utils.DebugOut;
@@ -87,25 +88,33 @@ public class AdvancedMap
 		}
 	}
 	
-	public void printData(DebugOut out, Collection<Integer> playerIds)
+	public void printData(DebugOut out, Collection<Game_Player> players)
 	{
 		out.pl("\n- - -");
-		out.pl("Generating abridged output of game-world:");
+		out.pl("Universe data:");
 		
-		for (Integer i : playerIds)
+		for (Game_Player pl : players)
 		{
-			out.pr("Stars owned by player " + i.intValue() + ": ");
+			int i = pl.NUM;
+			String name = pl.NAME;
+			String owner = "Stars owned by player " + name + " (" + i + "): ";
+			if (i == -1)
+				owner = "Neutral stars: ";
+			out.pr(owner);
 			Collection<AdvancedStar> stars = getStarsOfPlayer(advancedStars, i);
-			int totalStrength = 0;
-			for (AdvancedStar as : stars)
+			if (i != -1)
 			{
-				out.pr("<" + as.STAR.GAME_ID + "> ");
-				totalStrength += as.STAR.getArmy();
+			int totalStrength = 0;
+				for (AdvancedStar as : stars)
+				{
+					out.pr("<" + as.STAR.GAME_ID + "> ");
+					totalStrength += as.STAR.getArmy();
+				}
+				int reinforcements = 0;
+				if (!uMap.getStarsOfPlayer(i).isEmpty())
+					reinforcements = uMap.getStarsOfPlayer(i).iterator().next().getReinforcementsAvailable();
+				out.pl("\n		Total stars: " + stars.size() + "; Total army strength: " + totalStrength + "; Total reinforcements: " + reinforcements);
 			}
-			int reinforcements = 0;
-			if (!uMap.getStarsOfPlayer(i).isEmpty())
-				reinforcements = uMap.getStarsOfPlayer(i).iterator().next().getReinforcementsAvailable();
-			out.pl("\n		Total stars: " + stars.size() + "; Total army strength: " + totalStrength + "; Total reinforcements: " + reinforcements);
 		}
 		out.pl("- - -");
 	}

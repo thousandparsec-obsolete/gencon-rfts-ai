@@ -10,7 +10,7 @@ public class GenConRunner {
 	
 	public static void main(String[] args) 
 	{
-		Master master = new Master(args);
+		Master master = new Master(args, System.out);
 		
 		master.run();
 	}

@@ -5,6 +5,7 @@ import gencon.gamelib.RISK.UniverseMap;
 import gencon.robolib.Robot;
 import gencon.utils.DebugOut;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class ActionController 
@@ -27,7 +28,7 @@ public class ActionController
 	}
 	
 	
-	public void performActions(Map<Alleles, Byte> currentTraits)
+	public void performActions(Map<Alleles, Byte> currentTraits) throws IOException
 	{
 		//assign vaules to genes:
 		byte geneBackwaterDistribute = currentTraits.get(Alleles.ALLELE_1);

@@ -17,8 +17,8 @@ public class TestMultiplayerHarness
 		args1[1] = "tp://robot1:a@localhost";
 		args1[1] = "tp://robot2:a@localhost";
 		
-		Master master1 = new Master(args1);
-		Master master2 = new Master(args2);
+		Master master1 = new Master(args1, System.out);
+		Master master2 = new Master(args2, System.out);
 		
 		Thread game1 = new Thread(master1);
 		Thread game2 = new Thread(master2);

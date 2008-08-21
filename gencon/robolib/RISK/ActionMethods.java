@@ -1,9 +1,12 @@
 package gencon.robolib.RISK;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
+import net.thousandparsec.netlib.TPException;
 
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.gamelib.RISK.UniverseMap;
@@ -46,14 +49,11 @@ public class ActionMethods
 	 * 	0 sends all troops to the most endangered star, 
 	 * 	1 sends 50% to most endangered, with the rest evenly distributed between neighbors,
 	 * 	and 2 evenly distributes between all neighbors.
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean transferTroopsFromBackwaterStars(byte geneBackwaterDistribute, int myPlrNum)
+	public void transferTroopsFromBackwaterStars(byte geneBackwaterDistribute, int myPlrNum) throws IOException
 	{
 		assert geneBackwaterDistribute == 0 || geneBackwaterDistribute == 1 || geneBackwaterDistribute == 2;
 	
-		boolean success = true; //the value to be returned.
-		
 		//get all my backwaters, with army > 1
 		Collection<AdvancedStar> backwaters = MAP.getAllBackwaters(myPlrNum);
 		Collection<AdvancedStar> armyOfOne = new HashSet<AdvancedStar>();
@@ -91,14 +91,13 @@ public class ActionMethods
 					{
 						try
 						{
-							out.pl("Transfering " + (star.STAR.getArmy() - 1) +  " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">");
-							success = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, false);
+							boolean done = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, false);
+							out.pl("Transfering " + (star.STAR.getArmy() - 1) +  " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">; Sever said '" + done + "'");
 							star.STAR.setArmy(1);
 						}
 						catch (Exception e)
 						{
-							success = false;
-							out.pl("<Illegal action: transfer from backwaters> Else: connection broken");
+							out.pl("<Illegal action: transfer from backwaters>");
 						}
 					}
 					
@@ -111,14 +110,14 @@ public class ActionMethods
 						{
 							try
 							{
-								out.pl("Transfering " + halfArmy + " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">");
-								success = success && CLIENT_RISK.orderMove(star.STAR, endangered.STAR, halfArmy, false);
+								boolean done = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, halfArmy, false);
+								out.pl("Transfering " + halfArmy + " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">; Sever said '" + done + "'");
 								remainingArmy -= halfArmy;
 								star.STAR.setArmy(star.STAR.getArmy() - halfArmy);
 							}
-							catch (Exception e)
+							catch (TPException e)
 							{
-								success = false;
+								out.pl("<Illegal action: transfer from backwaters>");
 							}
 						}
 						//distributing evenly between all neighbors:
@@ -127,14 +126,14 @@ public class ActionMethods
 							{
 								try
 								{
-									success = success && CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
-									out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">");
+									boolean done = CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
+									out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">; Sever said '" + done + "'");
 									star.STAR.setArmy(star.STAR.getArmy() - 1);
 									remainingArmy--;
 								}
-								catch (Exception e)
+								catch (TPException e)
 								{
-									success = false;
+									out.pl("<Illegal action: transfer from backwaters>");
 								}
 								if (remainingArmy == 0)
 									break;
@@ -151,14 +150,14 @@ public class ActionMethods
 						{
 							try
 							{
-								success = success && CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
-								out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">");
+								boolean done = CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
+								out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">; Sever said '" + done + "'");
 								star.STAR.setArmy(star.STAR.getArmy() - 1);
 								total--;
 							}
-							catch (Exception e)
+							catch (TPException e)
 							{
-								success = false;
+								out.pl("<Illegal action: transfer from backwaters>");
 							}
 							
 							if (total == 0)
@@ -168,8 +167,7 @@ public class ActionMethods
 			}
 			
 		}
-		
-		return success;
+
 	}
 
 	/**
@@ -178,10 +176,9 @@ public class ActionMethods
 	 * @param geneDefence Can be 0, 1 or 2. Determines the maximum amount of stars reinforced:
 	 * 	0 (max helped: 3), 1 (max helped: 5), 2 (max helped: 7). Will help only those at risk.
 	 * @param geneReinforce Can be 0, 1 or 2. Determines the amount of reinforcements to be distributed: 
-	 * 	0 (50% of total available reinforcements), 1 (66%), or 2 (100%).
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
+	 * 	0 (50% of total available reinforcements), 1 (70%), or 2 (100%).
 	 */
-	public boolean reinforceEndangeredStars(byte geneDefence, byte geneReinforce, int myPlrNum)
+	public void reinforceEndangeredStars(byte geneDefence, byte geneReinforce, int myPlrNum) throws IOException
 	{
 		assert (geneReinforce == 0 || geneReinforce == 1 || geneReinforce == 2) &&
 			(geneDefence == 0 || geneDefence == 1 || geneDefence == 2);
@@ -190,7 +187,7 @@ public class ActionMethods
 		if (geneReinforce == 0)
 			importance = 0.5;
 		else if (geneReinforce == 1)
-			importance = 0.66666666666;
+			importance = 0.7;
 		else
 			importance = 1.0;
 		
@@ -206,7 +203,7 @@ public class ActionMethods
 		int totalReinforcements = (int) Math.round(Math.floor(MAP.getBasicMap().getMyReinforcements() * importance));
 		
 		if (totalReinforcements == 0)
-			return true; //nothing to be done, but nothing went wrong!
+			return; //nothing to be done, but nothing went wrong!
 		
 		//get list of stars by threat:
 		Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(MAP.getAllAdvStars(), myPlrNum);
@@ -216,8 +213,6 @@ public class ActionMethods
 		for (int i = 0; i < riskList.size(); i++)
 			if (riskList.get(i).getThreat() <= 1)
 				riskList.remove(i);
-		
-		boolean success = true; //to be returned.
 		
 		//to record the actual reinforcements (may differ due to the 'floor' function)
 		int actualTotalReinforced = 0;
@@ -243,14 +238,13 @@ public class ActionMethods
 			{			
 				try
 				{
-					success = success && CLIENT_RISK.orderReinforce(threatened.STAR, reinforce, false);
-					out.pl("Reinforcing endangered star <" + threatened.STAR.GAME_ID + "> with " + reinforce + " troops. Threat: " + threatened.getThreat());
+					boolean done = CLIENT_RISK.orderReinforce(threatened.STAR, reinforce, false);
+					out.pl("Reinforcing endangered star <" + threatened.STAR.GAME_ID + "> with " + reinforce + " troops. Threat: " + threatened.getThreat() + "; Sever said '" + done + "'");
 					actualTotalReinforced += reinforce;
 				}
-				catch (Exception e)
+				catch (TPException e)
 				{
-					success = false;
-					out.pl("<Illegal action: reinforce endangered> Else: connection broken");
+					out.pl("<Illegal action: reinforce endangered>");
 				}
 			}
 		}
@@ -258,8 +252,6 @@ public class ActionMethods
 		//adjusting available reinforcements in the map:
 		MAP.getBasicMap().setMyReinforcements(MAP.getBasicMap().getMyReinforcements() - actualTotalReinforced);
 		assert MAP.getBasicMap().getMyReinforcements() >= 0;
-		
-		return success;
 	}
 	
 	/**
@@ -267,9 +259,8 @@ public class ActionMethods
 	 * 
 	 * @param geneCheapness Can be 0, 1 or 2. Determines what percentage of available reinforcements to distribute amongst owned stars.
 	 * 	0 (50%) , 1 (75%) , 2 (100%)
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean distributeRemainingReinforcements(byte geneCheapness, int myPlrNum)
+	public void distributeRemainingReinforcements(byte geneCheapness, int myPlrNum) throws IOException
 	{
 		int reinforcements = MAP.getBasicMap().getMyReinforcements();
 		
@@ -281,7 +272,7 @@ public class ActionMethods
 		//else: nothing happens.
 		
 		if (reinforcements == 0) //can't do anything!
-			return true;
+			return;
 		
 		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
 		Collection<AdvancedStar> myStars = MAP.getStarsOfPlayer(allStars, myPlrNum);
@@ -293,7 +284,6 @@ public class ActionMethods
 				backwaters.add(as);
 		myStars.removeAll(backwaters);
 	
-		boolean success = true; //to be returned
 		int actualReinforced = 0; //the actual number of reinforcements issued.
 		
 		//try to divide reinforcements evenly:
@@ -303,15 +293,14 @@ public class ActionMethods
 			{
 				try
 				{
-					success = success && CLIENT_RISK.orderReinforce(s.STAR, reinforceEach, false);
-					out.pl("Reinforcing <" + s.STAR.GAME_ID + "> with " + reinforceEach + " troops");
+					boolean done = CLIENT_RISK.orderReinforce(s.STAR, reinforceEach, false);
+					out.pl("Reinforcing <" + s.STAR.GAME_ID + "> with " + reinforceEach + " troops; Sever said '" + done + "'");
 					actualReinforced += reinforceEach;
 					reinforcements -= reinforceEach;
 				}
-				catch (Exception e)
+				catch (TPException e)
 				{
-					success = false;
-					out.pl("<Illegal action: transfer from backwaters> Else: connection broken");
+					out.pl("<Illegal action: transfer from backwaters>");
 				}
 					
 				if (reinforcements == 0)
@@ -324,15 +313,14 @@ public class ActionMethods
 			{
 				try
 				{
-					success = success && CLIENT_RISK.orderReinforce(s.STAR, 1, false);
-					out.pl("Reinforcing <" + s.STAR.GAME_ID + "> with 1 troops");
+					boolean done = CLIENT_RISK.orderReinforce(s.STAR, 1, false);
+					out.pl("Reinforcing <" + s.STAR.GAME_ID + "> with 1 troops; Sever said '" + done + "'");
 					actualReinforced ++;
 					reinforcements --;
 				}
-				catch (Exception e)
+				catch (TPException e)
 				{
-					success = false;
-					out.pl("<Illegal action: transfer from backwaters> Else: connection broken");
+					out.pl("<Illegal action: transfer from backwaters>");
 				}
 					
 				if (reinforcements == 0)
@@ -342,7 +330,6 @@ public class ActionMethods
 		MAP.getBasicMap().setMyReinforcements(reinforcements - actualReinforced);
 		assert MAP.getBasicMap().getMyReinforcements() >= 0;
 		
-		return success;
 	}
 	
 	
@@ -351,11 +338,10 @@ public class ActionMethods
 	/**
 	 * Commences a series of offensive actions. For each owned star, it will see if it's beneficial to attack, according to the given genetic parameters.
 	 * 
-	 * @param geneBravery Can be 0, 1 or 2. Determines the ratio of troops that needs to be established between my forces and enemy, to attack: 0 (+0%), 1 (+10%), 2 (+20%).
+	 * @param geneBravery Can be 0, 1 or 2. Determines the ratio of troops that needs to be established between my forces and enemy, to attack: 0 (+10%), 1 (+25%), 2 (+40%).
 	 * @param geneCannonfodder Can be 0, 1 or 2. Determines the ratio of troops to be sent to battle from each star: 0 (70%), 1 (85%), 2 (%100).
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean offensiveActions(byte geneBravery, byte geneCannonfodder, int myPlrNum)
+	public void offensiveActions(byte geneBravery, byte geneCannonfodder, int myPlrNum) throws IOException
 	{
 		assert (geneBravery == 0 || geneBravery == 1 || geneBravery == 2) && 
 			(geneCannonfodder == 0 || geneCannonfodder == 1 || geneCannonfodder == 2); 
@@ -365,9 +351,9 @@ public class ActionMethods
 		if (geneBravery == 0)
 			overpowerBy = 1.1;
 		else if (geneBravery == 1)
-			overpowerBy = 1.3;
+			overpowerBy = 1.25;
 		else
-			overpowerBy = 1.5;
+			overpowerBy = 1.4;
 		
 		//determining the ratio of troops to be sent to combat:
 		double cannonFodder = 0.0;
@@ -377,8 +363,6 @@ public class ActionMethods
 			cannonFodder = 0.85;
 		else
 			cannonFodder = 1.0;
-		
-		boolean success = true; //to be returned.
 		
 		//getting all my stars, with army > 1:
 		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
@@ -415,18 +399,17 @@ public class ActionMethods
 			{
 				try
 				{
-					success = success && CLIENT_RISK.orderMove(myStar.STAR, target.STAR, attackers, false);
-					out.pl("Attacking <" + target.STAR.GAME_ID + "> (Army: " + target.STAR.getArmy() + ") from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") with " + attackers + " troops.");
+					boolean done = CLIENT_RISK.orderMove(myStar.STAR, target.STAR, attackers, false);
+					out.pl("Attacking <" + target.STAR.GAME_ID + "> (Army: " + target.STAR.getArmy() + ") from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") with " + attackers + " troops; Sever said '" + done + "'");
 					myStar.STAR.setArmy(myStar.STAR.getArmy() - attackers);
 				}
-				catch (Exception e)
+				catch (TPException e)
 				{
-					success = false;
-					out.pl("<Illegal action: attack> Else: connection broken");
+					out.pl("<Illegal action: attack>");
 				}
 			}
 		}
-		return success;
+
 	}
 	
 	/**
@@ -435,11 +418,10 @@ public class ActionMethods
 	 * @param geneExpansionism Can be 0, 1 or 2. Determines the maximum number of stars to be colonized at a turn.
 	 * 	0 (max. of 4), 1 (max. of 7), 2 (max. of 10).
 	 * @param geneEmigration Can be 0, 1 or 2. Determines the ratio of troops to be dispatched.
-	 * 	0 (30% of army), 1 (50%), 2 (80%).
+	 * 	0 (40% of army), 1 (60%), 2 (80%).
 	 * @param myPlrNum
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean expandToNeutralStars(byte geneExpansionism, byte geneEmigration, int myPlrNum)
+	public void expandToNeutralStars(byte geneExpansionism, byte geneEmigration, int myPlrNum) throws IOException
 	{
 		assert (geneExpansionism == 0 || geneExpansionism == 1 || geneExpansionism == 2) && 
 			(geneEmigration == 0 || geneEmigration == 1 || geneEmigration == 2);  
@@ -454,13 +436,11 @@ public class ActionMethods
 		
 		double emigration = 0.0;
 		if (geneEmigration == 0)
-			emigration = 0.3;
+			emigration = 0.4;
 		else if (geneEmigration == 1)
-			emigration = 0.5;
+			emigration = 0.6;
 		else
 			emigration = 0.7;
-		
-		boolean success = true; //to be returned.
 		
 		//get the friendly stars, remove unfit to colonize, and sort them by threat:
 		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
@@ -509,20 +489,18 @@ public class ActionMethods
 				{
 					try
 					{
-						success = success && CLIENT_RISK.orderMove(possibleColonist.STAR, safestFutureColony.STAR, colonists, false);
-						out.pl("Moving to neutral star: <" + safestFutureColony.STAR.GAME_ID + ">  From <" + possibleColonist.STAR.GAME_ID + "> (Army: " + possibleColonist.STAR.getArmy() + ") with " + colonists + " troops.");
+						boolean done = CLIENT_RISK.orderMove(possibleColonist.STAR, safestFutureColony.STAR, colonists, false);
+						out.pl("Moving to neutral star: <" + safestFutureColony.STAR.GAME_ID + ">  From <" + possibleColonist.STAR.GAME_ID + "> (Army: " + possibleColonist.STAR.getArmy() + ") with " + colonists + " troops; Sever said '" + done + "'");
 						possibleColonist.STAR.setArmy(possibleColonist.STAR.getArmy() - colonists);
 					}
-					catch (Exception e)
+					catch (TPException e)
 					{
-						success = false;
-						out.pl("<Illegal action: moving to neutral> Else: connection broken");
+						out.pl("<Illegal action: moving to neutral>");
 					}
 				}
 			}
 		}
 		
-		return success;
 	}
 	
 	
@@ -533,9 +511,8 @@ public class ActionMethods
 	 * 
 	 * @param geneStoicism Can be 0, 1 or 2. Determines the threshold of threat under which my forces need to escape to a safer location.
 	 * 	0 (outnumbered by 10%), 1 (20%), 2 (30%).
-	 * @return true if all went well, false if (at least some) orders failed. False indicates a bug or problem in connection!
 	 */
-	public boolean evacuateToSafety(byte geneStoicism, int myPlrNum)
+	public void evacuateToSafety(byte geneStoicism, int myPlrNum) throws IOException
 	{
 		assert geneStoicism == 0 || geneStoicism == 1 || geneStoicism == 2;
 		
@@ -547,8 +524,6 @@ public class ActionMethods
 			overrun = 1.2;
 		else
 			overrun = 1.3;
-		
-		boolean success = true; //to be returned.
 		
 		//get my stars:
 		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
@@ -576,18 +551,16 @@ public class ActionMethods
 				{
 					try
 					{
-						success = success && CLIENT_RISK.orderMove(myStar.STAR, sanctuary.STAR, myStar.STAR.getArmy() - 1, false);
-						out.pl("Evacuating from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") to <" + sanctuary.STAR.GAME_ID + "> , with " + (myStar.STAR.getArmy() - 1) + " troops. Threat: " + myStar.getThreat());
+						boolean done = CLIENT_RISK.orderMove(myStar.STAR, sanctuary.STAR, myStar.STAR.getArmy() - 1, false);
+						out.pl("Evacuating from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") to <" + sanctuary.STAR.GAME_ID + "> , with " + (myStar.STAR.getArmy() - 1) + " troops. Threat: " + myStar.getThreat() + "; Sever said '" + done + "'");
 						myStar.STAR.setArmy(1); //simple!
 					}
-					catch (Exception e)
+					catch (TPException e)
 					{
-						success = false;
-						out.pl("<Illegal action: evacuation> Else: connection broken");
+						out.pl("<Illegal action: evacuation>");
 					}
 				}
 			}
 		
-		return success;
 	}
 }

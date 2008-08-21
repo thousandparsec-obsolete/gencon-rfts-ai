@@ -1,5 +1,6 @@
 package gencon;
 
+import java.io.PrintStream;
 import java.util.Scanner;
 
 import gencon.clientLib.*;
@@ -70,9 +71,9 @@ public class Master implements Runnable
 	 *
 	 */
 
-	public Master(String[] args)
+	public Master(String[] args, PrintStream debugOut)
 	{
-		out = new DebugOut(System.out);
+		out = new DebugOut(debugOut);
 		CLIENT = new Client(this);
 		init(args);
 	}
@@ -183,6 +184,7 @@ public class Master implements Runnable
 			int time = CLIENT.getClientMethods().getTimeRemaining();
 			turn++;
 			out.pl("\n>>>");
+			out.pl(myUsername + "'s output:");
 			out.pl("Turn number: <" + turn + "> (since launch of client). Start of turn routine commencing... " + time + " seconds to end of turn.");
 			game_status.incrementTurn();
 			checkIfImAlive(); //check if I'm alive!
@@ -192,7 +194,7 @@ public class Master implements Runnable
 		}
 		catch (Exception e) 
 		{
-			exit("Unexpected failure to play turn.", ABNORMAL_EXIT, e);
+			exit("Unexpected failure to play turn. Possible cause: connection lost.", ABNORMAL_EXIT, e);
 		}
 	}
 	

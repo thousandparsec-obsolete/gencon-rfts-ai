@@ -1,5 +1,6 @@
 package gencon.robolib;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public abstract class Robot
 	 * 
 	 * @param seconds The amount of seconds left to make a move.
 	 */
-	public void startTurn(int time_remaining, int turn_num)
+	public void startTurn(int time_remaining, int turn_num) throws IOException
 	{
 		updateTraits(turn_num);
 	}

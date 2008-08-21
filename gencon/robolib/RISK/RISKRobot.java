@@ -1,5 +1,6 @@
 package gencon.robolib.RISK;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -7,6 +8,7 @@ import gencon.Master;
 import gencon.clientLib.Client;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.evolutionlib.Genotype;
+import gencon.gamelib.Players;
 import gencon.gamelib.Players.Game_Player;
 import gencon.gamelib.RISK.FullGameStatusRISK;
 import gencon.gamelib.RISK.UniverseMap;
@@ -34,7 +36,7 @@ public class RISKRobot extends Robot
 	}
 
 	@Override
-	public void startTurn(int time_remaining, int turn_num) 
+	public void startTurn(int time_remaining, int turn_num) throws IOException
 	{
 		MASTER.out.pr("Initializing bot with new data..... ");
 		long start = System.currentTimeMillis();
@@ -44,11 +46,10 @@ public class RISKRobot extends Robot
 		CONTROLLER.incrementTurn(mapForSimulations, FGS.getCurrentStatus().right.getMe().NUM);
 		
 		//generating output:
-		Collection<Integer> playerIds = new HashSet<Integer>();
-		for (Game_Player gp : FGS.getCurrentStatus().right.PLAYERS)
-			playerIds.add(gp.NUM);
-		playerIds.add(-1); //add neutral!
-		MAP.printData(MASTER.out, playerIds);
+		Collection<Game_Player> players = FGS.getCurrentStatus().right.PLAYERS;
+		Game_Player neutral = new Players.Game_Player(-1, "Neutral");
+		players.add(neutral);
+		MAP.printData(MASTER.out, players);
 		
 		MASTER.out.pl("Engaging in action.");
 		CONTROLLER.performActions(getCurrentTraits());

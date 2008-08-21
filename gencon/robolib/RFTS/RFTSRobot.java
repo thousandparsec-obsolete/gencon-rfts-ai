@@ -1,5 +1,6 @@
 package gencon.robolib.RFTS;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -59,7 +60,7 @@ public class RFTSRobot extends Robot
 	}
 	
 	@Override
-	public void startTurn(int time_remaining, int turn)
+	public void startTurn(int time_remaining, int turn) throws IOException
 	{
 		super.startTurn(time_remaining, turn);
 		incrementTurn();
