@@ -83,6 +83,8 @@ public class ActionController
 		
 		//always last:
 		ACTIONS.evacuateToSafety(geneStoicism, myPlayerId);
+		ACTIONS.actuallyReinforceStars();
+		ACTIONS.actuallyTransferFromBackwaters();
 	}
 	
 	
