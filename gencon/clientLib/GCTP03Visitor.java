@@ -16,12 +16,15 @@ public class GCTP03Visitor extends TP03Visitor
 {
 	private final Client CLIENT;
 	
+	//to determine turn time:
+	private int turn_duration = 0;
+	private boolean turn_duration_set = false; 
+	
 	public GCTP03Visitor(Client client)
 	{
 		super();
 		CLIENT = client;
 	}
-	
 	
 	@Override
 	public void unhandledFrame(Frame<?> frame) throws TPException
@@ -32,9 +35,17 @@ public class GCTP03Visitor extends TP03Visitor
     @Override
     public void frame(TimeRemaining frame)
     {
-    	if (frame.getTime() != 0) //an asynch time-remaining frame with !0 value signifies start of turn.
-    		CLIENT.pushTurnStartFlag();
-    	
+    	if (frame.getTime() != 0)
+    	{
+    		if (!turn_duration_set)
+    		{
+    			turn_duration = frame.getTime();
+    			turn_duration_set = true;
+    		}
+    		
+    		if (frame.getTime() == turn_duration)
+    			CLIENT.pushTurnStartFlag();
+    	}
     	//else, do nothing.
     }
     

@@ -192,8 +192,8 @@ public class Master implements Runnable
 				exit("WIPED OUT. Sorry boss, there was just too many of them.", NORMAL_EXIT, null);
 
 			robot.startTurn(time, turn);
-			//CLIENT.eventLogger.dumpLogStd();
 			out.pl("\n>>>");
+			CLIENT.finishedTurn();
 		}
 		catch (Exception e) 
 		{

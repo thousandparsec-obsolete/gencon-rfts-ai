@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import net.thousandparsec.netlib.Connection;
 import net.thousandparsec.netlib.Frame;
 import net.thousandparsec.netlib.SequentialConnection;
 import net.thousandparsec.netlib.TPException;
@@ -14,6 +15,7 @@ import net.thousandparsec.netlib.tp03.Object;
 import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
 import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
 import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
+import net.thousandparsec.netlib.tp04.TP04Visitor;
 
 public class ConnectionMethods
 {
@@ -239,7 +241,6 @@ public class ConnectionMethods
 		
 		return designs;
 	}
-	
 	
 	/*
 	 * Use to replace {@link SequentialConnection}.sendFrame.

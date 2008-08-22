@@ -11,7 +11,6 @@ import net.thousandparsec.util.Pair;
 
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.gamelib.RISK.UniverseMap;
-import gencon.gamelib.RISK.gameobjects.Star;
 import gencon.robolib.RISK.AdvancedMap.AdvancedStar;
 import gencon.utils.DebugOut;
 
@@ -28,7 +27,7 @@ public class ActionMethods
 	private final DebugOut out;
 	//private final double DOUBLE_TOLERANCE = 1e-3;
 	
-	//a collection of stars being reinforced each turn. To use when deciding to evacuate.
+	//a collection of stars being reinforced/moved-to each turn. To use when deciding to evacuate.
 	private Collection<Pair<AdvancedStar, Integer>> reinforced;
 	
 	public ActionMethods(AdvancedMap advMap, ClientMethodsRISK clientRisk, DebugOut output)
@@ -73,107 +72,105 @@ public class ActionMethods
 			Collection<AdvancedStar> neighbors = MAP.getNeighbors(star);
 			Collection<AdvancedStar> invalidNeighbors = new HashSet<AdvancedStar>();
 			for (AdvancedStar as : neighbors)
-				if (as.STAR.getOwner() != myPlrNum || as.getBackwaters() == true)
+				if (as.getBackwaters() == true)
 					invalidNeighbors.add(as);
 			neighbors.removeAll(invalidNeighbors);
 			
-			if (!neighbors.isEmpty())
+			if (neighbors.isEmpty()) //they're all backwaters, too!
+				return;
+			
+			//get the most endangered one:
+			Iterator<AdvancedStar> iterator = neighbors.iterator();
+			AdvancedStar endangered = iterator.next();
+			while (iterator.hasNext())
 			{
-				if (geneBackwaterDistribute == 0 || geneBackwaterDistribute == 1) //gives all troops to most endangered.
+				AdvancedStar as = iterator.next();
+				if (as.getThreat() > endangered.getThreat())
+					endangered = as;
+			}
+			
+			int army = star.STAR.getArmy();
+			int giveMostEndangered = 0;
+			
+			if (geneBackwaterDistribute == 0) //give all to most endangered
+			{
+				giveMostEndangered = army;
+				army = 0;
+			}
+			else if (geneBackwaterDistribute == 1) //give half to most endangered
+			{
+				giveMostEndangered = (int) Math.round((Math.floor(army / 2)));
+				army -= giveMostEndangered;
+			}
+			
+			//give something to the most endangered, if dictated by parameters.
+			if (giveMostEndangered > 0 && (geneBackwaterDistribute == 0 || geneBackwaterDistribute == 1)) 
+			{
+				try
 				{
-					//get the most endangered one:
-					Iterator<AdvancedStar> iterator = neighbors.iterator();
-					AdvancedStar endangered = iterator.next();
-					while (iterator.hasNext())
+					boolean done = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, giveMostEndangered, false);
+					out.pl("Transfering " + (star.STAR.getArmy() - 1) +  " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">; Sever said '" + done + "'");
+					if (done)
 					{
-						AdvancedStar as = iterator.next();
-						if (as.getThreat() > endangered.getThreat())
-							endangered = as;
-					}
-					//neighbors.remove(endangered); //no need to keep it there!
-					
-					if (geneBackwaterDistribute == 0) //give all to most endangered:
-					{
-						try
-						{
-							boolean done = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, star.STAR.getArmy() - 1, false);
-							out.pl("Transfering " + (star.STAR.getArmy() - 1) +  " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">; Sever said '" + done + "'");
-							if (done)
-								star.STAR.setArmy(1);
-						}
-						catch (Exception e)
-						{
-							out.pl("<Illegal action: transfer from backwaters>");
-						}
-					}
-					
-					else // gene == 1. Give 50% to most threatened, then distribute evenly.
-					{
-						int remainingArmy = star.STAR.getArmy() - 1;
-						int halfArmy = (int) Math.round(Math.floor(((double)(star.STAR.getArmy() - 1)) / 2.0));
-						
-						if (halfArmy > 0)
-						{
-							try
-							{
-								boolean done = CLIENT_RISK.orderMove(star.STAR, endangered.STAR, halfArmy, false);
-								out.pl("Transfering " + halfArmy + " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + endangered.STAR.GAME_ID + ">; Sever said '" + done + "'");
-								remainingArmy -= halfArmy;
-								star.STAR.setArmy(star.STAR.getArmy() - halfArmy);
-							}
-							catch (TPException e)
-							{
-								out.pl("<Illegal action: transfer from backwaters>");
-							}
-						}
-						//distributing evenly between all neighbors:
-						while (remainingArmy > 0)
-							for (AdvancedStar neighbor : neighbors)
-							{
-								try
-								{
-									boolean done = CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
-									out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">; Sever said '" + done + "'");
-									star.STAR.setArmy(star.STAR.getArmy() - 1);
-									remainingArmy--;
-								}
-								catch (TPException e)
-								{
-									out.pl("<Illegal action: transfer from backwaters>");
-								}
-								if (remainingArmy == 0)
-									break;
-							}
+						star.STAR.setArmy(star.STAR.getArmy() - giveMostEndangered);
+						reinforced.add(new Pair<AdvancedStar, Integer>(endangered, giveMostEndangered));
 					}
 				}
-		
-				else // gene == 2. Disribute evenly:
+				catch (Exception e)
 				{
-					//distributing evenly between all neighbors:
-					int total = star.STAR.getArmy();
-					while (total > 0)
-						for (AdvancedStar neighbor : neighbors)
-						{
-							try
-							{
-								boolean done = CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
-								out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">; Sever said '" + done + "'");
-								star.STAR.setArmy(star.STAR.getArmy() - 1);
-								total--;
-							}
-							catch (TPException e)
-							{
-								out.pl("<Illegal action: transfer from backwaters>");
-							}
-							
-							if (total == 0)
-								break;
-						}
+					out.pl("<Illegal action: transfer from backwaters>");
 				}
 			}
 			
-		}
+			//if any left, distribute evenly:
+			int eachGets = (int) Math.round(Math.floor((double)army / neighbors.size()));
 
+			//distribute by portions larger than 1:
+			if (eachGets > 1)
+				for (AdvancedStar neighbor : neighbors)
+				{
+					try
+					{
+						boolean done = CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, eachGets, false);
+						out.pl("Transfering " + eachGets + " troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">; Sever said '" + done + "'");
+						if (done)
+						{
+							star.STAR.setArmy(star.STAR.getArmy() - eachGets);
+							army--;
+							reinforced.add(new Pair<AdvancedStar, Integer>(neighbor, eachGets));
+						}
+					}
+					catch (TPException e)
+					{
+						out.pl("<Illegal action: transfer from backwaters>");
+					}
+				}
+			
+			
+			//distribute by 1 any troops that are left:
+			while (army > 0)
+				for (AdvancedStar neighbor : neighbors)
+				{
+					try
+					{
+						boolean done = CLIENT_RISK.orderMove(star.STAR, neighbor.STAR, 1, false);
+						out.pl("Transfering 1 troops from backwaters <" + star.STAR.GAME_ID + "> to <" + neighbor.STAR.GAME_ID + ">; Sever said '" + done + "'");
+						if (done)
+						{
+							star.STAR.setArmy(star.STAR.getArmy() - 1);
+							army--;
+							reinforced.add(new Pair<AdvancedStar, Integer>(neighbor, 1));
+						}
+					}
+					catch (TPException e)
+					{
+						out.pl("<Illegal action: transfer from backwaters>");
+					}
+					
+					if (army == 0)
+						break;
+				}
+		}
 	}
 
 	/**
@@ -294,6 +291,9 @@ public class ActionMethods
 				backwaters.add(as);
 		myStars.removeAll(backwaters);
 	
+		if (myStars.size() == 0) //there's only backwater; I won!
+			return;
+		
 		int actualReinforced = 0; //the actual number of reinforcements issued.
 		
 		//try to divide reinforcements evenly:
@@ -459,7 +459,7 @@ public class ActionMethods
 		else if (geneEmigration == 1)
 			emigration = 0.6;
 		else
-			emigration = 0.7;
+			emigration = 0.8;
 		
 		//get the friendly stars, remove unfit to colonize, and sort them by threat:
 		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
@@ -584,7 +584,10 @@ public class ActionMethods
 						boolean done = CLIENT_RISK.orderMove(myStar.STAR, sanctuary.STAR, myStar.STAR.getArmy() - 1, false);
 						out.pl("Evacuating from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") to <" + sanctuary.STAR.GAME_ID + "> , with " + (myStar.STAR.getArmy() - 1) + " troops. Threat: " + myStar.getThreat() + "; Threat after reinforcement: " + threatAfterReinforce + "; Sever said '" + done + "'");
 						if (done)
+						{
 							myStar.STAR.setArmy(1); //simple!
+							reinforced.add(new Pair<AdvancedStar, Integer>(sanctuary, myStar.STAR.getArmy() - 1));
+						}
 					}
 					catch (TPException e)
 					{

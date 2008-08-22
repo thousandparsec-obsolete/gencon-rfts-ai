@@ -12,12 +12,14 @@ import gencon.utils.Utils;
 import net.thousandparsec.netlib.*;
 import net.thousandparsec.netlib.tp03.Board;
 import net.thousandparsec.netlib.tp03.BoardIDs;
+import net.thousandparsec.netlib.tp03.FinishedTurn;
 import net.thousandparsec.netlib.tp03.GetBoardIDs;
 import net.thousandparsec.netlib.tp03.GetBoards;
 import net.thousandparsec.netlib.tp03.GetMessage;
 import net.thousandparsec.netlib.tp03.GetOrderDesc;
 import net.thousandparsec.netlib.tp03.GetOrderDescIDs;
 import net.thousandparsec.netlib.tp03.GetResource;
+import net.thousandparsec.netlib.tp03.GetTimeRemaining;
 import net.thousandparsec.netlib.tp03.Order;
 import net.thousandparsec.netlib.tp03.OrderDesc;
 import net.thousandparsec.netlib.tp03.OrderDescIDs;
@@ -27,6 +29,7 @@ import net.thousandparsec.netlib.tp03.Response;
 import net.thousandparsec.netlib.tp03.Sequence;
 import net.thousandparsec.netlib.tp03.TP03Decoder;
 import net.thousandparsec.netlib.tp03.TP03Visitor;
+import net.thousandparsec.netlib.tp03.TimeRemaining;
 import net.thousandparsec.netlib.tp03.GetWithID.IdsType;
 import net.thousandparsec.netlib.tp03.GetWithIDSlot.SlotsType;
 import net.thousandparsec.netlib.tp03.IDSequence.ModtimesType;
@@ -50,24 +53,19 @@ public class Client
 	//
 	private final Master MASTER;
 	//public final java.lang.Object END_OF_TURN_MONITOR = new java.lang.Object();
-	private boolean turn_start_flag= false; //if true: client has not yet acted upon new turn. 
+	private boolean turn_start_flag = false; //if true: client has not yet acted upon new turn. 
+	private int turn_time = 0; //to make sure the client does not mistake a real turn-start frame, from another asynch time frame.
 	
 	//
 	//	CONNECTION-RELATED
 	//
 	private URI serverURI;
 	private ConnectionManager<TP03Visitor> connMgr;
+	private Connection<TP03Visitor> basicCon;
 	public final LoggerConnectionListener<TP03Visitor> EVENT_LOGGER;
 	private final TP03Visitor VISITOR;
 	private ClientMethods methods;
 
-	//
-	//	GAME-RELATED
-	//
-
-	
-	
-	
 	/**
 	 * The default constructor.
 	 *
@@ -123,11 +121,11 @@ public class Client
 		TP03Decoder decoder = new TP03Decoder();
 		MASTER.out.pr("Establishing connection to server... ");
 			
-		Connection<TP03Visitor> basicCon = decoder.makeConnection(serverURI, true, VISITOR);
+		basicCon = decoder.makeConnection(serverURI, true, VISITOR);
 		basicCon.addConnectionListener(EVENT_LOGGER);
-			
+		
 		connMgr = new ConnectionManager<TP03Visitor>(basicCon);
-			
+		
 		MASTER.out.pl("connection established to : " + serverURI);
 		MASTER.setMyUsername(Utils.getUsrnameFromURI(serverURI));
 		MASTER.out.pl("Logged in successfully as : " + MASTER.getMyUsername());
@@ -146,10 +144,6 @@ public class Client
 		return connMgr.createPipeline();
 	}
 	
-	
-
-	
-	
 	/**
 	 * The {@link GCTP03Visitor} pushes this flag every time a turn starts.
 	 * The {@link Master} pushes this flag back to original posotion, 
@@ -158,12 +152,20 @@ public class Client
 	public synchronized void pushTurnStartFlag()
 	{
 		turn_start_flag = !turn_start_flag;
-		//END_OF_TURN_MONITOR.notify();
 	}
 	
 	public synchronized boolean isTurnStart()
 	{
 		return turn_start_flag;
+	}
+	
+	/**
+	 * Signals the server that the client has finished its turn.
+	 */
+	public synchronized void finishedTurn() throws IOException, TPException
+	{
+		FinishedTurn finished = new FinishedTurn();
+		basicCon.sendFrame(finished);
 	}
 	
 	public synchronized ClientMethods getClientMethods()
