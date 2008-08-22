@@ -181,6 +181,7 @@ public class Master implements Runnable
 	{
 		try
 		{
+			long start = System.currentTimeMillis();
 			int time = CLIENT.getClientMethods().getTimeRemaining();
 			turn++;
 			out.pl("\n>>>");
@@ -192,6 +193,8 @@ public class Master implements Runnable
 				exit("WIPED OUT. Sorry boss, there was just too many of them.", NORMAL_EXIT, null);
 
 			robot.startTurn(time, turn);
+			long tookMillis = System.currentTimeMillis() - start;
+			out.pl("Turn took: " + tookMillis + " ms.");
 			out.pl("\n>>>");
 			CLIENT.finishedTurn();
 		}

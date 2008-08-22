@@ -2,10 +2,8 @@ package gencon.robolib.RISK;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 
 import gencon.Master;
-import gencon.clientLib.Client;
 import gencon.clientLib.RISK.ClientMethodsRISK;
 import gencon.evolutionlib.Genotype;
 import gencon.gamelib.Players;
@@ -39,7 +37,6 @@ public class RISKRobot extends Robot
 	public void startTurn(int time_remaining, int turn_num) throws IOException
 	{
 		MASTER.out.pr("Initializing bot with new data..... ");
-		long start = System.currentTimeMillis();
 		super.startTurn(time_remaining, turn_num);
 		UniverseMap mapForSimulations = FGS.getCurrentStatus().left;
 		
@@ -53,10 +50,7 @@ public class RISKRobot extends Robot
 		
 		MASTER.out.pl("Engaging in action.");
 		CONTROLLER.performActions(getCurrentTraits());
-		long end = System.currentTimeMillis();
-		long time = end - start;
-		MASTER.out.pl("Finished performing actions for this turn. Total time required: " + time + " ms.");
-		//test();
+		MASTER.out.pl("Finished performing actions for this turn.");
 	}
 	
 	
