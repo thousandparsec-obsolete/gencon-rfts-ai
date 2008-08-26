@@ -17,8 +17,7 @@ public class GCTP03Visitor extends TP03Visitor
 	private final Client CLIENT;
 	
 	//to determine turn time:
-	private int turn_duration = 0;
-	private boolean turn_duration_set = false; 
+	private int turn_duration = 15; //default value. Shouldn't go below it.
 	
 	public GCTP03Visitor(Client client)
 	{
@@ -37,11 +36,8 @@ public class GCTP03Visitor extends TP03Visitor
     {
     	if (frame.getTime() != 0)
     	{
-    		if (!turn_duration_set)
-    		{
+    		if (frame.getTime() > turn_duration) //the turn_duration should always be the biggest time frame.
     			turn_duration = frame.getTime();
-    			turn_duration_set = true;
-    		}
     		
     		if (frame.getTime() == turn_duration)
     			CLIENT.pushTurnStartFlag();

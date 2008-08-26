@@ -152,9 +152,8 @@ public class Master implements Runnable
 	{
 		while (true)  //if the 'exit' method is invoked at any point, the program will be killed on its own.
 		{
-			delayUntilNewTurn(); //wait till start of new turn.
-			CLIENT.pushTurnStartFlag(); //push the flag back to its place!
 			startOfTurnRoutine();
+			delayUntilNewTurn(); //wait till start of new turn.
 		}
 	}
 	
@@ -175,6 +174,8 @@ public class Master implements Runnable
 				exit("Thread interrupted", ABNORMAL_EXIT, e);
 			}
 		}
+		
+		CLIENT.pushTurnStartFlag(); //push the flag back to its place!
 	}
 	
 	private void startOfTurnRoutine()

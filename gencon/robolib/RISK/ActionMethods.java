@@ -314,9 +314,9 @@ public class ActionMethods
 		
 		//determining the ratio of troops to be sent to combat:
 		double cannonFodder = 0.0;
-		if (cannonFodder == 0)
+		if (geneCannonfodder == 0)
 			cannonFodder = 0.7;
-		else if (cannonFodder == 1)
+		else if (geneCannonfodder == 1)
 			cannonFodder = 0.85;
 		else
 			cannonFodder = 1.0;
@@ -341,7 +341,10 @@ public class ActionMethods
 			count++;
 			for (AdvancedStar myStar : allMyStars)
 			{
-				int attackers = (int) Math.round(Math.floor((double)(myStar.STAR.getArmy() - 1) * cannonFodder));
+				int attackers = (int) Math.round(Math.floor(myStar.STAR.getArmy()) * cannonFodder);
+				
+				if (myStar.STAR.getArmy() == attackers)
+					attackers --;
 				
 				//finding enemies
 				Collection<AdvancedStar> neighbors = MAP.getNeighbors(myStar);
@@ -366,7 +369,8 @@ public class ActionMethods
 						target = enemy;
 				}
 				
-				if (target != null && myStar.STAR.getArmy() - attackers > 1 && attackers > 0) //if it's there, and it's valid!
+				
+				if (target != null && myStar.STAR.getArmy() - attackers >= 1 && attackers > 0) //if it's there, and it's valid!
 				{
 					try
 					{

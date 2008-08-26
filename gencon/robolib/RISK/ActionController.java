@@ -43,12 +43,14 @@ public class ActionController
 		byte geneCheapness = currentTraits.get(Alleles.ALLELE_10);
 		
 		//output the genome values:
-		/*out.pl("The current genetic traits are (by trait number): < 0 > (" + geneBackwaterDistribute + "); < 1 > (" + geneDefence + 
+		/*
+		out.pl("The current genetic traits are (by trait number): < 0 > (" + geneBackwaterDistribute + "); < 1 > (" + geneDefence + 
 					"); < 2 > (" + geneReinforce + "); < 3 > (" + geneBravery + "); < 4 > (" + geneCannonfodder + "); < 5 > (" +
 					geneExpansionism + "); < 6 > (" + geneEmigration + "); < 7 > (" + geneStoicism + "); < 8 > (" + 
 					geneAggression + "); < 9 > (" + geneCheapness + ");");
-		*/
-		//------------------------------------
+		 * 
+		 */
+		
 		//LET'S FIRE 'ER UP. DIE, INFIDELS!
 		
 		//always first:

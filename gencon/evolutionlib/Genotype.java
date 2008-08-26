@@ -134,20 +134,20 @@ public class Genotype
 			
 			System.out.print("\n");
 		}
-		
 		//160 is the maximum amount of turns in RFTS:
-		for (byte i = 1; i <= 160; i += 10)
+		for (short i = 1; i <= 160; i += 10)
 		{
 			System.out.print("\nTurn " + i + " :  ");
 			Map<Alleles, Byte> gnm = getGenome(i);
-			
 			Set<Alleles> ks2 = gnm.keySet();
 			
 			for (Alleles a : ks2)
 				System.out.print(" (" + a + " : " + gnm.get(a) +") ");
 		}
-		
 		//corner case:
+		
+		System.out.print("Min: " + Short.MIN_VALUE + "; Max: " + Short.MAX_VALUE);
+		
 		byte i = (byte)160;
 		System.out.print("\nTurn " + i + " :  ");
 		Map<Alleles, Byte> gnm = getGenome(i);
