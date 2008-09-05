@@ -80,7 +80,7 @@ public class AdvancedMap
 			 * If so, it's marked 'backwaters'.
 			 */
 			//the threat formula:
-			double threat = (enemyForces / forces) * (1 /enemyCount);
+			double threat = (enemyForces - forces) * (1 /enemyCount);
 			
 			//setting values:
 			as.setThreat(threat);

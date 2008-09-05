@@ -189,7 +189,7 @@ public class ActionMethods
 		
 		//remove the ones not threatened:
 		for (int i = 0; i < riskList.size(); i++)
-			if (riskList.get(i).getThreat() <= 1)
+			if (riskList.get(i).getThreat() <= 0)
 				riskList.remove(i);
 		
 		//to record the actual reinforcements (may differ due to the 'floor' function)
@@ -306,11 +306,11 @@ public class ActionMethods
 		//determining the risk factor:
 		double overpowerBy = 0;
 		if (geneBravery == 0)
-			overpowerBy = 1.1;
+			overpowerBy = 1.3;
 		else if (geneBravery == 1)
-			overpowerBy = 1.25;
+			overpowerBy = 1.6;
 		else
-			overpowerBy = 1.4;
+			overpowerBy = 2.0;
 		
 		//determining the ratio of troops to be sent to combat:
 		double cannonFodder = 0.0;
@@ -364,7 +364,7 @@ public class ActionMethods
 							alreadyAttackedBy += pair.right.intValue();
 					
 					int defenders = enemy.STAR.getArmy();
-					double ratio = (double)(attackers + alreadyAttackedBy) / defenders;
+					int ratio = (attackers + alreadyAttackedBy) / defenders;
 					if (ratio >= overpowerBy && (target == null || defenders < target.STAR.getArmy()))
 						target = enemy;
 				}
@@ -441,47 +441,97 @@ public class ActionMethods
 		if (maxColonies > friendlyByThreat.size())
 			maxColonies = friendlyByThreat.size();
 		
-		//iterate on friendly stars, lowest threat first, for 'maxColonies' times.
-		for (int i = friendlyByThreat.size() - 1; i > friendlyByThreat.size() - 1 - maxColonies; i--)
+		//TODO: Use below structures, to coordinate orders.
+		//keeping track of orders given:
+		Collection<Pair<AdvancedStar, Integer>> moved = new HashSet<Pair<AdvancedStar,Integer>>();
+		short loopCount = 0; //to indicate the loop when to terminate. Do 3 loops.
+		int movedTo_count = 0; //counting the amount of orders given.
+		
+		//iterate on friendly stars, lowest threat first, for 3 times.
+		while (loopCount <= 3)
 		{
-			AdvancedStar possibleColonist = friendlyByThreat.get(i);
-			int colonists = (int) Math.round(Math.floor(possibleColonist.STAR.getArmy() * emigration));
-			
-			//see if it'll be safe and viable to colonize!
-			if (possibleColonist.getThreat() <= possibleColonist.STAR.getArmy() - colonists && colonists > 0)
+			for (int i = friendlyByThreat.size() - 1; i >= 0; i--)
 			{
-				//get all neutral neighbors:
-				Collection<Integer> neighborIds = possibleColonist.STAR.getAdjacencies();
-				Collection<AdvancedStar> neutralNeighbors = new HashSet<AdvancedStar>();
-				for (Integer id : neighborIds)
+				AdvancedStar possibleColonist = friendlyByThreat.get(i);
+				
+				int maxColonists = (int) Math.round(Math.floor(possibleColonist.STAR.getArmy() * emigration));
+				if (maxColonists == possibleColonist.STAR.getArmy())
+					maxColonists--;
+				
+				//set number of colonists
+				int colonists = 0;
+				double newThreat = 0;
+				while (colonists < maxColonists && newThreat <= 0)
 				{
-					AdvancedStar neighbor = MAP.getAdvancedStarWithId(id);
-					if (neighbor.STAR.getOwner() == -1)
-						neutralNeighbors.add(neighbor);
+					colonists++;
+					newThreat = possibleColonist.getThreat() + colonists;
 				}
 				
-				//find the safest place to colonize, and see if it's safe enough:
-				AdvancedStar safestFutureColony = null;
-				for (AdvancedStar possibleColony : neutralNeighbors)
-					if (safestFutureColony == null || possibleColony.getThreat() < safestFutureColony.getThreat())
-						safestFutureColony = possibleColony;
-				
-				//if this place exists, and it's safe enough.
-				if (safestFutureColony != null && safestFutureColony.getThreat() <= colonists)
+				//see if it'll be safe and viable to colonize!
+				if (newThreat <= 0 && colonists > 0)
 				{
-					try
+					//get all neutral neighbors:
+					Collection<AdvancedStar> neighbors = MAP.getNeighbors(possibleColonist);
+					Collection<AdvancedStar> neutralNeighbors = MAP.getStarsOfPlayer(neighbors, -1);
+					
+					//exclude all the stars that have been marked for a move:
+					Collection<AdvancedStar> invalid = new HashSet<AdvancedStar>();
+					for (AdvancedStar as : neutralNeighbors)
+						for (Pair<AdvancedStar, Integer> pair : moved)
+							if (as.STAR.GAME_ID == pair.left.STAR.GAME_ID)
+								invalid.add(as);
+					neutralNeighbors.removeAll(invalid);
+					
+					//find the safest place to move to, see if it's safe enough:
+					AdvancedStar safestFutureColony = null;
+					for (AdvancedStar possibleColony : neutralNeighbors)
+						if (safestFutureColony == null || possibleColony.getThreat() < safestFutureColony.getThreat())
+							safestFutureColony = possibleColony;
+					
+					//if a star like that does not exist, check with stars already marked for a move (which also neighbor it):
+					if (safestFutureColony == null)
 					{
-						boolean done = CLIENT_RISK.orderMove(possibleColonist.STAR, safestFutureColony.STAR, colonists, false);
-						out.pl("Moving to neutral star: <" + safestFutureColony.STAR.GAME_ID + ">  From <" + possibleColonist.STAR.GAME_ID + "> (Army: " + possibleColonist.STAR.getArmy() + ") with " + colonists + " troops; Sever said '" + done + "'");
-						if (done)
-							possibleColonist.STAR.setArmy(possibleColonist.STAR.getArmy() - colonists);
+						Collection<AdvancedStar> neighborsToo = new HashSet<AdvancedStar>();
+						for (Pair<AdvancedStar, Integer> p : moved)
+							for (AdvancedStar n : neighbors)
+								if (p.left.STAR.GAME_ID == n.STAR.GAME_ID)
+								{
+									neighborsToo.add(p.left);
+									break;
+								}
+						
+						for (AdvancedStar as : neighborsToo)
+							if (safestFutureColony == null || as.getThreat() < safestFutureColony.getThreat() )
+								safestFutureColony = as;
 					}
-					catch (TPException e)
+					//if this place exists, and it's safe enough.
+					if (safestFutureColony != null && safestFutureColony.getThreat() <= colonists)
 					{
-						out.pl("<Illegal action: moving to neutral>");
+						try
+						{
+							boolean done = CLIENT_RISK.orderMove(possibleColonist.STAR, safestFutureColony.STAR, colonists, false);
+							out.pl("Moving to neutral star: <" + safestFutureColony.STAR.GAME_ID + ">  From <" + possibleColonist.STAR.GAME_ID + "> (Army: " + possibleColonist.STAR.getArmy() + ") with " + colonists + " troops; Sever said '" + done + "'");
+							if (done)
+							{
+								possibleColonist.STAR.setArmy(possibleColonist.STAR.getArmy() - colonists);
+								AdvancedStar movedInto = new AdvancedStar(safestFutureColony);
+								movedInto.setThreat(safestFutureColony.getThreat() - colonists);
+								moved.add(new Pair<AdvancedStar, Integer>(movedInto, colonists));
+								movedTo_count++;
+								if (movedTo_count >= maxColonies)
+									break;
+							}
+						}
+						catch (TPException e)
+						{
+							out.pl("<Illegal action: moving to neutral>");
+						}
 					}
 				}
+				
 			}
+			
+			loopCount++;
 		}
 		
 	}
@@ -504,9 +554,9 @@ public class ActionMethods
 		if (geneStoicism == 0)
 			overrun = 1.5;
 		else if (geneStoicism == 1)
-			overrun = 2.0;
+			overrun = 2;
 		else
-			overrun = 3.0;
+			overrun = 3;
 		
 		//get my stars:
 		Collection<AdvancedStar> allStars = MAP.getAllAdvStars();
@@ -524,13 +574,14 @@ public class ActionMethods
 					reinforcedBy += pair.right.right.intValue();
 			
 			//equation works for 1 enemy player. Extra-safe for > 1 types of enemies.
-			double threatAfterReinforce = (myStar.getThreat() * myStar.STAR.getArmy()) / (myStar.STAR.getArmy() + reinforcedBy);
+			double threatAfterReinforce = myStar.getThreat() - reinforcedBy;
+			double threatRatio = (threatAfterReinforce + myStar.STAR.getArmy()) / myStar.STAR.getArmy();
 			
-			//taking into account whether the star is attacking presently: (cut the threat by 1/4)
+			//taking into account whether the star is attacking presently: (cut the threat by 1/2, so the remaining forces don't run away after attack!)
 			if (attackingStars.contains(myStar))
-				threatAfterReinforce = threatAfterReinforce / 3;
+				threatRatio = threatRatio / 2;
 			
-			if (threatAfterReinforce > overrun && myStar.STAR.getArmy() > 1) //RUN, FOREST!
+			if (threatRatio > overrun && myStar.STAR.getArmy() > 1) //RUN, FOREST!
 			{
 				//collect all neighbors:
 				Collection<AdvancedStar> neighbors = MAP.getNeighbors(myStar);
@@ -552,7 +603,7 @@ public class ActionMethods
 					try
 					{
 						boolean done = CLIENT_RISK.orderMove(myStar.STAR, sanctuary.STAR, myStar.STAR.getArmy() - 1, false);
-						out.pl("Evacuating from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") to <" + sanctuary.STAR.GAME_ID + "> , with " + (myStar.STAR.getArmy() - 1) + " troops; Threat after all considerations: " + threatAfterReinforce + "; Sever said '" + done + "'");
+						out.pl("Evacuating from <" + myStar.STAR.GAME_ID + "> (Army: " + myStar.STAR.getArmy() + ") to <" + sanctuary.STAR.GAME_ID + "> , with " + (myStar.STAR.getArmy() - 1) + " troops; Threat after all considerations: " + threatRatio + "; Sever said '" + done + "'");
 						if (done)
 						{
 							myStar.STAR.setArmy(1); //simple!
